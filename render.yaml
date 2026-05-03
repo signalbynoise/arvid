@@ -5,7 +5,7 @@ services:
     runtime: static
     branch: main
     autoDeploy: true
-    buildCommand: cat .env.production && npm ci && npm run build
+    buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     buildFilter:
       paths:
