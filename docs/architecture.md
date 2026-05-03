@@ -24,11 +24,12 @@ The frontend never calls the database directly. All data flows through `/api/*`.
 
 ## State Management
 
-Zustand store with three slices:
+Zustand store with four slices:
 
 - **Entities** (`store/slices/entities.ts`) — requirements, questions, answers, data-loading state machine, mutations
 - **Selection** (`store/slices/selection.ts`) — selected requirement, question, project
-- **Projects** (`store/slices/projects.ts`) — project tree and CRUD
+- **Projects** (`store/slices/projects.ts`) — project CRUD backed by API
+- **Summaries** (`store/slices/summaries.ts`) — AI-generated summary cache, generation triggers
 
 Data loading uses an explicit state machine (`idle → loading → ready | error`). Derived data is computed via `useMemo`, never stored separately.
 
@@ -51,7 +52,12 @@ Each entity has:
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Health check |
-| GET | `/api/requirements` | List all |
+| GET | `/api/projects` | List all projects |
+| GET | `/api/projects/:id` | Get one project |
+| POST | `/api/projects` | Create project |
+| PATCH | `/api/projects/:id` | Update project |
+| DELETE | `/api/projects/:id` | Delete project (cascades) |
+| GET | `/api/requirements?project_id=` | List (filterable by project) |
 | GET | `/api/requirements/:id` | Get one |
 | POST | `/api/requirements` | Create |
 | PATCH | `/api/requirements/:id` | Update |
@@ -60,14 +66,18 @@ Each entity has:
 | PATCH | `/api/questions/:id` | Update |
 | GET | `/api/answers?question_id=` | List (filterable) |
 | PATCH | `/api/answers/:id` | Update |
+| GET | `/api/summaries?requirement_id=` | Get cached summary |
+| POST | `/api/summaries/generate/:requirementId` | Generate AI summary |
 
 ## Database
 
-Three tables with RLS enabled:
+Five tables with RLS enabled:
 
-- **requirements** — id, title, source, owner, owner_team, owner_role, created_at, description, completeness, clarity, risk
+- **projects** — id, name, parent_id (self-FK for sub-projects), created_at
+- **requirements** — id, title, source, owner, owner_team, owner_role, created_at, description, completeness, clarity, risk, project_id (FK)
 - **questions** — id, requirement_id (FK), text, status, importance, type, category, is_suggested, is_hidden, author, author_team, author_role, created_at, description
 - **answers** — id, question_id (FK), text, author, date, is_current
+- **summaries** — id, requirement_id (unique FK), synthesis, core_objective, architecture, constraints, unverified_risks, model, generated_at
 
 ## Environment Variables
 
@@ -75,6 +85,7 @@ Three tables with RLS enabled:
 |----------|-------|----------|
 | `SUPABASE_URL` | Server | Yes |
 | `SUPABASE_KEY` | Server | Yes |
+| `OPENROUTER_API_KEY` | Server | Yes (for AI summaries) |
 | `PORT` | Server | No (default 3001) |
 | `VITE_API_BASE` | Frontend build | No (default `/api`) |
 

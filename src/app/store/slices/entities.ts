@@ -21,11 +21,16 @@ export interface EntitiesSlice {
   answers: Answer[];
   dataState: DataState;
   abortController: AbortController | null;
+  isSuggestingQuestions: boolean;
 
-  loadEntities: () => Promise<void>;
+  loadEntities: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
 
-  createRequirement: (text: string) => Promise<void>;
+  enhanceRequirement: (text: string, projectId?: string | null) => Promise<{ title: string; description: string }>;
+  createRequirement: (text: string, title?: string) => Promise<void>;
+  createQuestion: (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => Promise<void>;
+  suggestQuestions: (requirementId: string) => Promise<void>;
+  createAnswer: (text: string, questionId: string, author: string) => Promise<void>;
   useSuggestion: (id: string) => Promise<void>;
   hideSuggestion: (id: string) => Promise<void>;
   toggleCurrentAnswer: (answerId: string) => Promise<void>;
@@ -37,8 +42,9 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   answers: [],
   dataState: { status: 'idle' },
   abortController: null,
+  isSuggestingQuestions: false,
 
-  loadEntities: async () => {
+  loadEntities: async (projectId?: string) => {
     const current = get();
     if (current.dataState.status === 'loading') {
       log.debug('loadEntities', 'Already loading, aborting previous');
@@ -47,11 +53,11 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
 
     const controller = new AbortController();
     set({ dataState: { status: 'loading' }, abortController: controller });
-    log.info('loadEntities', 'Starting data fetch');
+    log.info('loadEntities', 'Starting data fetch', { projectId });
 
     try {
       const [reqs, qs, ans] = await Promise.all([
-        api.getRequirements(controller.signal),
+        api.getRequirements(projectId, controller.signal),
         api.getQuestions(undefined, controller.signal),
         api.getAnswers(undefined, controller.signal),
       ]);
@@ -93,13 +99,27 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
-  createRequirement: async (text: string) => {
-    const title = text.length > 50 ? text.substring(0, 50) + '...' : text;
+  enhanceRequirement: async (text: string, projectId?: string | null) => {
+    log.info('enhanceRequirement', 'Enhancing requirement via AI', { textLength: text.length });
+    try {
+      const result = await api.enhanceRequirement(text, projectId);
+      log.info('enhanceRequirement', 'Enhancement complete', { title: result.title });
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('enhanceRequirement', 'Enhancement failed', { error: message });
+      throw err;
+    }
+  },
+
+  createRequirement: async (text: string, explicitTitle?: string) => {
+    const title = explicitTitle || (text.length > 80 ? text.substring(0, 80) + '...' : text);
     log.info('createRequirement', 'Creating requirement', { title });
 
-    const newReq: Partial<Requirement> = {
+    const newReq: Partial<Requirement> & { projectId?: string } = {
       id: `r${Date.now()}`,
       title,
+      description: text,
       source: 'User',
       owner: 'Unassigned',
       completeness: 0,
@@ -112,15 +132,84 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       const created = await api.createRequirement(newReq);
       set(state => ({ requirements: [created, ...state.requirements] }));
       log.info('createRequirement', 'Requirement created', { id: created.id });
+
+      get().suggestQuestions(created.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createRequirement', 'Failed to create requirement', { error: message });
     }
   },
 
+  createQuestion: async (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => {
+    log.info('createQuestion', 'Creating question', { text: text.substring(0, 50), requirementId });
+
+    try {
+      const created = await api.createQuestion({
+        text,
+        requirementId,
+        importance,
+        category,
+      });
+      set(state => ({ questions: [...state.questions, created] }));
+      log.info('createQuestion', 'Question created', { id: created.id });
+
+      get().suggestQuestions(requirementId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('createQuestion', 'Failed to create question', { error: message });
+    }
+  },
+
+  suggestQuestions: async (requirementId: string) => {
+    if (get().isSuggestingQuestions) {
+      log.debug('suggestQuestions', 'Already suggesting, skipping', { requirementId });
+      return;
+    }
+
+    log.info('suggestQuestions', 'Requesting AI question suggestions', { requirementId });
+    set({ isSuggestingQuestions: true });
+
+    try {
+      const suggestions = await api.suggestQuestions(requirementId);
+
+      set(state => {
+        const withoutOldSuggestions = state.questions.filter(
+          q => !(q.requirementId === requirementId && q.isSuggested),
+        );
+        return {
+          questions: [...withoutOldSuggestions, ...suggestions],
+          isSuggestingQuestions: false,
+        };
+      });
+
+      log.info('suggestQuestions', 'Suggestions updated', {
+        requirementId,
+        newCount: suggestions.length,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      set({ isSuggestingQuestions: false });
+      log.error('suggestQuestions', 'Failed to generate suggestions', { requirementId, error: message });
+    }
+  },
+
+  createAnswer: async (text: string, questionId: string, author: string) => {
+    log.info('createAnswer', 'Creating answer', { questionId, author });
+
+    try {
+      const created = await api.createAnswer({ text, questionId, author });
+      set(state => ({ answers: [...state.answers, created] }));
+      log.info('createAnswer', 'Answer created', { id: created.id });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('createAnswer', 'Failed to create answer', { error: message });
+    }
+  },
+
   useSuggestion: async (id: string) => {
     log.info('useSuggestion', 'Accepting suggestion', { id });
 
+    const question = get().questions.find(q => q.id === id);
     set(state => ({
       questions: state.questions.map(q =>
         q.id === id ? { ...q, isSuggested: false, type: 'Manual' as const } : q,
@@ -129,6 +218,10 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
 
     try {
       await api.updateQuestion(id, { isSuggested: false, type: 'Manual' });
+
+      if (question?.requirementId) {
+        get().suggestQuestions(question.requirementId);
+      }
     } catch (err) {
       log.error('useSuggestion', 'Failed to persist suggestion acceptance', {
         id,
@@ -192,6 +285,11 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     try {
       await api.updateAnswer(answerId, { isCurrent: newIsCurrent });
       await api.updateQuestion(targetQuestionId, { status: newStatus });
+
+      const question = questions.find(q => q.id === targetQuestionId);
+      if (question?.requirementId) {
+        get().suggestQuestions(question.requirementId);
+      }
     } catch (err) {
       log.error('toggleCurrentAnswer', 'Failed to persist answer toggle, rolling back', {
         answerId,

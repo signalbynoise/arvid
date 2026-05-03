@@ -6,14 +6,9 @@ import { useStore } from '../store';
 import { Project } from '../types';
 
 const projects: Project[] = [
-  {
-    id: 'p1',
-    name: 'Project Alpha',
-    subProjects: [
-      { id: 'p1-1', name: 'Sub Alpha' },
-    ],
-  },
-  { id: 'p2', name: 'Project Beta', subProjects: [] },
+  { id: 'p1', name: 'Project Alpha', parentId: undefined },
+  { id: 'p1-1', name: 'Sub Alpha', parentId: 'p1' },
+  { id: 'p2', name: 'Project Beta', parentId: undefined },
 ];
 
 describe('Sidebar', () => {
@@ -47,16 +42,6 @@ describe('Sidebar', () => {
     render(<Sidebar isOpen={true} />);
     fireEvent.click(screen.getByText('Project Beta'));
     expect(useStore.getState().selectedProjectId).toBe('p2');
-  });
-
-  it('creates project when new button is clicked and prompt answered', () => {
-    vi.spyOn(window, 'prompt').mockReturnValue('New Project');
-    render(<Sidebar isOpen={true} />);
-    const newBtn = screen.getByTitle('New Project');
-    fireEvent.click(newBtn);
-    const state = useStore.getState();
-    expect(state.projects.some((p: Project) => p.name === 'New Project')).toBe(true);
-    vi.restoreAllMocks();
   });
 
   it('highlights the selected project', () => {

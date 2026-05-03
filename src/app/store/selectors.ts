@@ -9,3 +9,8 @@ export const selectProjects = (state: AppState) => state.projects;
 export const selectSelectedReqId = (state: AppState) => state.selectedReqId;
 export const selectSelectedQuestionId = (state: AppState) => state.selectedQuestionId;
 export const selectSelectedProjectId = (state: AppState) => state.selectedProjectId;
+
+export const selectIsSuggestingQuestions = (state: AppState) => state.isSuggestingQuestions;
+
+export const selectSummary = (state: AppState) => state.summary;
+export const selectSummaryDataState = (state: AppState) => state.summaryDataState;

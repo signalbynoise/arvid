@@ -34,6 +34,7 @@ describe('api', () => {
         completeness: 80,
         clarity: 'High',
         risk: 'Low',
+        projectId: undefined,
       });
     });
 

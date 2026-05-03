@@ -3,6 +3,7 @@ import { Answer } from '../types';
 import { Plus, MessageSquare, Check, User, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
+import { NewAnswerModal } from './NewAnswerModal';
 import { useStore, selectAnswers, selectSelectedQuestionId } from '../store';
 
 const GROUP_OPTIONS = [
@@ -31,6 +32,7 @@ export function AnswerColumn() {
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('date_desc');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [isNewAnswerOpen, setIsNewAnswerOpen] = useState(false);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
@@ -131,7 +133,7 @@ export function AnswerColumn() {
               onSortChange={setSortBy}
             />
           )}
-          <IconButton title="New Answer">
+          <IconButton title="New Answer" onClick={() => setIsNewAnswerOpen(true)}>
             <Plus size={14} />
           </IconButton>
         </div>
@@ -172,11 +174,15 @@ export function AnswerColumn() {
       </div>
       
       <div className="relative z-[1] p-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-        <button className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2">
+        <button
+          onClick={() => setIsNewAnswerOpen(true)}
+          className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2"
+        >
           <Plus size={14} />
           <span>Add Answer</span>
         </button>
       </div>
+      <NewAnswerModal isOpen={isNewAnswerOpen} onClose={() => setIsNewAnswerOpen(false)} />
     </div>
   );
 }

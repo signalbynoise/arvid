@@ -16,11 +16,20 @@ vi.mock('../api', () => ({
       { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', date: '2026-01-01', isCurrent: true },
       { id: 'a2', questionId: 'q1', text: 'Alt answer', author: 'Eve', date: '2026-01-02', isCurrent: false },
     ]),
+    getProjects: vi.fn().mockResolvedValue([
+      { id: 'p1', name: 'Test Project', parentId: undefined },
+    ]),
+    createProject: vi.fn().mockResolvedValue({ id: 'p-new', name: 'New Project', parentId: undefined }),
     createRequirement: vi.fn().mockResolvedValue({
       id: 'r-new', title: 'New Req', source: 'User', owner: 'Unassigned', completeness: 0, clarity: 'Low', risk: 'Medium',
     }),
     updateQuestion: vi.fn().mockResolvedValue({}),
     updateAnswer: vi.fn().mockResolvedValue({}),
+    getSummary: vi.fn().mockResolvedValue(null),
+    generateSummary: vi.fn().mockResolvedValue({}),
+    suggestQuestions: vi.fn().mockResolvedValue([]),
+    updateProject: vi.fn().mockResolvedValue({}),
+    deleteProject: vi.fn().mockResolvedValue(undefined),
   },
   ApiError: class extends Error {},
   ValidationError: class extends Error {},
@@ -111,16 +120,22 @@ describe('Zustand store (replaces useAppState)', () => {
     expect(useStore.getState().requirements).toHaveLength(0);
   });
 
-  it('creates a top-level project', () => {
+  it('creates a top-level project via API', async () => {
     const initialCount = useStore.getState().projects.length;
-    useStore.getState().createProject('New Project');
+    await useStore.getState().createProject('New Project');
     expect(useStore.getState().projects).toHaveLength(initialCount + 1);
+    expect(mockedApi.createProject).toHaveBeenCalledWith('New Project', undefined);
   });
 
-  it('creates a sub-project under existing project', () => {
-    useStore.getState().createProject('Sub Project', 'p1');
-    const p1 = useStore.getState().projects.find(p => p.id === 'p1');
-    expect(p1?.subProjects?.some(s => s.name === 'Sub Project')).toBe(true);
+  it('creates a sub-project via API', async () => {
+    await useStore.getState().createProject('Sub Project', 'p1');
+    expect(mockedApi.createProject).toHaveBeenCalledWith('Sub Project', 'p1');
+  });
+
+  it('loads projects from API', async () => {
+    await useStore.getState().loadProjects();
+    expect(useStore.getState().projects).toHaveLength(1);
+    expect(useStore.getState().projectsDataState.status).toBe('ready');
   });
 
   it('optimistically toggles answer current status', async () => {

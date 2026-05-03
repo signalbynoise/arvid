@@ -9,4 +9,5 @@ export type {
   Question,
   Answer,
   Project,
+  Summary,
 } from '../../shared/schemas';

@@ -1,6 +1,5 @@
 import { useStore } from '../app/store';
-import { Requirement, Question, Answer, Project } from '../app/types';
-import { DEFAULT_PROJECTS } from '../app/constants';
+import { Requirement, Question, Answer, Project, Summary } from '../app/types';
 
 interface StoreOverrides {
   requirements?: Requirement[];
@@ -8,9 +7,10 @@ interface StoreOverrides {
   answers?: Answer[];
   selectedReqId?: string | null;
   selectedQuestionId?: string | null;
-  selectedProjectId?: string;
+  selectedProjectId?: string | null;
   projects?: Project[];
   dataState?: { status: 'idle' | 'loading' | 'ready' | 'error'; error?: string; loadedAt?: number; failedAt?: number };
+  summary?: Summary | null;
 }
 
 export function setStoreState(overrides: StoreOverrides) {
@@ -21,8 +21,11 @@ export function setStoreState(overrides: StoreOverrides) {
     selectedReqId: overrides.selectedReqId ?? null,
     selectedQuestionId: overrides.selectedQuestionId ?? null,
     selectedProjectId: overrides.selectedProjectId ?? 'p1',
-    projects: overrides.projects ?? DEFAULT_PROJECTS,
+    projects: overrides.projects ?? [],
     dataState: overrides.dataState ?? { status: 'ready', loadedAt: Date.now() },
+    summary: overrides.summary ?? null,
+    summaryDataState: { status: 'idle' },
+    isSuggestingQuestions: false,
   });
 }
 
@@ -33,9 +36,13 @@ export function resetStore() {
     answers: [],
     selectedReqId: null,
     selectedQuestionId: null,
-    selectedProjectId: 'p1',
-    projects: DEFAULT_PROJECTS,
+    selectedProjectId: null,
+    projects: [],
     dataState: { status: 'idle' },
     abortController: null,
+    isSuggestingQuestions: false,
+    summary: null,
+    summaryDataState: { status: 'idle' },
+    projectsDataState: { status: 'idle' },
   });
 }

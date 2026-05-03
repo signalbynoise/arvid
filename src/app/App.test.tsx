@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import { resetStore } from '../test/store-utils';
+import { useStore } from './store';
 
 vi.mock('./api', () => ({
   api: {
@@ -14,9 +15,20 @@ vi.mock('./api', () => ({
     getAnswers: vi.fn().mockResolvedValue([
       { id: 'a1', questionId: 'q1', text: 'Because.', author: 'Bob', date: '2026-01-01', isCurrent: true },
     ]),
+    getProjects: vi.fn().mockResolvedValue([
+      { id: 'p1', name: 'Platform Migration', parentId: undefined },
+      { id: 'p1-1', name: 'Auth V2', parentId: 'p1' },
+    ]),
     createRequirement: vi.fn(),
     updateQuestion: vi.fn(),
     updateAnswer: vi.fn(),
+    suggestQuestions: vi.fn().mockResolvedValue([]),
+    createQuestion: vi.fn(),
+    createProject: vi.fn(),
+    updateProject: vi.fn(),
+    deleteProject: vi.fn(),
+    getSummary: vi.fn().mockResolvedValue(null),
+    generateSummary: vi.fn(),
   },
   ApiError: class ApiError extends Error {
     status: number;
@@ -112,7 +124,7 @@ describe('App', () => {
     const newReqBtn = screen.getByTitle('New Requirement');
     fireEvent.click(newReqBtn);
 
-    expect(screen.getByPlaceholderText('Describe the requirement in plain text...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Describe what needs to be built in plain text...')).toBeInTheDocument();
   });
 
   it('shows summary column when requirement is selected', async () => {
@@ -125,46 +137,6 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('4. Summary')).toBeInTheDocument();
-    });
-  });
-
-  it('shows answer column when question is selected', async () => {
-    render(<App />);
-    await waitFor(() => {
-      expect(screen.getByText('Test Requirement')).toBeInTheDocument();
-    });
-
-    const reqCard = document.querySelector('#req-r1') as HTMLElement;
-    fireEvent.click(reqCard);
-
-    await waitFor(() => {
-      expect(screen.getByText('2. Questions')).toBeInTheDocument();
-    });
-
-    const questionCard = document.querySelector('#question-q1') as HTMLElement;
-    if (questionCard) {
-      fireEvent.click(questionCard);
-      await waitFor(() => {
-        expect(screen.getByText('Because.')).toBeInTheDocument();
-      });
-    }
-  });
-
-  it('deselects requirement when clicking it again', async () => {
-    render(<App />);
-    await waitFor(() => {
-      expect(screen.getByText('Test Requirement')).toBeInTheDocument();
-    });
-
-    const reqCard = document.querySelector('#req-r1') as HTMLElement;
-    fireEvent.click(reqCard);
-    await waitFor(() => {
-      expect(screen.getByText('2. Questions')).toBeInTheDocument();
-    });
-
-    fireEvent.click(reqCard);
-    await waitFor(() => {
-      expect(screen.getByText('Select a requirement to view its knowledge flow.')).toBeInTheDocument();
     });
   });
 

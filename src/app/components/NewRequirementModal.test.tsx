@@ -6,6 +6,8 @@ import { resetStore } from '../../test/store-utils';
 vi.mock('../api', () => ({
   api: {
     createRequirement: vi.fn().mockResolvedValue({ id: 'r-new', title: 'My new requirement', source: 'User', owner: 'Unassigned', completeness: 0, clarity: 'Low', risk: 'Medium' }),
+    enhanceRequirement: vi.fn().mockResolvedValue({ title: 'Enhanced Title', description: 'Enhanced description text.' }),
+    suggestQuestions: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -34,7 +36,18 @@ describe('NewRequirementModal', () => {
 
   it('shows the write step by default with textarea', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    expect(screen.getByPlaceholderText('Describe the requirement in plain text...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Describe what needs to be built in plain text...')).toBeInTheDocument();
+  });
+
+  it('shows Next button instead of Create on step 1', () => {
+    render(<NewRequirementModal {...defaultProps} />);
+    expect(screen.getByText('Next')).toBeInTheDocument();
+  });
+
+  it('Next button is disabled without text', () => {
+    render(<NewRequirementModal {...defaultProps} />);
+    const nextBtn = screen.getByText('Next');
+    expect(nextBtn).toBeDisabled();
   });
 
   it('calls onClose when X button is clicked', () => {
@@ -44,26 +57,6 @@ describe('NewRequirementModal', () => {
     const closeBtn = buttons.find(btn => btn.querySelector('svg'));
     fireEvent.click(closeBtn!);
     expect(onClose).toHaveBeenCalled();
-  });
-
-  it('creates requirement when Create is clicked with text', () => {
-    const onClose = vi.fn();
-    render(<NewRequirementModal {...defaultProps} onClose={onClose} />);
-
-    const textarea = screen.getByPlaceholderText('Describe the requirement in plain text...');
-    fireEvent.change(textarea, { target: { value: 'My new requirement' } });
-
-    const submitBtn = screen.getByText('Create');
-    fireEvent.click(submitBtn);
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('does not create requirement when Create is clicked without text', () => {
-    const onClose = vi.fn();
-    render(<NewRequirementModal {...defaultProps} onClose={onClose} />);
-    const submitBtn = screen.getByText('Create');
-    fireEvent.click(submitBtn);
-    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('shows source import options (Files, Email, Slack)', () => {
@@ -92,13 +85,6 @@ describe('NewRequirementModal', () => {
     fireEvent.click(screen.getByText('Slack'));
     expect(screen.getByText('Import from Slack')).toBeInTheDocument();
     expect(screen.getByText('Connect Slack')).toBeInTheDocument();
-  });
-
-  it('shows Enhance button when text is entered', () => {
-    render(<NewRequirementModal {...defaultProps} />);
-    const textarea = screen.getByPlaceholderText('Describe the requirement in plain text...');
-    fireEvent.change(textarea, { target: { value: 'Some text' } });
-    expect(screen.getByText('Enhance')).toBeInTheDocument();
   });
 
   it('back button returns to write step from file upload', () => {

@@ -6,8 +6,12 @@ import {
   RequirementRowSchema,
   QuestionRowSchema,
   AnswerRowSchema,
+  ProjectRowSchema,
+  ProjectSchema,
+  SummaryRowSchema,
+  SummarySchema,
 } from '../../shared/schemas';
-import { Requirement, Question, Answer } from './types';
+import { Requirement, Question, Answer, Project, Summary } from './types';
 import { API_BASE } from './constants';
 import { logger } from './logger';
 
@@ -56,6 +60,8 @@ async function request<T>(method: string, endpoint: string, body?: unknown, sign
     throw error;
   }
 
+  if (res.status === 204) return undefined as T;
+
   const data = await res.json();
   log.debug(method.toLowerCase(), `${method} ${endpoint} succeeded`, { count: Array.isArray(data) ? data.length : 1 });
   return data;
@@ -102,9 +108,35 @@ function parseSingle<TRow, TOut>(
 }
 
 export const api = {
-  async getRequirements(signal?: AbortSignal): Promise<Requirement[]> {
-    const rows = await request<unknown[]>('GET', '/requirements', undefined, signal);
-    return parseArray(RequirementRowSchema, RequirementSchema, rows, '/requirements');
+  // --- Projects ---
+
+  async getProjects(signal?: AbortSignal): Promise<Project[]> {
+    const rows = await request<unknown[]>('GET', '/projects', undefined, signal);
+    return parseArray(ProjectRowSchema, ProjectSchema, rows, '/projects');
+  },
+
+  async createProject(name: string, parentId?: string): Promise<Project> {
+    const body: Record<string, unknown> = { name };
+    if (parentId) body.parent_id = parentId;
+    const row = await request<unknown>('POST', '/projects', body);
+    return parseSingle(ProjectRowSchema, ProjectSchema, row, '/projects');
+  },
+
+  async updateProject(id: string, updates: { name?: string }): Promise<Project> {
+    const row = await request<unknown>('PATCH', `/projects/${id}`, updates);
+    return parseSingle(ProjectRowSchema, ProjectSchema, row, `/projects/${id}`);
+  },
+
+  async deleteProject(id: string): Promise<void> {
+    await request<void>('DELETE', `/projects/${id}`);
+  },
+
+  // --- Requirements ---
+
+  async getRequirements(projectId?: string, signal?: AbortSignal): Promise<Requirement[]> {
+    const params = projectId ? `?project_id=${projectId}` : '';
+    const rows = await request<unknown[]>('GET', `/requirements${params}`, undefined, signal);
+    return parseArray(RequirementRowSchema, RequirementSchema, rows, `/requirements${params}`);
   },
 
   async getQuestions(requirementId?: string, signal?: AbortSignal): Promise<Question[]> {
@@ -119,7 +151,13 @@ export const api = {
     return parseArray(AnswerRowSchema, AnswerSchema, rows, `/answers${params}`);
   },
 
-  async createRequirement(req: Partial<Requirement>): Promise<Requirement> {
+  async enhanceRequirement(text: string, projectId?: string | null): Promise<{ title: string; description: string }> {
+    const body: Record<string, string> = { text };
+    if (projectId) body.project_id = projectId;
+    return request<{ title: string; description: string }>('POST', '/requirements/enhance', body);
+  },
+
+  async createRequirement(req: Partial<Requirement> & { projectId?: string }): Promise<Requirement> {
     const body = {
       id: req.id,
       title: req.title,
@@ -132,9 +170,35 @@ export const api = {
       completeness: req.completeness ?? 0,
       clarity: req.clarity || 'Low',
       risk: req.risk || 'Medium',
+      project_id: req.projectId,
     };
     const row = await request<unknown>('POST', '/requirements', body);
     return parseSingle(RequirementRowSchema, RequirementSchema, row, '/requirements');
+  },
+
+  async createQuestion(q: { text: string; requirementId: string; importance: string; category: string }): Promise<Question> {
+    const body = {
+      id: `q${Date.now()}`,
+      requirement_id: q.requirementId,
+      text: q.text,
+      importance: q.importance,
+      category: q.category,
+      status: 'Unanswered',
+      type: 'Manual',
+      author: 'User',
+      created_at: new Date().toISOString().split('T')[0],
+    };
+    const row = await request<unknown>('POST', '/questions', body);
+    return parseSingle(QuestionRowSchema, QuestionSchema, row, '/questions');
+  },
+
+  async classifyQuestion(text: string, requirementId: string): Promise<{ importance: string; category: string }> {
+    return request<{ importance: string; category: string }>('POST', '/questions/classify', { text, requirement_id: requirementId });
+  },
+
+  async suggestQuestions(requirementId: string): Promise<Question[]> {
+    const rows = await request<unknown[]>('POST', `/questions/suggest/${requirementId}`);
+    return parseArray(QuestionRowSchema, QuestionSchema, rows, `/questions/suggest/${requirementId}`);
   },
 
   async updateQuestion(id: string, updates: Record<string, unknown>): Promise<Question> {
@@ -148,11 +212,37 @@ export const api = {
     return parseSingle(QuestionRowSchema, QuestionSchema, row, `/questions/${id}`);
   },
 
+  async createAnswer(a: { text: string; questionId: string; author: string }): Promise<Answer> {
+    const body = {
+      id: `a${Date.now()}`,
+      question_id: a.questionId,
+      text: a.text,
+      author: a.author,
+      date: new Date().toISOString().split('T')[0],
+      is_current: false,
+    };
+    const row = await request<unknown>('POST', '/answers', body);
+    return parseSingle(AnswerRowSchema, AnswerSchema, row, '/answers');
+  },
+
   async updateAnswer(id: string, updates: Record<string, unknown>): Promise<Answer> {
     const body: Record<string, unknown> = {};
     if (updates.isCurrent !== undefined) body.is_current = updates.isCurrent;
 
     const row = await request<unknown>('PATCH', `/answers/${id}`, body);
     return parseSingle(AnswerRowSchema, AnswerSchema, row, `/answers/${id}`);
+  },
+
+  // --- Summaries ---
+
+  async getSummary(requirementId: string, signal?: AbortSignal): Promise<Summary | null> {
+    const rows = await request<unknown[]>('GET', `/summaries?requirement_id=${requirementId}`, undefined, signal);
+    if (!rows || rows.length === 0) return null;
+    return parseSingle(SummaryRowSchema, SummarySchema, rows[0], `/summaries?requirement_id=${requirementId}`);
+  },
+
+  async generateSummary(requirementId: string): Promise<Summary> {
+    const row = await request<unknown>('POST', `/summaries/generate/${requirementId}`);
+    return parseSingle(SummaryRowSchema, SummarySchema, row, `/summaries/generate/${requirementId}`);
   },
 };

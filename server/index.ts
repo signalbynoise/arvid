@@ -3,6 +3,8 @@ import cors from 'cors';
 import { requirementsRouter } from './routes/requirements';
 import { questionsRouter } from './routes/questions';
 import { answersRouter } from './routes/answers';
+import { projectsRouter } from './routes/projects';
+import { summariesRouter } from './routes/summaries';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +15,8 @@ app.use(express.json());
 app.use('/api/requirements', requirementsRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/answers', answersRouter);
+app.use('/api/projects', projectsRouter);
+app.use('/api/summaries', summariesRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

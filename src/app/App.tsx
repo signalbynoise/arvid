@@ -6,14 +6,15 @@ import { SummaryColumn } from './components/SummaryColumn';
 import { NewRequirementModal } from './components/NewRequirementModal';
 import { DetailsModal } from './components/DetailsModal';
 import { Sidebar } from './components/Sidebar';
-import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw } from 'lucide-react';
+import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
-import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions } from './store';
+import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId } from './store';
 
 export default function App() {
   const dataState = useStore(selectDataState);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
+  const selectedProjectId = useStore(selectSelectedProjectId);
   const requirements = useStore(selectRequirements);
   const questions = useStore(selectQuestions);
   const loadEntities = useStore(s => s.loadEntities);
@@ -35,9 +36,11 @@ export default function App() {
   const [detailsModalData, setDetailsModalData] = useState<Requirement | Question | null>(null);
 
   useEffect(() => {
-    loadEntities();
+    if (selectedProjectId) {
+      loadEntities(selectedProjectId);
+    }
     return () => cancelLoad();
-  }, [loadEntities, cancelLoad]);
+  }, [selectedProjectId, loadEntities, cancelLoad]);
 
 
   const openDetails = (type: 'requirement' | 'question', id: string) => {
@@ -52,29 +55,68 @@ export default function App() {
     setDetailsModalOpen(true);
   };
 
-  if (dataState.status === 'idle' || dataState.status === 'loading') {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#08090a] text-[#f7f8f8]">
-        <LoaderPinwheel className="animate-spin" size={24} />
-      </div>
-    );
-  }
+  const renderMainContent = () => {
+    if (!selectedProjectId) {
+      return (
+        <div className="flex-1 bg-[#0f1011] flex flex-col items-center justify-center text-[#62666d]">
+          <Folder size={48} className="mb-4 opacity-10" />
+          <p className="text-[14px] mb-1">No project selected.</p>
+          <p className="text-[13px] text-[#4a4e54]">Create your first project from the sidebar to get started.</p>
+        </div>
+      );
+    }
 
-  if (dataState.status === 'error') {
+    if (dataState.status === 'idle' || dataState.status === 'loading') {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-[#0f1011]">
+          <LoaderPinwheel className="animate-spin" size={24} />
+        </div>
+      );
+    }
+
+    if (dataState.status === 'error') {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center bg-[#0f1011] space-y-4">
+          <AlertTriangle size={32} className="text-[#ef4444]" />
+          <p className="text-[14px] text-[#8a8f98]">{dataState.error}</p>
+          <button
+            onClick={() => loadEntities(selectedProjectId)}
+            className="flex items-center space-x-2 px-4 py-2 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] rounded-[6px] text-[13px] font-[510] transition-colors"
+          >
+            <RotateCw size={14} />
+            <span>Retry</span>
+          </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#08090a] text-[#f7f8f8] space-y-4">
-        <AlertTriangle size={32} className="text-[#ef4444]" />
-        <p className="text-[14px] text-[#8a8f98]">{dataState.error}</p>
-        <button
-          onClick={() => loadEntities()}
-          className="flex items-center space-x-2 px-4 py-2 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] rounded-[6px] text-[13px] font-[510] transition-colors"
-        >
-          <RotateCw size={14} />
-          <span>Retry</span>
-        </button>
-      </div>
+      <>
+        <RequirementColumn 
+          onNewReqClick={() => setIsModalOpen(true)}
+          onOpenDetails={(id) => openDetails('requirement', id)}
+        />
+        {selectedReqId ? (
+          <>
+            <QuestionColumn 
+              onOpenDetails={(id) => openDetails('question', id)}
+            />
+            {selectedQuestionId ? (
+              <AnswerColumn />
+            ) : (
+              <div className="w-1/4 h-full border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]" />
+            )}
+            <SummaryColumn />
+          </>
+        ) : (
+          <div className="flex-1 bg-[#0f1011] flex flex-col items-center justify-center text-[#62666d]">
+            <Layers size={48} className="mb-4 opacity-10" />
+            <p className="text-[14px]">Select a requirement to view its knowledge flow.</p>
+          </div>
+        )}
+      </>
     );
-  }
+  };
 
   return (
     <div className="flex flex-row h-screen w-full bg-[#08090a] text-[#f7f8f8] antialiased" style={{ fontFeatureSettings: '"cv01", "ss03"' }}>
@@ -99,28 +141,7 @@ export default function App() {
         </header>
 
         <main className="flex-1 flex w-full min-h-0 overflow-hidden bg-[#0f1011]">
-          <RequirementColumn 
-            onNewReqClick={() => setIsModalOpen(true)}
-            onOpenDetails={(id) => openDetails('requirement', id)}
-          />
-          {selectedReqId ? (
-            <>
-              <QuestionColumn 
-                onOpenDetails={(id) => openDetails('question', id)}
-              />
-              {selectedQuestionId ? (
-                <AnswerColumn />
-              ) : (
-                <div className="w-1/4 h-full border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]" />
-              )}
-              <SummaryColumn />
-            </>
-          ) : (
-            <div className="flex-1 bg-[#0f1011] flex flex-col items-center justify-center text-[#62666d]">
-              <Layers size={48} className="mb-4 opacity-10" />
-              <p className="text-[14px]">Select a requirement to view its knowledge flow.</p>
-            </div>
-          )}
+          {renderMainContent()}
         </main>
 
         <NewRequirementModal 

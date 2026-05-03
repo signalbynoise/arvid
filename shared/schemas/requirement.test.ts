@@ -79,6 +79,7 @@ describe('RequirementSchema (transform)', () => {
     expect(result.ownerRole).toBeUndefined();
     expect(result.createdAt).toBe('2026-03-01');
     expect(result.description).toBeUndefined();
+    expect(result.projectId).toBeUndefined();
   });
 
   it('preserves non-transformed fields', () => {

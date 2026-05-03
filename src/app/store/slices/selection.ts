@@ -6,7 +6,7 @@ const log = logger.create('store:selection');
 export interface SelectionSlice {
   selectedReqId: string | null;
   selectedQuestionId: string | null;
-  selectedProjectId: string;
+  selectedProjectId: string | null;
 
   selectRequirement: (id: string) => void;
   selectQuestion: (id: string) => void;
@@ -16,7 +16,7 @@ export interface SelectionSlice {
 export const createSelectionSlice: StateCreator<SelectionSlice, [], [], SelectionSlice> = (set, get) => ({
   selectedReqId: null,
   selectedQuestionId: null,
-  selectedProjectId: 'p1',
+  selectedProjectId: null,
 
   selectRequirement: (id: string) => {
     const current = get().selectedReqId;

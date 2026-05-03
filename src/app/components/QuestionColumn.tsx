@@ -3,7 +3,8 @@ import { Question } from '../types';
 import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, ChevronDown, ChevronRight, Check, X, Eye, User, LoaderPinwheel } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
-import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId } from '../store';
+import { NewQuestionModal } from './NewQuestionModal';
+import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions } from '../store';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
@@ -30,6 +31,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   const allQuestions = useStore(selectQuestions);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedId = useStore(selectSelectedQuestionId);
+  const isSuggestingQuestions = useStore(selectIsSuggestingQuestions);
 
   const questions = useMemo(
     () => allQuestions.filter(q => q.requirementId === selectedReqId),
@@ -42,6 +44,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [isNewQuestionOpen, setIsNewQuestionOpen] = useState(false);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
@@ -208,16 +211,64 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     );
   };
 
+  const headerControls = (
+    <div className="flex items-center">
+      <SortGroupControls
+        groupByOptions={GROUP_OPTIONS}
+        sortByOptions={SORT_OPTIONS}
+        currentGroup={groupBy}
+        currentSort={sortBy}
+        onGroupChange={setGroupBy}
+        onSortChange={setSortBy}
+      />
+      <IconButton title="New Question" onClick={() => setIsNewQuestionOpen(true)}>
+        <Plus size={14} />
+      </IconButton>
+    </div>
+  );
+
+  const bottomBar = (
+    <div className="relative z-[1] p-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
+      <button
+        onClick={() => setIsNewQuestionOpen(true)}
+        className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2"
+      >
+        <Plus size={14} />
+        <span>Add Question</span>
+      </button>
+    </div>
+  );
+
+  const suggestingBanner = isSuggestingQuestions ? (
+    <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] flex items-center space-x-2.5">
+      <LoaderPinwheel size={14} className="text-[#8a8f98] animate-spin shrink-0" />
+      <span className="text-[12px] font-[510] text-[#8a8f98]">Arvid is generating questions...</span>
+    </div>
+  ) : null;
+
   if (questions.length === 0) {
     return (
       <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-        <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[#0f1011] flex items-center justify-between sticky top-0 z-10">
+        <div className="sticky top-0 z-10 bg-[#0f1011] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
           <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">2. Questions</h2>
+          {headerControls}
         </div>
+        {suggestingBanner}
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#62666d]">
-          <MessageCircleQuestion size={32} className="mb-3 opacity-20" />
-          <p className="text-[13px]">No questions yet. Add one to start the flow.</p>
+          {isSuggestingQuestions ? (
+            <>
+              <LoaderPinwheel size={32} className="mb-3 opacity-30 animate-spin" />
+              <p className="text-[13px]">Arvid is analyzing the requirement...</p>
+            </>
+          ) : (
+            <>
+              <MessageCircleQuestion size={32} className="mb-3 opacity-20" />
+              <p className="text-[13px]">No questions yet. Add one to start the flow.</p>
+            </>
+          )}
         </div>
+        {bottomBar}
+        <NewQuestionModal isOpen={isNewQuestionOpen} onClose={() => setIsNewQuestionOpen(false)} />
       </div>
     );
   }
@@ -226,21 +277,10 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
       <div className="sticky top-0 z-10 bg-[#0f1011] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
         <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">2. Questions</h2>
-        <div className="flex items-center">
-          <SortGroupControls 
-            groupByOptions={GROUP_OPTIONS}
-            sortByOptions={SORT_OPTIONS}
-            currentGroup={groupBy}
-            currentSort={sortBy}
-            onGroupChange={setGroupBy}
-            onSortChange={setSortBy}
-          />
-          <IconButton title="New Question">
-            <Plus size={14} />
-          </IconButton>
-        </div>
+        {headerControls}
       </div>
       
+      {suggestingBanner}
       <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-4 space-y-4">
         {Object.entries(processedQuestions).map(([group, qs]) => {
           if (groupBy === 'none') {
@@ -269,12 +309,8 @@ export function QuestionColumn({ onOpenDetails }: Props) {
         })}
       </div>
       
-      <div className="relative z-[1] p-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-        <button className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2">
-          <Plus size={14} />
-          <span>Add Question</span>
-        </button>
-      </div>
+      {bottomBar}
+      <NewQuestionModal isOpen={isNewQuestionOpen} onClose={() => setIsNewQuestionOpen(false)} />
     </div>
   );
 }
