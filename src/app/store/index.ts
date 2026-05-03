@@ -12,4 +12,4 @@ export const useStore = create<AppState>()((...args) => ({
 }));
 
 export type { DataState, DataStatus } from './slices/entities';
-export { selectRequirements, selectQuestions, selectAnswers, selectDataState, selectProjects, selectSelectedReqId, selectSelectedQuestionId, selectSelectedProjectId, selectSelectedReq, selectReqQuestions, selectSelectedQuestionAnswers } from './selectors';
+export { selectRequirements, selectQuestions, selectAnswers, selectDataState, selectProjects, selectSelectedReqId, selectSelectedQuestionId, selectSelectedProjectId } from './selectors';

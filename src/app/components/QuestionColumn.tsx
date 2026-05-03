@@ -3,7 +3,7 @@ import { Question } from '../types';
 import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, ChevronDown, ChevronRight, Check, X, Eye, User, LoaderPinwheel } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
-import { useStore, selectReqQuestions, selectSelectedQuestionId } from '../store';
+import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId } from '../store';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
@@ -27,8 +27,14 @@ const importanceScore = { 'Critical': 3, 'Important': 2, 'Optional': 1 };
 const statusScore = { 'Unanswered': 3, 'Conflicting': 2, 'Answered': 1 };
 
 export function QuestionColumn({ onOpenDetails }: Props) {
-  const questions = useStore(selectReqQuestions);
+  const allQuestions = useStore(selectQuestions);
+  const selectedReqId = useStore(selectSelectedReqId);
   const selectedId = useStore(selectSelectedQuestionId);
+
+  const questions = useMemo(
+    () => allQuestions.filter(q => q.requirementId === selectedReqId),
+    [allQuestions, selectedReqId],
+  );
   const selectQuestion = useStore(s => s.selectQuestion);
   const useSuggestion = useStore(s => s.useSuggestion);
   const hideSuggestion = useStore(s => s.hideSuggestion);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FileText, AlertTriangle, ShieldAlert, CheckCircle2, Sparkles, Network, ArrowUpRight, LoaderPinwheel, Loader2, Target, Settings, Shield } from 'lucide-react';
-import { useStore, selectSelectedReq, selectReqQuestions } from '../store';
+import { useStore, selectRequirements, selectQuestions, selectSelectedReqId } from '../store';
 
 const mockSummaryContent: Record<string, { synthesis: string; coreObjective: string; architecture: string; constraints: string; unverifiedRisks: string }> = {
   r1: {
@@ -41,8 +41,18 @@ const mockSummaryContent: Record<string, { synthesis: string; coreObjective: str
 };
 
 export function SummaryColumn() {
-  const requirement = useStore(selectSelectedReq);
-  const questions = useStore(selectReqQuestions);
+  const requirements = useStore(selectRequirements);
+  const allQuestions = useStore(selectQuestions);
+  const selectedReqId = useStore(selectSelectedReqId);
+
+  const requirement = useMemo(
+    () => requirements.find(r => r.id === selectedReqId) ?? null,
+    [requirements, selectedReqId],
+  );
+  const questions = useMemo(
+    () => allQuestions.filter(q => q.requirementId === selectedReqId),
+    [allQuestions, selectedReqId],
+  );
 
   const [isUpdating, setIsUpdating] = useState(false);
 

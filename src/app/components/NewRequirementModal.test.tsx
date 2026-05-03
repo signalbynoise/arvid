@@ -1,17 +1,28 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NewRequirementModal } from './NewRequirementModal';
+import { resetStore } from '../../test/store-utils';
+
+vi.mock('../api', () => ({
+  api: {
+    createRequirement: vi.fn().mockResolvedValue({ id: 'r-new', title: 'My new requirement', source: 'User', owner: 'Unassigned', completeness: 0, clarity: 'Low', risk: 'Medium' }),
+  },
+}));
 
 const defaultProps = {
   isOpen: true,
   onClose: vi.fn(),
-  onCreate: vi.fn(),
 };
 
 describe('NewRequirementModal', () => {
+  beforeEach(() => {
+    resetStore();
+    vi.clearAllMocks();
+  });
+
   it('renders nothing when isOpen is false', () => {
     const { container } = render(
-      <NewRequirementModal isOpen={false} onClose={vi.fn()} onCreate={vi.fn()} />,
+      <NewRequirementModal isOpen={false} onClose={vi.fn()} />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -35,25 +46,24 @@ describe('NewRequirementModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('calls onCreate when Create is clicked with text', () => {
-    const onCreate = vi.fn();
+  it('creates requirement when Create is clicked with text', () => {
     const onClose = vi.fn();
-    render(<NewRequirementModal {...defaultProps} onCreate={onCreate} onClose={onClose} />);
+    render(<NewRequirementModal {...defaultProps} onClose={onClose} />);
 
     const textarea = screen.getByPlaceholderText('Describe the requirement in plain text...');
     fireEvent.change(textarea, { target: { value: 'My new requirement' } });
 
     const submitBtn = screen.getByText('Create');
     fireEvent.click(submitBtn);
-    expect(onCreate).toHaveBeenCalledWith('My new requirement');
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it('does not call onCreate when Create is clicked without text', () => {
-    const onCreate = vi.fn();
-    render(<NewRequirementModal {...defaultProps} onCreate={onCreate} />);
+  it('does not create requirement when Create is clicked without text', () => {
+    const onClose = vi.fn();
+    render(<NewRequirementModal {...defaultProps} onClose={onClose} />);
     const submitBtn = screen.getByText('Create');
     fireEvent.click(submitBtn);
-    expect(onCreate).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('shows source import options (Files, Email, Slack)', () => {

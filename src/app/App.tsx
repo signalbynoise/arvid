@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { RequirementColumn } from './components/RequirementColumn';
 import { QuestionColumn } from './components/QuestionColumn';
 import { AnswerColumn } from './components/AnswerColumn';
@@ -8,16 +8,25 @@ import { DetailsModal } from './components/DetailsModal';
 import { Sidebar } from './components/Sidebar';
 import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw } from 'lucide-react';
 import { Requirement, Question } from './types';
-import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectSelectedReq, selectReqQuestions } from './store';
+import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions } from './store';
 
 export default function App() {
   const dataState = useStore(selectDataState);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
-  const selectedReq = useStore(selectSelectedReq);
-  const reqQuestions = useStore(selectReqQuestions);
+  const requirements = useStore(selectRequirements);
+  const questions = useStore(selectQuestions);
   const loadEntities = useStore(s => s.loadEntities);
   const cancelLoad = useStore(s => s.cancelLoad);
+
+  const selectedReq = useMemo(
+    () => requirements.find(r => r.id === selectedReqId) ?? null,
+    [requirements, selectedReqId],
+  );
+  const reqQuestions = useMemo(
+    () => questions.filter(q => q.requirementId === selectedReqId),
+    [questions, selectedReqId],
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -30,8 +39,6 @@ export default function App() {
     return () => cancelLoad();
   }, [loadEntities, cancelLoad]);
 
-  const requirements = useStore(s => s.requirements);
-  const questions = reqQuestions;
 
   const openDetails = (type: 'requirement' | 'question', id: string) => {
     setDetailsModalType(type);

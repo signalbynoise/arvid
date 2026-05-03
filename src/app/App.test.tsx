@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
+import { resetStore } from '../test/store-utils';
 
 vi.mock('./api', () => ({
   api: {
@@ -26,10 +27,20 @@ vi.mock('./api', () => ({
       this.endpoint = endpoint;
     }
   },
+  ValidationError: class ValidationError extends Error {
+    endpoint: string;
+    issues: unknown[];
+    constructor(msg: string, endpoint: string, issues: unknown[]) {
+      super(msg);
+      this.endpoint = endpoint;
+      this.issues = issues;
+    }
+  },
 }));
 
 describe('App', () => {
   beforeEach(() => {
+    resetStore();
     vi.clearAllMocks();
   });
 

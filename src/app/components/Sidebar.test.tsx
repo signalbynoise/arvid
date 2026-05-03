@@ -1,6 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Sidebar } from './Sidebar';
+import { setStoreState, resetStore } from '../../test/store-utils';
+import { useStore } from '../store';
 import { Project } from '../types';
 
 const projects: Project[] = [
@@ -14,68 +16,51 @@ const projects: Project[] = [
   { id: 'p2', name: 'Project Beta', subProjects: [] },
 ];
 
-const defaultProps = {
-  isOpen: true,
-  projects,
-  selectedProjectId: 'p1',
-  onSelectProject: vi.fn(),
-  onCreateProject: vi.fn(),
-};
-
 describe('Sidebar', () => {
+  beforeEach(() => {
+    resetStore();
+    setStoreState({ projects, selectedProjectId: 'p1' });
+  });
+
   it('renders nothing when isOpen is false', () => {
-    const { container } = render(<Sidebar {...defaultProps} isOpen={false} />);
+    const { container } = render(<Sidebar isOpen={false} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('renders the Arvid logo', () => {
-    render(<Sidebar {...defaultProps} />);
+    render(<Sidebar isOpen={true} />);
     expect(screen.getByText('Arvid')).toBeInTheDocument();
   });
 
   it('renders project names', () => {
-    render(<Sidebar {...defaultProps} />);
+    render(<Sidebar isOpen={true} />);
     expect(screen.getByText('Project Alpha')).toBeInTheDocument();
     expect(screen.getByText('Project Beta')).toBeInTheDocument();
   });
 
   it('renders sub-projects when parent is expanded', () => {
-    render(<Sidebar {...defaultProps} />);
+    render(<Sidebar isOpen={true} />);
     expect(screen.getByText('Sub Alpha')).toBeInTheDocument();
   });
 
-  it('calls onSelectProject when a project is clicked', () => {
-    const onSelectProject = vi.fn();
-    render(<Sidebar {...defaultProps} onSelectProject={onSelectProject} />);
-
+  it('selects project when clicked', () => {
+    render(<Sidebar isOpen={true} />);
     fireEvent.click(screen.getByText('Project Beta'));
-    expect(onSelectProject).toHaveBeenCalledWith('p2');
+    expect(useStore.getState().selectedProjectId).toBe('p2');
   });
 
-  it('calls onCreateProject when new project button is clicked', () => {
-    const onCreateProject = vi.fn();
-    render(<Sidebar {...defaultProps} onCreateProject={onCreateProject} />);
-
+  it('creates project when new button is clicked and prompt answered', () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('New Project');
+    render(<Sidebar isOpen={true} />);
     const newBtn = screen.getByTitle('New Project');
     fireEvent.click(newBtn);
-    expect(onCreateProject).toHaveBeenCalledWith();
-  });
-
-  it('collapses sub-projects when chevron is clicked', () => {
-    render(<Sidebar {...defaultProps} />);
-    expect(screen.getByText('Sub Alpha')).toBeInTheDocument();
-
-    const chevronBtns = screen.getAllByRole('button').filter(btn =>
-      btn.querySelector('svg') && btn.closest('[style]'),
-    );
-    const expandBtn = chevronBtns[0];
-    if (expandBtn) {
-      fireEvent.click(expandBtn);
-    }
+    const state = useStore.getState();
+    expect(state.projects.some((p: Project) => p.name === 'New Project')).toBe(true);
+    vi.restoreAllMocks();
   });
 
   it('highlights the selected project', () => {
-    render(<Sidebar {...defaultProps} selectedProjectId="p1" />);
+    render(<Sidebar isOpen={true} />);
     const projectEl = screen.getByText('Project Alpha').closest('[class*="bg-"]');
     expect(projectEl?.className).toContain('bg-');
   });

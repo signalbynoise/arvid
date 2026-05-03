@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SummaryColumn } from './SummaryColumn';
+import { setStoreState, resetStore } from '../../test/store-utils';
 import { Requirement, Question } from '../types';
 
 const mockReq: Requirement = {
@@ -19,33 +20,43 @@ const mockQuestions: Question[] = [
 ];
 
 describe('SummaryColumn', () => {
+  beforeEach(() => {
+    resetStore();
+  });
+
   it('renders the column header', () => {
-    render(<SummaryColumn requirement={mockReq} questions={mockQuestions} />);
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+    render(<SummaryColumn />);
     expect(screen.getByText('4. Summary')).toBeInTheDocument();
   });
 
-  it('renders with null requirement without crashing', () => {
-    render(<SummaryColumn requirement={null} questions={[]} />);
+  it('renders with no requirement selected without crashing', () => {
+    setStoreState({ requirements: [], questions: [], selectedReqId: null });
+    render(<SummaryColumn />);
     expect(screen.getByText('4. Summary')).toBeInTheDocument();
   });
 
   it('shows the requirement title', () => {
-    render(<SummaryColumn requirement={mockReq} questions={mockQuestions} />);
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+    render(<SummaryColumn />);
     expect(screen.getByText('SOC2 Automated Access Review Workflows')).toBeInTheDocument();
   });
 
   it('shows the Arvid Specification label', () => {
-    render(<SummaryColumn requirement={mockReq} questions={mockQuestions} />);
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+    render(<SummaryColumn />);
     expect(screen.getByText('Arvid Specification')).toBeInTheDocument();
   });
 
   it('shows Knowledge Completeness section', () => {
-    render(<SummaryColumn requirement={mockReq} questions={mockQuestions} />);
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+    render(<SummaryColumn />);
     expect(screen.getByText('Knowledge Completeness')).toBeInTheDocument();
   });
 
   it('shows question statistics section', () => {
-    render(<SummaryColumn requirement={mockReq} questions={mockQuestions} />);
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+    render(<SummaryColumn />);
     expect(screen.getByText('Question Authors')).toBeInTheDocument();
   });
 });

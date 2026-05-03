@@ -3,7 +3,7 @@ import { Answer } from '../types';
 import { Plus, MessageSquare, Check, User, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
-import { useStore, selectSelectedQuestionAnswers, selectSelectedQuestionId } from '../store';
+import { useStore, selectAnswers, selectSelectedQuestionId } from '../store';
 
 const GROUP_OPTIONS = [
   { label: 'None', value: 'none' },
@@ -18,8 +18,14 @@ const SORT_OPTIONS = [
 ];
 
 export function AnswerColumn() {
-  const answers = useStore(selectSelectedQuestionAnswers);
-  const questionSelected = useStore(selectSelectedQuestionId) !== null;
+  const allAnswers = useStore(selectAnswers);
+  const selectedQuestionId = useStore(selectSelectedQuestionId);
+  const questionSelected = selectedQuestionId !== null;
+
+  const answers = useMemo(
+    () => allAnswers.filter(a => a.questionId === selectedQuestionId),
+    [allAnswers, selectedQuestionId],
+  );
   const toggleCurrentAnswer = useStore(s => s.toggleCurrentAnswer);
 
   const [groupBy, setGroupBy] = useState('none');

@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, Plus, Folder, Hash, MoreHorizontal, LoaderPinwheel } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { Project } from '../types';
+import { useStore, selectProjects, selectSelectedProjectId } from '../store';
 
 interface SidebarProps {
   isOpen: boolean;
-  projects: Project[];
-  selectedProjectId: string;
-  onSelectProject: (id: string) => void;
-  onCreateProject: (parentId?: string) => void;
 }
 
-export function Sidebar({ isOpen, projects, selectedProjectId, onSelectProject, onCreateProject }: SidebarProps) {
+export function Sidebar({ isOpen }: SidebarProps) {
+  const projects = useStore(selectProjects);
+  const selectedProjectId = useStore(selectSelectedProjectId);
+  const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
+  const createProject = useStore(s => s.createProject);
+
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({
     'p1': true
   });
@@ -23,6 +25,12 @@ export function Sidebar({ isOpen, projects, selectedProjectId, onSelectProject, 
     setExpandedProjects(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleCreateProject = (parentId?: string) => {
+    const name = prompt('Enter project name:');
+    if (!name) return;
+    createProject(name, parentId);
+  };
+
   const renderProject = (project: Project, depth = 0) => {
     const isExpanded = expandedProjects[project.id];
     const isSelected = selectedProjectId === project.id;
@@ -31,7 +39,7 @@ export function Sidebar({ isOpen, projects, selectedProjectId, onSelectProject, 
     return (
       <div key={project.id}>
         <div 
-          onClick={() => onSelectProject(project.id)}
+          onClick={() => setSelectedProjectId(project.id)}
           className={`group flex items-center justify-between py-1.5 px-2 mx-2 rounded-[6px] cursor-pointer text-[13px] font-[510] transition-colors ${
             isSelected 
               ? 'bg-[rgba(255,255,255,0.08)] text-[#f7f8f8]' 
@@ -53,7 +61,7 @@ export function Sidebar({ isOpen, projects, selectedProjectId, onSelectProject, 
           
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <IconButton
-              onClick={(e) => { e.stopPropagation(); onCreateProject(project.id); }}
+              onClick={(e) => { e.stopPropagation(); handleCreateProject(project.id); }}
               title="Add sub-project"
             >
               <Plus size={14} />
@@ -83,7 +91,7 @@ export function Sidebar({ isOpen, projects, selectedProjectId, onSelectProject, 
       <div className="flex-1 overflow-y-auto hide-scrollbar py-3">
         <div className="flex items-center justify-between px-4 mb-2">
           <span className="text-[11px] font-[510] text-[#62666d] uppercase tracking-widest">Projects</span>
-          <IconButton onClick={() => onCreateProject()} title="New Project">
+          <IconButton onClick={() => handleCreateProject()} title="New Project">
             <Plus size={14} />
           </IconButton>
         </div>

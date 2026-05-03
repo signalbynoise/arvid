@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Paperclip, Mail, MessageSquare, ArrowLeft, UploadCloud, CheckCircle2 } from 'lucide-react';
+import { z } from 'zod';
+import { useStore } from '../store';
+
+const RequirementInputSchema = z.object({
+  text: z.string().min(1, 'Requirement text is required').min(5, 'Must be at least 5 characters'),
+});
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (text: string) => void;
 }
 
 type Step = 'WRITE' | 'FILE_UPLOAD' | 'EMAIL_IMPORT' | 'SLACK_IMPORT' | 'SUCCESS';
 
-export function NewRequirementModal({ isOpen, onClose, onCreate }: Props) {
+export function NewRequirementModal({ isOpen, onClose }: Props) {
+  const createRequirement = useStore(s => s.createRequirement);
   const [step, setStep] = useState<Step>('WRITE');
   const [text, setText] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -33,7 +40,7 @@ export function NewRequirementModal({ isOpen, onClose, onCreate }: Props) {
       setIsProcessing(false);
       setStep('SUCCESS');
       setTimeout(() => {
-        onCreate("Imported requirements batch");
+        createRequirement("Imported requirements batch");
         onClose();
         reset();
       }, 1500);
@@ -41,8 +48,13 @@ export function NewRequirementModal({ isOpen, onClose, onCreate }: Props) {
   };
 
   const handleCreate = () => {
-    if (!text.trim()) return;
-    onCreate(text);
+    const result = RequirementInputSchema.safeParse({ text: text.trim() });
+    if (!result.success) {
+      setValidationError(result.error.issues[0].message);
+      return;
+    }
+    setValidationError(null);
+    createRequirement(result.data.text);
     onClose();
     reset();
   };
@@ -50,6 +62,7 @@ export function NewRequirementModal({ isOpen, onClose, onCreate }: Props) {
   const reset = () => {
     setStep('WRITE');
     setText('');
+    setValidationError(null);
     setIsEnhancing(false);
     setIsProcessing(false);
   };
@@ -79,10 +92,15 @@ export function NewRequirementModal({ isOpen, onClose, onCreate }: Props) {
               </div>
               <textarea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => { setText(e.target.value); setValidationError(null); }}
                 placeholder="Describe the requirement in plain text..."
-                className="w-full h-32 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[8px] p-3 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] focus:outline-none focus:border-[rgba(255,255,255,0.2)] focus:bg-[rgba(255,255,255,0.04)] transition-all resize-none shadow-inner"
+                className={`w-full h-32 bg-[rgba(255,255,255,0.02)] border rounded-[8px] p-3 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] focus:outline-none focus:border-[rgba(255,255,255,0.2)] focus:bg-[rgba(255,255,255,0.04)] transition-all resize-none shadow-inner ${
+                  validationError ? 'border-[rgba(239,68,68,0.5)]' : 'border-[rgba(255,255,255,0.08)]'
+                }`}
               />
+              {validationError && (
+                <p className="text-[12px] text-[#ef4444] mt-1.5">{validationError}</p>
+              )}
             </div>
 
             <div className="pt-2">
