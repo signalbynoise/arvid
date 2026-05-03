@@ -72,7 +72,7 @@ describe('App', () => {
   it('renders the sidebar with Arvid logo', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('Arvid')).toBeInTheDocument();
+      expect(screen.getByAltText('Arvid')).toBeInTheDocument();
     });
   });
 
@@ -93,13 +93,13 @@ describe('App', () => {
   it('toggles sidebar when button is clicked', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('Arvid')).toBeInTheDocument();
+      expect(screen.getByAltText('Arvid')).toBeInTheDocument();
     });
 
     const toggleBtn = screen.getByTitle('Toggle Sidebar');
     fireEvent.click(toggleBtn);
 
-    expect(screen.queryByText('Arvid')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Arvid')).not.toBeInTheDocument();
   });
 
   it('shows question column when a requirement is selected', async () => {

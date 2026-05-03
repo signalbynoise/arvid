@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { supabase } from '../supabase';
+import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateProjectBodySchema, UpdateProjectBodySchema } from '../../shared/schemas';
 
 export const projectsRouter = Router();
 
-projectsRouter.get('/', async (_req, res) => {
-  const { data, error } = await supabase
+projectsRouter.get('/', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('projects')
     .select('*')
     .order('created_at', { ascending: true });
@@ -16,7 +17,8 @@ projectsRouter.get('/', async (_req, res) => {
 });
 
 projectsRouter.get('/:id', async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('projects')
     .select('*')
     .eq('id', req.params.id)
@@ -27,12 +29,14 @@ projectsRouter.get('/:id', async (req, res) => {
 });
 
 projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const body = {
     ...req.body,
     id: req.body.id || `p${Date.now()}`,
+    user_id: req.user!.id,
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('projects')
     .insert(body)
     .select()
@@ -43,7 +47,8 @@ projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res)
 });
 
 projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('projects')
     .update(req.body)
     .eq('id', req.params.id)
@@ -55,7 +60,8 @@ projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, 
 });
 
 projectsRouter.delete('/:id', async (req, res) => {
-  const { error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { error } = await db
     .from('projects')
     .delete()
     .eq('id', req.params.id);

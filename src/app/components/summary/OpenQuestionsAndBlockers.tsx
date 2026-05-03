@@ -17,20 +17,20 @@ export function OpenQuestionsAndBlockers({ unverifiedRisks, missingCritical, con
       icon={AlertTriangle}
       title="Open Questions & Blockers"
       defaultOpen={hasIssues}
-      titleClassName={hasIssues ? 'text-[#f59e0b]' : 'text-[#d0d6e0]'}
+      titleClassName={hasIssues ? 'text-status-warning' : 'text-text-secondary'}
     >
       <div className="space-y-4">
-        <p className="text-[13px] text-[#f59e0b] leading-relaxed">{unverifiedRisks}</p>
+        <p className="text-[13px] text-status-warning leading-relaxed">{unverifiedRisks}</p>
         
         {missingCritical.length > 0 && (
-          <div className="bg-[rgba(239,68,68,0.05)] border border-[rgba(239,68,68,0.2)] p-4 rounded-[8px]">
-            <div className="flex items-center space-x-2 text-[#ef4444] font-[510] mb-3 text-[13px]">
+          <div className="bg-status-error-surface-subtle border border-status-error-border p-4 rounded-card">
+            <div className="flex items-center space-x-2 text-status-error font-[var(--fw-medium)] mb-3 text-[13px]">
               <ShieldAlert size={14} />
               <span>Missing Critical Answers</span>
             </div>
             <ul className="space-y-2">
               {missingCritical.map(q => (
-                <li key={q.id} className="text-[13px] text-[#f7f8f8] bg-[rgba(255,255,255,0.03)] border border-[rgba(239,68,68,0.15)] rounded-[6px] p-2.5 leading-snug">
+                <li key={q.id} className="text-[13px] text-text-primary bg-surface-frost-03 border border-status-error-border-muted rounded-comfortable p-2.5 leading-snug">
                   {q.text}
                 </li>
               ))}
@@ -39,14 +39,14 @@ export function OpenQuestionsAndBlockers({ unverifiedRisks, missingCritical, con
         )}
 
         {conflicts.length > 0 && (
-          <div className="bg-[rgba(245,158,11,0.05)] border border-[rgba(245,158,11,0.2)] p-4 rounded-[8px]">
-            <div className="flex items-center space-x-2 text-[#f59e0b] font-[510] mb-3 text-[13px]">
+          <div className="bg-status-warning-surface-subtle border border-status-warning-border p-4 rounded-card">
+            <div className="flex items-center space-x-2 text-status-warning font-[var(--fw-medium)] mb-3 text-[13px]">
               <AlertTriangle size={14} />
               <span>Active Conflicts</span>
             </div>
             <ul className="space-y-2">
               {conflicts.map(q => (
-                <li key={q.id} className="text-[13px] text-[#f7f8f8] bg-[rgba(255,255,255,0.03)] border border-[rgba(245,158,11,0.15)] rounded-[6px] p-2.5 leading-snug">
+                <li key={q.id} className="text-[13px] text-text-primary bg-surface-frost-03 border border-status-warning-border-muted rounded-comfortable p-2.5 leading-snug">
                   {q.text}
                 </li>
               ))}

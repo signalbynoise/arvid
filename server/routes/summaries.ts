@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { supabase } from '../supabase';
+import { createUserClient } from '../supabase';
 import { generateSummary, SummaryGenerationInput } from '../openrouter';
 import { fetchRequirementContext } from '../context';
 
 export const summariesRouter = Router();
 
 summariesRouter.get('/', async (req, res) => {
-  let query = supabase
+  const db = createUserClient(req.accessToken!);
+  let query = db
     .from('summaries')
     .select('*');
 
@@ -20,7 +21,8 @@ summariesRouter.get('/', async (req, res) => {
 });
 
 summariesRouter.get('/:id', async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('summaries')
     .select('*')
     .eq('id', req.params.id)
@@ -31,6 +33,7 @@ summariesRouter.get('/:id', async (req, res) => {
 });
 
 summariesRouter.post('/generate/:requirementId', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const { requirementId } = req.params;
 
   console.info(
@@ -38,7 +41,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
     JSON.stringify({ requirementId }),
   );
 
-  const context = await fetchRequirementContext(requirementId);
+  const context = await fetchRequirementContext(db, requirementId);
 
   if (!context) {
     return res.status(404).json({ error: `Requirement ${requirementId} not found` });
@@ -68,7 +71,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
 
     const summaryId = `s-${requirementId}-${Date.now()}`;
 
-    const { data: upserted, error: upsertError } = await supabase
+    const { data: upserted, error: upsertError } = await db
       .from('summaries')
       .upsert(
         {

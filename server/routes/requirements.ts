@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../supabase';
+import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
 import { enhanceRequirement } from '../openrouter';
@@ -7,7 +7,8 @@ import { enhanceRequirement } from '../openrouter';
 export const requirementsRouter = Router();
 
 requirementsRouter.get('/', async (req, res) => {
-  let query = supabase
+  const db = createUserClient(req.accessToken!);
+  let query = db
     .from('requirements')
     .select('*')
     .order('created_at', { ascending: true });
@@ -22,7 +23,8 @@ requirementsRouter.get('/', async (req, res) => {
 });
 
 requirementsRouter.get('/:id', async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('requirements')
     .select('*')
     .eq('id', req.params.id)
@@ -33,7 +35,8 @@ requirementsRouter.get('/:id', async (req, res) => {
 });
 
 requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('requirements')
     .insert(req.body)
     .select()
@@ -44,7 +47,8 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
 });
 
 requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('requirements')
     .update(req.body)
     .eq('id', req.params.id)
@@ -56,6 +60,7 @@ requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), asyn
 });
 
 requirementsRouter.post('/enhance', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const { text, project_id } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 3) {
@@ -66,13 +71,13 @@ requirementsRouter.post('/enhance', async (req, res) => {
     let context: { projectName?: string; existingRequirements?: string[] } | undefined;
 
     if (project_id) {
-      const { data: project } = await supabase
+      const { data: project } = await db
         .from('projects')
         .select('name')
         .eq('id', project_id)
         .single();
 
-      const { data: existingReqs } = await supabase
+      const { data: existingReqs } = await db
         .from('requirements')
         .select('title')
         .eq('project_id', project_id)
@@ -99,7 +104,8 @@ requirementsRouter.post('/enhance', async (req, res) => {
 });
 
 requirementsRouter.delete('/:id', async (req, res) => {
-  const { error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { error } = await db
     .from('requirements')
     .delete()
     .eq('id', req.params.id);

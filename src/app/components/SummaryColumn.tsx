@@ -83,10 +83,10 @@ export function SummaryColumn() {
   if (!requirement) {
     return (
       <div className="w-1/4 h-full flex flex-col">
-        <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[#0f1011] sticky top-0 z-10">
-          <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">4. Summary</h2>
+        <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10">
+          <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#62666d]">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-quaternary">
           <FileText size={32} className="mb-3 opacity-20" />
           <p className="text-[13px]">Select a requirement to view its live summary.</p>
         </div>
@@ -105,15 +105,15 @@ export function SummaryColumn() {
   const isLoading = summaryDataState.status === 'loading';
 
   return (
-    <div className="w-1/4 h-full flex flex-col bg-[#0f1011]">
-      <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[#0f1011] sticky top-0 z-10 flex items-center justify-between">
-        <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase flex items-center space-x-2">
+    <div className="w-1/4 h-full flex flex-col bg-surface-panel">
+      <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10 flex items-center justify-between">
+        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase flex items-center space-x-2">
           <span>4. Summary</span>
         </h2>
         {(isGenerating || isLoading) && (
           <div className="flex items-center space-x-1.5">
-            <Loader2 size={12} className="text-[#8a8f98] animate-spin" />
-            <span className="text-[11px] font-[510] text-[#8a8f98]">
+            <Loader2 size={12} className="text-text-tertiary animate-spin" />
+            <span className="text-[11px] font-[var(--fw-medium)] text-text-tertiary">
               {isGenerating && summary ? 'Updating summary...' : isGenerating ? 'Generating...' : 'Loading...'}
             </span>
           </div>
@@ -121,13 +121,13 @@ export function SummaryColumn() {
       </div>
       
       <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-5">
-        <div className="bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[12px] shadow-[rgba(0,0,0,0.2)_0px_0px_0px_1px] overflow-hidden mb-6">
-          <div className="bg-[rgba(255,255,255,0.02)] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-start justify-between">
+        <div className="bg-surface-frost-02 border border-border-default rounded-panel shadow-ring overflow-hidden mb-6">
+          <div className="bg-surface-frost-02 p-4 border-b border-border-subtle flex items-start justify-between">
             <div>
-              <h3 className="font-[510] text-[#f7f8f8] text-[16px] leading-tight tracking-[-0.165px]">{requirement.title}</h3>
+              <h3 className="font-[var(--fw-medium)] text-text-primary text-[16px] leading-tight tracking-[-0.165px]">{requirement.title}</h3>
               <div className="flex items-center space-x-2 mt-2">
-                <LoaderPinwheel size={12} className="text-[#8a8f98]" />
-                <span className="text-[12px] font-[510] text-[#8a8f98] uppercase tracking-widest">Arvid Specification</span>
+                <LoaderPinwheel size={12} className="text-text-tertiary" />
+                <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Arvid Specification</span>
               </div>
             </div>
           </div>
@@ -145,16 +145,16 @@ export function SummaryColumn() {
               <div className="p-4 text-center">
                 {isGenerating ? (
                   <div className="flex flex-col items-center space-y-3 py-4">
-                    <Loader2 size={20} className="text-[#8a8f98] animate-spin" />
-                    <p className="text-[13px] text-[#8a8f98]">Arvid is analyzing this requirement...</p>
+                    <Loader2 size={20} className="text-text-tertiary animate-spin" />
+                    <p className="text-[13px] text-text-tertiary">Arvid is analyzing this requirement...</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center space-y-3 py-4">
-                    <Sparkles size={20} className="text-[#62666d]" />
-                    <p className="text-[13px] text-[#62666d]">No summary generated yet.</p>
+                    <Sparkles size={20} className="text-text-quaternary" />
+                    <p className="text-[13px] text-text-quaternary">No summary generated yet.</p>
                     <button
                       onClick={() => generateSummary(requirement.id)}
-                      className="px-4 py-2 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.08)] rounded-[6px] text-[13px] font-[510] text-[#f7f8f8] transition-colors flex items-center space-x-2"
+                      className="px-4 py-2 bg-surface-frost-08 hover:bg-surface-frost-12 border border-border-default rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-primary transition-colors flex items-center space-x-2"
                     >
                       <Sparkles size={14} />
                       <span>Generate Summary</span>
@@ -191,10 +191,10 @@ export function SummaryColumn() {
                 <button
                   onClick={() => generateSummary(requirement.id)}
                   disabled={isGenerating}
-                  className={`flex-1 py-2 px-4 border rounded-[6px] text-[13px] font-[510] transition-all duration-200 flex items-center justify-center space-x-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
+                  className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
                     isGenerating
-                      ? 'border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] opacity-50 cursor-not-allowed text-[#8a8f98]'
-                      : 'border-[rgba(255,255,255,0.08)] bg-[#141516] hover:bg-[#1a1b1e] hover:border-[rgba(255,255,255,0.12)] text-[#f7f8f8]'
+                      ? 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
+                      : 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary'
                   }`}
                 >
                   <Sparkles size={14} className="opacity-50" />
@@ -203,10 +203,10 @@ export function SummaryColumn() {
               )}
               <button 
                 disabled={calculatedCompleteness < 100}
-                className={`flex-1 py-2 px-4 border rounded-[6px] text-[13px] font-[510] transition-all duration-200 flex items-center justify-center space-x-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
+                className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
                   calculatedCompleteness === 100 
-                    ? 'border-[rgba(255,255,255,0.08)] bg-[#141516] hover:bg-[#1a1b1e] hover:border-[rgba(255,255,255,0.12)] text-[#f7f8f8]' 
-                    : 'border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] opacity-50 cursor-not-allowed text-[#8a8f98]'
+                    ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
+                    : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
                 }`}
               >
                 <span>Send to Linear</span>
@@ -214,10 +214,10 @@ export function SummaryColumn() {
               </button>
               <button 
                 disabled={calculatedCompleteness < 100}
-                className={`flex-1 py-2 px-4 border rounded-[6px] text-[13px] font-[510] transition-all duration-200 flex items-center justify-center space-x-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
+                className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
                   calculatedCompleteness === 100 
-                    ? 'border-[rgba(255,255,255,0.08)] bg-[#141516] hover:bg-[#1a1b1e] hover:border-[rgba(255,255,255,0.12)] text-[#f7f8f8]' 
-                    : 'border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] opacity-50 cursor-not-allowed text-[#8a8f98]'
+                    ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
+                    : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
                 }`}
               >
                 <span>Send to Cursor</span>

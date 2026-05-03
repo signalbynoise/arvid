@@ -66,18 +66,18 @@ export function AnswerColumn() {
     <div
       id={`answer-${ans.id}`}
       key={ans.id}
-      className={`relative z-[1] p-4 rounded-[8px] border transition-all duration-200 ${
+      className={`relative z-[1] p-4 rounded-card border transition-all duration-200 ${
         ans.isCurrent 
-          ? 'border-[rgba(113,112,255,0.3)] bg-[rgba(113,112,255,0.05)] shadow-[inset_0_0_0_1px_rgba(113,112,255,0.1)]' 
-          : 'border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] opacity-70 hover:opacity-100 hover:bg-[rgba(255,255,255,0.04)]'
+          ? 'border-accent-border bg-accent-surface-subtle shadow-accent-selected' 
+          : 'border-border-default bg-surface-frost-02 opacity-70 hover:opacity-100 hover:bg-surface-frost-04'
       }`}
     >
-      <div className={`absolute top-1/2 -left-4 w-4 h-[1px] ${ans.isCurrent ? 'bg-[rgba(113,112,255,0.3)]' : 'bg-[rgba(255,255,255,0.2)]'}`} />
+      <div className={`absolute top-1/2 -left-4 w-4 h-[1px] ${ans.isCurrent ? 'bg-accent-border' : 'bg-border-focus'}`} />
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3 text-[12px] text-[#8a8f98]">
+        <div className="flex items-center space-x-3 text-[12px] text-text-tertiary">
           <div className="flex items-center space-x-1.5">
             <User size={13} />
-            <span className="font-[510] text-[#d0d6e0]">{ans.author}</span>
+            <span className="font-[var(--fw-medium)] text-text-secondary">{ans.author}</span>
           </div>
           <div className="flex items-center space-x-1.5">
             <Clock size={13} />
@@ -86,15 +86,15 @@ export function AnswerColumn() {
         </div>
       </div>
       
-      <p className="text-[14px] text-[#f7f8f8] mb-4 leading-relaxed">{ans.text}</p>
+      <p className="text-[14px] text-text-primary mb-4 leading-relaxed">{ans.text}</p>
       
-      <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.05)] pt-3">
+      <div className="flex items-center justify-between border-t border-border-subtle pt-3">
         <button 
           onClick={() => toggleCurrentAnswer(ans.id)}
-          className={`flex items-center space-x-1.5 text-[12px] font-[510] px-2.5 py-1.5 rounded-[6px] transition-colors border ${
+          className={`flex items-center space-x-1.5 text-[12px] font-[var(--fw-medium)] px-2.5 py-1.5 rounded-comfortable transition-colors border ${
             ans.isCurrent 
-              ? 'border-[#7170ff] bg-[rgba(113,112,255,0.15)] text-[#7170ff] hover:bg-[rgba(113,112,255,0.25)]' 
-              : 'border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.06)]'
+              ? 'border-accent bg-accent-surface text-accent hover:bg-accent-surface-hover' 
+              : 'border-border-subtle bg-surface-frost-02 text-text-secondary hover:bg-surface-frost-06'
           }`}
         >
           <Check size={14} className={ans.isCurrent ? 'opacity-100' : 'opacity-50'} />
@@ -106,11 +106,11 @@ export function AnswerColumn() {
 
   if (!questionSelected) {
     return (
-      <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-        <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[#0f1011] flex items-center justify-between sticky top-0 z-10">
-          <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">3. Answers</h2>
+      <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+        <div className="p-4 border-b border-border-subtle bg-surface-panel flex items-center justify-between sticky top-0 z-10">
+          <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">3. Answers</h2>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#62666d]">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-quaternary">
           <MessageSquare size={32} className="mb-3 opacity-20" />
           <p className="text-[13px]">Select a question to view or add answers.</p>
         </div>
@@ -119,9 +119,9 @@ export function AnswerColumn() {
   }
 
   return (
-    <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-      <div className="sticky top-0 z-10 bg-[#0f1011] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
-        <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">3. Answers</h2>
+    <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+      <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">3. Answers</h2>
         <div className="flex items-center">
           {answers.length > 0 && (
             <SortGroupControls 
@@ -141,7 +141,7 @@ export function AnswerColumn() {
       
       <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-4 space-y-4">
         {answers.length === 0 ? (
-          <div className="text-center p-6 border border-dashed border-[rgba(255,255,255,0.1)] rounded-[8px] bg-[rgba(255,255,255,0.02)] text-[#8a8f98] text-[13px]">
+          <div className="text-center p-6 border border-dashed border-border-strong rounded-card bg-surface-frost-02 text-text-tertiary text-[13px]">
             No answers yet. Be the first to clarify this.
           </div>
         ) : (
@@ -155,11 +155,11 @@ export function AnswerColumn() {
               <div key={group} className="flex flex-col space-y-2">
                 <button 
                   onClick={() => toggleGroup(group)}
-                  className="flex items-center text-[11px] font-[510] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+                  className="flex items-center text-[11px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors"
                 >
                   {isExpanded ? <ChevronDown size={14} className="mr-1" /> : <ChevronRight size={14} className="mr-1" />}
                   <span className="uppercase tracking-wider">{group}</span>
-                  <span className="ml-2 text-[#62666d] bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded-[4px]">{ans.length}</span>
+                  <span className="ml-2 text-text-quaternary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard">{ans.length}</span>
                 </button>
                 
                 {isExpanded && (
@@ -173,10 +173,10 @@ export function AnswerColumn() {
         )}
       </div>
       
-      <div className="relative z-[1] p-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
+      <div className="relative z-[1] p-4 border-t border-border-subtle bg-surface-panel">
         <button
           onClick={() => setIsNewAnswerOpen(true)}
-          className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2"
+          className="w-full py-1.5 px-4 border border-border-default bg-surface-frost-02 rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-secondary hover:text-text-primary hover:bg-surface-frost-04 transition-colors flex items-center justify-center space-x-2"
         >
           <Plus size={14} />
           <span>Add Answer</span>

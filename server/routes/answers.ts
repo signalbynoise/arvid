@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { supabase } from '../supabase';
+import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateAnswerBodySchema, UpdateAnswerBodySchema } from '../../shared/schemas';
 
 export const answersRouter = Router();
 
 answersRouter.get('/', async (req, res) => {
-  let query = supabase
+  const db = createUserClient(req.accessToken!);
+  let query = db
     .from('answers')
     .select('*')
     .order('date', { ascending: true });
@@ -21,7 +22,8 @@ answersRouter.get('/', async (req, res) => {
 });
 
 answersRouter.get('/:id', async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('answers')
     .select('*')
     .eq('id', req.params.id)
@@ -32,7 +34,8 @@ answersRouter.get('/:id', async (req, res) => {
 });
 
 answersRouter.post('/', validateBody(CreateAnswerBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('answers')
     .insert(req.body)
     .select()
@@ -43,7 +46,8 @@ answersRouter.post('/', validateBody(CreateAnswerBodySchema), async (req, res) =
 });
 
 answersRouter.patch('/:id', validateBody(UpdateAnswerBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('answers')
     .update(req.body)
     .eq('id', req.params.id)
@@ -55,7 +59,8 @@ answersRouter.patch('/:id', validateBody(UpdateAnswerBodySchema), async (req, re
 });
 
 answersRouter.delete('/:id', async (req, res) => {
-  const { error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { error } = await db
     .from('answers')
     .delete()
     .eq('id', req.params.id);

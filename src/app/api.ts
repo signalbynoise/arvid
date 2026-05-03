@@ -13,9 +13,19 @@ import {
 } from '../../shared/schemas';
 import { Requirement, Question, Answer, Project, Summary } from './types';
 import { API_BASE } from './constants';
+import { supabase } from './lib/supabase';
 import { logger } from './logger';
 
 const log = logger.create('api');
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {};
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  return headers;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -43,9 +53,15 @@ async function request<T>(method: string, endpoint: string, body?: unknown, sign
   const url = `${API_BASE}${endpoint}`;
   log.debug(method.toLowerCase(), `${method} ${endpoint}`, body ? { body } : undefined);
 
+  const authHeaders = await getAuthHeaders();
+  const headers: Record<string, string> = {
+    ...authHeaders,
+    ...(body ? { 'Content-Type': 'application/json' } : {}),
+  };
+
   const res = await fetch(url, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers,
     body: body ? JSON.stringify(body) : undefined,
     signal,
   });

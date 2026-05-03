@@ -29,7 +29,7 @@ describe('IconButton', () => {
     render(<IconButton>X</IconButton>);
     const btn = screen.getByRole('button');
     expect(btn).toHaveClass('p-1');
-    expect(btn).toHaveClass('rounded-[4px]');
+    expect(btn).toHaveClass('rounded-standard');
     expect(btn).toHaveClass('transition-colors');
   });
 });

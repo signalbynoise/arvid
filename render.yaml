@@ -1,5 +1,30 @@
 services:
-  # Static site — Vite React frontend served via CDN
+  # Marketing landing page — arvid.work
+  - type: web
+    name: arvid-site
+    runtime: static
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci && npx vite build --config vite.config.site.ts
+    staticPublishPath: ./dist-site
+    buildFilter:
+      paths:
+        - src/site/**
+        - src/styles/**
+        - package.json
+        - package-lock.json
+        - vite.config.site.ts
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_APP_URL
+        sync: false  # https://app.arvid.work
+      - key: NODE_VERSION
+        value: "20"
+
+  # Dashboard app — app.arvid.work
   - type: web
     name: arvid-web
     runtime: static
@@ -9,25 +34,28 @@ services:
     staticPublishPath: ./dist
     buildFilter:
       paths:
-        - src/**
+        - src/app/**
+        - src/styles/**
         - shared/**
         - index.html
         - package.json
         - package-lock.json
         - vite.config.ts
-        - postcss.config.mjs
-        - .env.production
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
       - key: VITE_API_BASE
-        sync: false  # Set to https://arvid-api.onrender.com/api after first deploy
+        sync: false  # https://arvid-api.onrender.com/api
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
       - key: NODE_VERSION
         value: "20"
 
-  # API server — Express BFF proxying Supabase
+  # API server — Express BFF
   - type: web
     name: arvid-api
     runtime: node
@@ -53,3 +81,7 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: SITE_ORIGIN
+        sync: false  # https://arvid.work
+      - key: APP_ORIGIN
+        sync: false  # https://app.arvid.work

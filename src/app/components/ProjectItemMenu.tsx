@@ -27,19 +27,19 @@ export function ProjectItemMenu({ onAddSubProject, onRename, onDelete }: Props) 
       <DropdownMenuContent
         align="end"
         side="bottom"
-        className="bg-[#1a1c1e] border-[rgba(255,255,255,0.1)] min-w-[160px]"
+        className="bg-surface-menu border-border-strong min-w-[160px]"
         onClick={(e) => e.stopPropagation()}
       >
         <DropdownMenuItem
           onClick={onAddSubProject}
-          className="flex items-center gap-2 text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] cursor-pointer"
+          className="flex items-center gap-2 text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
         >
           <Plus size={14} />
           <span>Add Sub-project</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onRename}
-          className="flex items-center gap-2 text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] cursor-pointer"
+          className="flex items-center gap-2 text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
         >
           <Pencil size={14} />
           <span>Rename</span>

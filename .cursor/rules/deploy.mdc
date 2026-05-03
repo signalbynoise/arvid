@@ -7,6 +7,7 @@ globs:
   - shared/**
   - package.json
   - vite.config.ts
+  - vite.config.site.ts
 alwaysApply: true
 ---
 
@@ -28,21 +29,43 @@ All Render infrastructure MUST be defined in `render.yaml` at the repository roo
 
 ## Architecture
 
-| Service          | Type     | Name         | Runtime  |
-| ---------------- | -------- | ------------ | -------- |
-| React frontend   | static   | arvid-web    | static   |
-| Express API (BFF)| web      | arvid-api    | node     |
+| Service                          | Type   | Name       | Runtime |
+| -------------------------------- | ------ | ---------- | ------- |
+| Marketing site (arvid.work)      | static | arvid-site | static  |
+| Dashboard + login (app.arvid.work) | static | arvid-web  | static  |
+| Express API (BFF)                | web    | arvid-api  | node    |
+
+## Domain Mapping
+
+- `arvid.work` — Cloudflare CNAME → `arvid-site.onrender.com`
+- `app.arvid.work` — Cloudflare CNAME → `arvid-web.onrender.com`
+- `arvid-api.onrender.com` — default Render URL (no custom domain)
+
+Custom domains added in Render Dashboard under Settings > Custom Domains after first deploy.
 
 ## Environment Variables
 
-### arvid-api (set in Dashboard after deploy)
-- `SUPABASE_URL` — Supabase project URL
-- `SUPABASE_KEY` — Supabase anon/service key
-- `NODE_ENV` — hardcoded to `production` in blueprint
-- `PORT` — auto-injected by Render
+### arvid-site (set in Dashboard after deploy)
+- `VITE_APP_URL` — full URL to the dashboard app, e.g. `https://app.arvid.work`
 
 ### arvid-web (set in Dashboard after deploy)
 - `VITE_API_BASE` — full URL to the API server including path prefix, e.g. `https://arvid-api.onrender.com/api`
+- `VITE_SUPABASE_URL` — Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` — Supabase publishable/anon key
+
+### arvid-api (set in Dashboard after deploy)
+- `SUPABASE_URL` — Supabase project URL
+- `SUPABASE_KEY` — Supabase service key
+- `OPENROUTER_API_KEY` — OpenRouter API key for AI summaries
+- `SITE_ORIGIN` — `https://arvid.work` (CORS)
+- `APP_ORIGIN` — `https://app.arvid.work` (CORS)
+- `NODE_ENV` — hardcoded to `production` in blueprint
+- `PORT` — auto-injected by Render
+
+## Two Vite Builds
+
+- `vite.config.ts` — builds dashboard app from `src/app/`, outputs to `dist/`
+- `vite.config.site.ts` — builds marketing site from `src/site/`, outputs to `dist-site/`
 
 ## Code Constraints for Deployability
 
@@ -50,10 +73,11 @@ All Render infrastructure MUST be defined in `render.yaml` at the repository roo
 - No hardcoded credentials — all secrets via `process.env`
 - Frontend API base must read from `import.meta.env.VITE_API_BASE` with `/api` fallback for local dev
 - Shared schemas in `shared/` are consumed by both frontend and server — changes trigger both builds
+- Marketing site links use `import.meta.env.VITE_APP_URL` for sign-in/get-started CTAs
 
 ## Deploy Workflow
 
 1. Change `render.yaml`
 2. Commit and push to `main`
-3. Render auto-deploys both services
+3. Render auto-deploys all three services
 4. Verify via `/api/health` on the API service

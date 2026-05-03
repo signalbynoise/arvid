@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Plus, Folder, Hash, LoaderPinwheel, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, Folder, Hash, Loader2 } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { NewProjectModal } from './NewProjectModal';
 import { RenameProjectModal } from './RenameProjectModal';
@@ -94,22 +94,21 @@ export function Sidebar({ isOpen }: SidebarProps) {
       <div key={node.id}>
         <div 
           onClick={() => setSelectedProjectId(node.id)}
-          className={`group flex items-center justify-between py-1.5 px-2 mx-2 rounded-[6px] cursor-pointer text-[13px] font-[510] transition-colors ${
+          className={`group flex items-center justify-between py-1.5 px-2 mx-2 rounded-comfortable cursor-pointer text-[13px] font-[var(--fw-medium)] transition-colors ${
             isSelected 
-              ? 'bg-[rgba(255,255,255,0.08)] text-[#f7f8f8]' 
-              : 'text-[#8a8f98] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d0d6e0]'
+              ? 'bg-surface-frost-08 text-text-primary' 
+              : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
           }`}
-          style={{ paddingLeft: `${8 + depth * 16}px` }}
+          style={{ '--depth': depth } as React.CSSProperties}
         >
           <div className="flex items-center space-x-2 overflow-hidden">
             <button 
               onClick={(e) => hasChildren ? toggleExpand(e, node.id) : undefined}
-              className={`p-0.5 rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors ${hasChildren ? 'opacity-100' : 'opacity-0'}`}
-              style={{ pointerEvents: hasChildren ? 'auto' : 'none' }}
+              className={`p-0.5 rounded-standard hover:bg-surface-frost-10 transition-colors ${hasChildren ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             >
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             </button>
-            {depth === 0 ? <Folder size={14} className={isSelected ? 'text-[#f7f8f8]' : 'text-[#62666d]'} /> : <Hash size={14} className={isSelected ? 'text-[#f7f8f8]' : 'text-[#62666d]'} />}
+            {depth === 0 ? <Folder size={14} className={isSelected ? 'text-text-primary' : 'text-text-quaternary'} /> : <Hash size={14} className={isSelected ? 'text-text-primary' : 'text-text-quaternary'} />}
             <span className="truncate">{node.name}</span>
           </div>
           
@@ -138,15 +137,14 @@ export function Sidebar({ isOpen }: SidebarProps) {
   };
 
   return (
-    <div className="w-[240px] h-full flex-shrink-0 bg-[#0f1011] border-r border-[rgba(255,255,255,0.05)] flex flex-col z-20">
-      <div className="h-14 flex items-center px-4 border-b border-[rgba(255,255,255,0.05)] shrink-0 space-x-2">
-        <LoaderPinwheel className="text-[#f7f8f8]" size={18} />
-        <span className="text-[16px] font-[510] text-[#f7f8f8] tracking-[-0.165px]">Arvid</span>
+    <div className="w-[240px] h-full flex-shrink-0 bg-surface-panel border-r border-border-subtle flex flex-col z-20">
+      <div className="h-14 flex items-center px-4 border-b border-border-subtle shrink-0">
+        <img src="/logo_wide.svg" alt="Arvid" className="h-5" />
       </div>
       
       <div className="flex-1 overflow-y-auto hide-scrollbar py-3">
         <div className="flex items-center justify-between px-4 mb-2">
-          <span className="text-[11px] font-[510] text-[#62666d] uppercase tracking-widest">Projects</span>
+          <span className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">Projects</span>
           <IconButton onClick={() => openCreate()} title="New Project">
             <Plus size={14} />
           </IconButton>
@@ -154,15 +152,15 @@ export function Sidebar({ isOpen }: SidebarProps) {
         
         {projectsDataState.status === 'loading' && projects.length === 0 ? (
           <div className="flex justify-center py-4">
-            <Loader2 size={16} className="text-[#62666d] animate-spin" />
+            <Loader2 size={16} className="text-text-quaternary animate-spin" />
           </div>
         ) : tree.length === 0 ? (
           <div className="px-4 py-6 text-center">
-            <Folder size={24} className="mx-auto mb-2 text-[#3a3d42] opacity-60" />
-            <p className="text-[12px] text-[#4a4e54] mb-3">No projects yet.</p>
+            <Folder size={24} className="mx-auto mb-2 text-text-quaternary opacity-60" />
+            <p className="text-[12px] text-text-empty mb-3">No projects yet.</p>
             <button
               onClick={() => openCreate()}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.08)] rounded-[6px] text-[12px] font-[510] text-[#8a8f98] hover:text-[#d0d6e0] transition-colors"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-surface-frost-06 hover:bg-surface-frost-10 border border-border-default rounded-comfortable text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-secondary transition-colors"
             >
               <Plus size={12} />
               <span>Create Project</span>

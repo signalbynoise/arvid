@@ -5,6 +5,7 @@ export const ProjectRowSchema = z.object({
   name: z.string(),
   parent_id: z.string().nullable(),
   created_at: z.string().nullable().optional(),
+  user_id: z.string().optional(),
 });
 
 export const ProjectSchema = ProjectRowSchema.transform(row => ({

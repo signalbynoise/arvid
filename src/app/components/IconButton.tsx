@@ -12,7 +12,7 @@ export function IconButton({ onClick, title, children, className = '' }: IconBut
     <button
       onClick={onClick}
       title={title}
-      className={`p-1 rounded-[4px] text-[#62666d] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.1)] transition-colors ${className}`}
+      className={`p-1 rounded-standard text-text-quaternary hover:text-text-primary hover:bg-surface-frost-10 transition-colors ${className}`}
     >
       {children}
     </button>

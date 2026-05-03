@@ -19,23 +19,23 @@ export function ImportFromSlack({ onBack, onImport }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[8px] p-5 text-center">
-        <MessageSquare size={24} className="mx-auto text-[#8a8f98] mb-3" />
-        <h3 className="text-[14px] font-[510] text-[#f7f8f8] mb-2">Connect Slack Workspace</h3>
-        <p className="text-[13px] text-[#8a8f98] mb-4">Select channels or paste message links to extract knowledge.</p>
-        <button className="px-4 py-2 bg-[#611f69] text-white text-[13px] font-[510] rounded-[6px] hover:bg-[#4a154b] transition-colors w-full">
+      <div className="bg-surface-frost-02 border border-border-default rounded-card p-5 text-center">
+        <MessageSquare size={24} className="mx-auto text-text-tertiary mb-3" />
+        <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">Connect Slack Workspace</h3>
+        <p className="text-[13px] text-text-tertiary mb-4">Select channels or paste message links to extract knowledge.</p>
+        <button className="px-4 py-2 bg-brand-slack text-white text-[13px] font-[var(--fw-medium)] rounded-comfortable hover:bg-brand-slack-hover transition-colors w-full">
           Connect Slack
         </button>
       </div>
       <div className="flex justify-between items-center pt-3">
-        <button onClick={onBack} className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[510] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors rounded-[6px] hover:bg-[rgba(255,255,255,0.04)] -ml-2">
+        <button onClick={onBack} className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
         <button
           onClick={handleImport}
           disabled={isProcessing}
-          className="px-4 py-2 text-[13px] font-[510] rounded-[6px] transition-colors bg-white text-black hover:bg-[#e0e0e0] flex items-center space-x-2"
+          className="px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors bg-white text-black hover:bg-btn-primary-hover flex items-center space-x-2"
         >
           {isProcessing ? (
             <>

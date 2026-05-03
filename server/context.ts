@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface RequirementFullContext {
   requirement: {
@@ -24,8 +24,8 @@ export interface RequirementFullContext {
   }[];
 }
 
-export async function fetchRequirementContext(requirementId: string): Promise<RequirementFullContext | null> {
-  const { data: requirement, error: reqError } = await supabase
+export async function fetchRequirementContext(db: SupabaseClient, requirementId: string): Promise<RequirementFullContext | null> {
+  const { data: requirement, error: reqError } = await db
     .from('requirements')
     .select('*')
     .eq('id', requirementId)
@@ -37,7 +37,7 @@ export async function fetchRequirementContext(requirementId: string): Promise<Re
   let siblingRequirements: string[] = [];
 
   if (requirement.project_id) {
-    const { data: project } = await supabase
+    const { data: project } = await db
       .from('projects')
       .select('name')
       .eq('id', requirement.project_id)
@@ -45,7 +45,7 @@ export async function fetchRequirementContext(requirementId: string): Promise<Re
 
     projectName = project?.name;
 
-    const { data: siblings } = await supabase
+    const { data: siblings } = await db
       .from('requirements')
       .select('title')
       .eq('project_id', requirement.project_id)
@@ -55,7 +55,7 @@ export async function fetchRequirementContext(requirementId: string): Promise<Re
     siblingRequirements = (siblings || []).map((r: { title: string }) => r.title);
   }
 
-  const { data: dbQuestions } = await supabase
+  const { data: dbQuestions } = await db
     .from('questions')
     .select('*')
     .eq('requirement_id', requirementId)
@@ -65,7 +65,7 @@ export async function fetchRequirementContext(requirementId: string): Promise<Re
   let dbAnswers: Array<{ id: string; question_id: string; text: string; author: string; is_current: boolean }> = [];
 
   if (questionIds.length > 0) {
-    const { data: ansData } = await supabase
+    const { data: ansData } = await db
       .from('answers')
       .select('*')
       .in('question_id', questionIds);

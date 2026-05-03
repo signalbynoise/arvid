@@ -52,28 +52,28 @@ export function QuestionColumn({ onOpenDetails }: Props) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Answered': return <CheckCircle2 size={12} className="text-[#10b981]" />;
-      case 'Conflicting': return <AlertCircle size={12} className="text-[#f59e0b]" />;
-      case 'Unanswered': return <CircleDashed size={12} className="text-[#ef4444]" />;
+      case 'Answered': return <CheckCircle2 size={12} className="text-status-success" />;
+      case 'Conflicting': return <AlertCircle size={12} className="text-status-warning" />;
+      case 'Unanswered': return <CircleDashed size={12} className="text-status-error" />;
       default: return null;
     }
   };
 
   const getStatusClass = (status: string) => {
     switch (status) {
-      case 'Answered': return 'text-[#10b981] bg-[rgba(16,185,129,0.1)] border-[rgba(16,185,129,0.2)]';
-      case 'Conflicting': return 'text-[#f59e0b] bg-[rgba(245,158,11,0.1)] border-[rgba(245,158,11,0.2)]';
-      case 'Unanswered': return 'text-[#ef4444] bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.2)]';
-      default: return 'text-[#8a8f98] bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.05)]';
+      case 'Answered': return 'text-status-success bg-status-success-surface border-status-success-border';
+      case 'Conflicting': return 'text-status-warning bg-status-warning-surface border-status-warning-border';
+      case 'Unanswered': return 'text-status-error bg-status-error-surface border-status-error-border';
+      default: return 'text-text-tertiary bg-surface-frost-05 border-border-subtle';
     }
   };
 
   const getImportanceClass = (importance: string) => {
     switch (importance) {
-      case 'Critical': return 'bg-[#ef4444]';
-      case 'Important': return 'bg-[#f59e0b]';
-      case 'Optional': return 'bg-[#8a8f98]';
-      default: return 'bg-[#8a8f98]';
+      case 'Critical': return 'bg-status-error';
+      case 'Important': return 'bg-status-warning';
+      case 'Optional': return 'bg-text-tertiary';
+      default: return 'bg-text-tertiary';
     }
   };
 
@@ -111,19 +111,19 @@ export function QuestionColumn({ onOpenDetails }: Props) {
         id={`question-${q.id}`}
         key={q.id}
         onClick={() => !isSuggested && selectQuestion(q.id)}
-        className={`group relative z-[1] p-4 rounded-[8px] transition-all duration-200 ease-in-out ${
+        className={`group relative z-[1] p-4 rounded-card transition-all duration-200 ease-in-out ${
           isSuggested 
-            ? 'border border-dashed border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.01)] opacity-70 hover:opacity-100'
+            ? 'border border-dashed border-border-strong bg-surface-frost-01 opacity-70 hover:opacity-100'
             : isSelected 
-              ? 'border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] cursor-pointer' 
-              : 'border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.12)] cursor-pointer'
+              ? 'border border-border-focus bg-surface-frost-05 shadow-card-selected cursor-pointer' 
+              : 'border border-border-default bg-surface-frost-02 hover:bg-surface-frost-04 hover:border-border-hover cursor-pointer'
         } ${isDimmed && !isSuggested ? 'opacity-30 saturate-50 hover:opacity-100 hover:saturate-100' : ''}`}
       >
         {isSelected && !isSuggested && (
-          <div className="absolute top-1/2 -right-4 w-4 h-[1px] bg-[rgba(255,255,255,0.2)]" />
+          <div className="absolute top-1/2 -right-4 w-4 h-[1px] bg-border-focus" />
         )}
         {!isSuggested && (
-          <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-[rgba(255,255,255,0.2)]" />
+          <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-border-focus" />
         )}
         
         <button
@@ -131,7 +131,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
             e.stopPropagation();
             onOpenDetails?.(q.id);
           }}
-          className="absolute top-3 right-3 p-1.5 rounded-[4px] text-[#8a8f98] opacity-0 group-hover:opacity-100 hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.08)] transition-all"
+          className="absolute top-3 right-3 p-1.5 rounded-standard text-text-tertiary opacity-0 group-hover:opacity-100 hover:text-text-primary hover:bg-surface-frost-08 transition-all"
         >
           <Eye size={14} />
         </button>
@@ -139,14 +139,14 @@ export function QuestionColumn({ onOpenDetails }: Props) {
         {isSuggested && (
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-[510] text-[#8a8f98] bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider border border-[rgba(255,255,255,0.05)]">AI Suggestion</span>
+              <span className="text-[10px] font-[var(--fw-medium)] text-text-tertiary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard uppercase tracking-wider border border-border-subtle">AI Suggestion</span>
             </div>
           </div>
         )}
         
-        <h3 className={`font-[400] text-[14px] mb-4 pr-4 leading-snug ${isSuggested ? 'text-[#8a8f98]' : 'text-[#f7f8f8]'}`}>{q.text}</h3>
+        <h3 className={`font-[var(--fw-regular)] text-[14px] mb-4 pr-4 leading-snug ${isSuggested ? 'text-text-tertiary' : 'text-text-primary'}`}>{q.text}</h3>
         
-        <div className="flex items-center text-[12px] text-[#8a8f98] mb-3 space-x-2">
+        <div className="flex items-center text-[12px] text-text-tertiary mb-3 space-x-2">
           <div className="flex items-center space-x-1.5">
             {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? (
               <LoaderPinwheel size={13} className="opacity-70" />
@@ -163,7 +163,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
           {isSuggested ? (
             <div className="flex flex-col space-y-3 w-full">
               <div className="flex items-center justify-end space-x-2">
-                <span className="text-[10px] font-[510] text-[#62666d] uppercase tracking-wider">
+                <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
                   {q.category}
                 </span>
                 <div 
@@ -174,14 +174,14 @@ export function QuestionColumn({ onOpenDetails }: Props) {
               <div className="flex items-center space-x-2 w-full">
                 <button 
                   onClick={(e) => { e.stopPropagation(); useSuggestion(q.id); }}
-                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] text-[#f7f8f8] rounded-[4px] text-[11px] font-[510] transition-colors"
+                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
                 >
                   <Check size={12} />
                   <span>Use Question</span>
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); hideSuggestion(q.id); }}
-                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-[#8a8f98] hover:text-[#f7f8f8] rounded-[4px] text-[11px] font-[510] transition-colors"
+                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-05 hover:bg-surface-frost-10 text-text-tertiary hover:text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
                 >
                   <X size={12} />
                   <span>Hide</span>
@@ -190,13 +190,13 @@ export function QuestionColumn({ onOpenDetails }: Props) {
             </div>
           ) : (
             <>
-              <div className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-[4px] border text-[11px] font-[510] ${getStatusClass(q.status)}`}>
+              <div className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-standard border text-[11px] font-[var(--fw-medium)] ${getStatusClass(q.status)}`}>
                 {getStatusIcon(q.status)}
                 <span>{q.status}</span>
               </div>
               
               <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-[510] text-[#62666d] uppercase tracking-wider">
+                <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
                   {q.category}
                 </span>
                 <div 
@@ -213,6 +213,9 @@ export function QuestionColumn({ onOpenDetails }: Props) {
 
   const headerControls = (
     <div className="flex items-center">
+      {isSuggestingQuestions && (
+        <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-2" />
+      )}
       <SortGroupControls
         groupByOptions={GROUP_OPTIONS}
         sortByOptions={SORT_OPTIONS}
@@ -228,10 +231,10 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   );
 
   const bottomBar = (
-    <div className="relative z-[1] p-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
+    <div className="relative z-[1] p-4 border-t border-border-subtle bg-surface-panel">
       <button
         onClick={() => setIsNewQuestionOpen(true)}
-        className="w-full py-1.5 px-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] rounded-[6px] text-[13px] font-[510] text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors flex items-center justify-center space-x-2"
+        className="w-full py-1.5 px-4 border border-border-default bg-surface-frost-02 rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-secondary hover:text-text-primary hover:bg-surface-frost-04 transition-colors flex items-center justify-center space-x-2"
       >
         <Plus size={14} />
         <span>Add Question</span>
@@ -239,22 +242,14 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     </div>
   );
 
-  const suggestingBanner = isSuggestingQuestions ? (
-    <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] flex items-center space-x-2.5">
-      <LoaderPinwheel size={14} className="text-[#8a8f98] animate-spin shrink-0" />
-      <span className="text-[12px] font-[510] text-[#8a8f98]">Arvid is generating questions...</span>
-    </div>
-  ) : null;
-
   if (questions.length === 0) {
     return (
-      <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-        <div className="sticky top-0 z-10 bg-[#0f1011] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
-          <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">2. Questions</h2>
+      <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+        <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
+          <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
           {headerControls}
         </div>
-        {suggestingBanner}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#62666d]">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-quaternary">
           {isSuggestingQuestions ? (
             <>
               <LoaderPinwheel size={32} className="mb-3 opacity-30 animate-spin" />
@@ -274,13 +269,12 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   }
 
   return (
-    <div className="w-1/4 h-full flex flex-col border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]">
-      <div className="sticky top-0 z-10 bg-[#0f1011] p-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
-        <h2 className="font-[510] text-[#8a8f98] text-[11px] tracking-widest uppercase">2. Questions</h2>
+    <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+      <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
         {headerControls}
       </div>
       
-      {suggestingBanner}
       <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-4 space-y-4">
         {Object.entries(processedQuestions).map(([group, qs]) => {
           if (groupBy === 'none') {
@@ -292,11 +286,11 @@ export function QuestionColumn({ onOpenDetails }: Props) {
             <div key={group} className="flex flex-col space-y-2">
               <button 
                 onClick={() => toggleGroup(group)}
-                className="flex items-center text-[11px] font-[510] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+                className="flex items-center text-[11px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors"
               >
                 {isExpanded ? <ChevronDown size={14} className="mr-1" /> : <ChevronRight size={14} className="mr-1" />}
                 <span className="uppercase tracking-wider">{group}</span>
-                <span className="ml-2 text-[#62666d] bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 rounded-[4px]">{qs.length}</span>
+                <span className="ml-2 text-text-quaternary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard">{qs.length}</span>
               </button>
               
               {isExpanded && (

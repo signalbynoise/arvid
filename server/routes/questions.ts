@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../supabase';
+import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateQuestionBodySchema, UpdateQuestionBodySchema } from '../../shared/schemas';
 import { suggestQuestions, classifyQuestion } from '../openrouter';
@@ -8,7 +8,8 @@ import { fetchRequirementContext } from '../context';
 export const questionsRouter = Router();
 
 questionsRouter.get('/', async (req, res) => {
-  let query = supabase
+  const db = createUserClient(req.accessToken!);
+  let query = db
     .from('questions')
     .select('*')
     .order('created_at', { ascending: true });
@@ -23,7 +24,8 @@ questionsRouter.get('/', async (req, res) => {
 });
 
 questionsRouter.get('/:id', async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('questions')
     .select('*')
     .eq('id', req.params.id)
@@ -34,7 +36,8 @@ questionsRouter.get('/:id', async (req, res) => {
 });
 
 questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('questions')
     .insert(req.body)
     .select()
@@ -45,6 +48,7 @@ questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, re
 });
 
 questionsRouter.post('/classify', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const { text, requirement_id } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 3) {
@@ -54,7 +58,7 @@ questionsRouter.post('/classify', async (req, res) => {
     return res.status(400).json({ error: 'requirement_id is required' });
   }
 
-  const { data: requirement } = await supabase
+  const { data: requirement } = await db
     .from('requirements')
     .select('title, description')
     .eq('id', requirement_id)
@@ -75,6 +79,7 @@ questionsRouter.post('/classify', async (req, res) => {
 });
 
 questionsRouter.post('/suggest/:requirementId', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const { requirementId } = req.params;
 
   console.info(
@@ -82,7 +87,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
     JSON.stringify({ requirementId }),
   );
 
-  const context = await fetchRequirementContext(requirementId);
+  const context = await fetchRequirementContext(db, requirementId);
 
   if (!context) {
     return res.status(404).json({ error: `Requirement ${requirementId} not found` });
@@ -118,7 +123,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       created_at: new Date().toISOString().split('T')[0],
     }));
 
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await db
       .from('questions')
       .insert(rows)
       .select();
@@ -148,7 +153,8 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
 });
 
 questionsRouter.patch('/:id', validateBody(UpdateQuestionBodySchema), async (req, res) => {
-  const { data, error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
     .from('questions')
     .update(req.body)
     .eq('id', req.params.id)
@@ -160,7 +166,8 @@ questionsRouter.patch('/:id', validateBody(UpdateQuestionBodySchema), async (req
 });
 
 questionsRouter.delete('/:id', async (req, res) => {
-  const { error } = await supabase
+  const db = createUserClient(req.accessToken!);
+  const { error } = await db
     .from('questions')
     .delete()
     .eq('id', req.params.id);

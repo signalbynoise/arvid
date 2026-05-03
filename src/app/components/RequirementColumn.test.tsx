@@ -51,7 +51,7 @@ describe('RequirementColumn', () => {
     setStoreState({ requirements, selectedReqId: 'r1' });
     render(<RequirementColumn />);
     const card = screen.getByText('First Requirement').closest('[class*="border"]');
-    expect(card?.className).toContain('border-[rgba(255,255,255,0.2)]');
+    expect(card?.className).toContain('border-border-focus');
   });
 
   it('dims non-selected requirements when one is selected', () => {

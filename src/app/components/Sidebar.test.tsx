@@ -24,7 +24,7 @@ describe('Sidebar', () => {
 
   it('renders the Arvid logo', () => {
     render(<Sidebar isOpen={true} />);
-    expect(screen.getByText('Arvid')).toBeInTheDocument();
+    expect(screen.getByAltText('Arvid')).toBeInTheDocument();
   });
 
   it('renders project names', () => {

@@ -1,131 +1,252 @@
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   DESIGN TOKENS — Single Source of Truth
+   All visual values consumed by components via Tailwind classes.
+   See src/imports/DESIGN.md for the complete design system spec.
+   ============================================================ */
+
 :root {
+  /* --- Surfaces --- */
+  --surface-base: #08090a;
+  --surface-panel: #0f1011;
+  --surface-elevated: #191a1b;
+  --surface-menu: #1a1c1e;
+  --surface-frost-01: rgba(255, 255, 255, 0.01);
+  --surface-frost-02: rgba(255, 255, 255, 0.02);
+  --surface-frost-03: rgba(255, 255, 255, 0.03);
+  --surface-frost-04: rgba(255, 255, 255, 0.04);
+  --surface-frost-05: rgba(255, 255, 255, 0.05);
+  --surface-frost-06: rgba(255, 255, 255, 0.06);
+  --surface-frost-08: rgba(255, 255, 255, 0.08);
+  --surface-frost-10: rgba(255, 255, 255, 0.1);
+  --surface-frost-12: rgba(255, 255, 255, 0.12);
+  --surface-frost-15: rgba(255, 255, 255, 0.15);
+
+  /* --- Text --- */
+  --text-primary: #f7f8f8;
+  --text-secondary: #d0d6e0;
+  --text-tertiary: #8a8f98;
+  --text-quaternary: #62666d;
+  --text-empty: #4a4e54;
+  --text-on-primary: #000000;
+
+  /* --- Borders --- */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 255, 255, 0.2);
+  --border-focus-max: rgba(255, 255, 255, 0.3);
+
+  /* --- Status: Success --- */
+  --status-success: #10b981;
+  --status-success-green: #27a644;
+  --status-success-surface: rgba(16, 185, 129, 0.1);
+  --status-success-border: rgba(16, 185, 129, 0.2);
+  --status-success-green-halo: rgba(39, 166, 68, 0.15);
+
+  /* --- Status: Warning --- */
+  --status-warning: #f59e0b;
+  --status-warning-surface: rgba(245, 158, 11, 0.1);
+  --status-warning-surface-subtle: rgba(245, 158, 11, 0.05);
+  --status-warning-border: rgba(245, 158, 11, 0.2);
+  --status-warning-border-muted: rgba(245, 158, 11, 0.15);
+
+  /* --- Status: Error / Destructive --- */
+  --status-error: #ef4444;
+  --status-error-surface: rgba(239, 68, 68, 0.1);
+  --status-error-surface-subtle: rgba(239, 68, 68, 0.05);
+  --status-error-border: rgba(239, 68, 68, 0.2);
+  --status-error-border-muted: rgba(239, 68, 68, 0.15);
+  --status-error-border-focus: rgba(239, 68, 68, 0.5);
+  --status-error-fill-hover: rgba(239, 68, 68, 0.25);
+  --status-error-border-strong: rgba(239, 68, 68, 0.3);
+  --status-error-fill-muted: rgba(239, 68, 68, 0.15);
+  --status-error-fill-faint: rgba(239, 68, 68, 0.2);
+
+  /* --- Accent --- */
+  --accent: #7170ff;
+  --accent-hover: #828fff;
+  --accent-brand: #5e6ad2;
+  --accent-surface-subtle: rgba(113, 112, 255, 0.05);
+  --accent-surface: rgba(113, 112, 255, 0.15);
+  --accent-surface-hover: rgba(113, 112, 255, 0.25);
+  --accent-ring-inset: rgba(113, 112, 255, 0.1);
+  --accent-border: rgba(113, 112, 255, 0.3);
+
+  /* --- Overlay --- */
+  --overlay-scrim: rgba(0, 0, 0, 0.85);
+
+  /* --- Interactive / Primary Button --- */
+  --btn-primary-bg: #ffffff;
+  --btn-primary-hover: #e0e0e0;
+
+  /* --- Brand (third-party) --- */
+  --brand-slack: #611f69;
+  --brand-slack-hover: #4a154b;
+
+  /* --- Font Weights --- */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 510;
+  --fw-semibold: 590;
+
+  /* --- Radius --- */
+  --radius-micro: 2px;
+  --radius-standard: 4px;
+  --radius-comfortable: 6px;
+  --radius-card: 8px;
+  --radius-panel: 12px;
+  --radius-large: 22px;
+  --radius-pill: 9999px;
+
+  /* --- Shadows / Elevation --- */
+  --shadow-subtle: 0 1.2px 0 0 rgba(0, 0, 0, 0.03);
+  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 24px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.2);
+  --shadow-card-selected: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow-accent-selected: inset 0 0 0 1px rgba(113, 112, 255, 0.1);
+
+  /* --- Icon Sizes --- */
+  --icon-xs: 12px;
+  --icon-sm: 14px;
+  --icon-md: 16px;
+  --icon-lg: 20px;
+  --icon-xl: 24px;
+  --icon-2xl: 32px;
+
+  /* --- Spacing (kept from original) --- */
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
-}
+/* ============================================================
+   TAILWIND THEME REGISTRATION
+   Maps CSS variables to Tailwind utility classes.
+   Usage: bg-surface-panel, text-primary, border-default, etc.
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  /* Surfaces */
+  --color-surface-base: var(--surface-base);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-menu: var(--surface-menu);
+  --color-surface-frost-01: var(--surface-frost-01);
+  --color-surface-frost-02: var(--surface-frost-02);
+  --color-surface-frost-03: var(--surface-frost-03);
+  --color-surface-frost-04: var(--surface-frost-04);
+  --color-surface-frost-05: var(--surface-frost-05);
+  --color-surface-frost-06: var(--surface-frost-06);
+  --color-surface-frost-08: var(--surface-frost-08);
+  --color-surface-frost-10: var(--surface-frost-10);
+  --color-surface-frost-12: var(--surface-frost-12);
+  --color-surface-frost-15: var(--surface-frost-15);
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-quaternary: var(--text-quaternary);
+  --color-text-empty: var(--text-empty);
+  --color-text-on-primary: var(--text-on-primary);
+
+  /* Borders */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-hover: var(--border-hover);
+  --color-border-focus: var(--border-focus);
+  --color-border-focus-max: var(--border-focus-max);
+
+  /* Status */
+  --color-status-success: var(--status-success);
+  --color-status-success-green: var(--status-success-green);
+  --color-status-success-surface: var(--status-success-surface);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-success-green-halo: var(--status-success-green-halo);
+
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-surface: var(--status-warning-surface);
+  --color-status-warning-surface-subtle: var(--status-warning-surface-subtle);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-warning-border-muted: var(--status-warning-border-muted);
+
+  --color-status-error: var(--status-error);
+  --color-status-error-surface: var(--status-error-surface);
+  --color-status-error-surface-subtle: var(--status-error-surface-subtle);
+  --color-status-error-border: var(--status-error-border);
+  --color-status-error-border-muted: var(--status-error-border-muted);
+  --color-status-error-border-focus: var(--status-error-border-focus);
+  --color-status-error-fill-hover: var(--status-error-fill-hover);
+  --color-status-error-border-strong: var(--status-error-border-strong);
+  --color-status-error-fill-muted: var(--status-error-fill-muted);
+  --color-status-error-fill-faint: var(--status-error-fill-faint);
+
+  /* Accent */
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-input-background: var(--input-background);
-  --color-switch-background: var(--switch-background);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-brand: var(--accent-brand);
+  --color-accent-surface-subtle: var(--accent-surface-subtle);
+  --color-accent-surface: var(--accent-surface);
+  --color-accent-surface-hover: var(--accent-surface-hover);
+  --color-accent-ring-inset: var(--accent-ring-inset);
+  --color-accent-border: var(--accent-border);
+
+  /* Overlay */
+  --color-overlay-scrim: var(--overlay-scrim);
+
+  /* Interactive */
+  --color-btn-primary: var(--btn-primary-bg);
+  --color-btn-primary-hover: var(--btn-primary-hover);
+
+  /* Brand */
+  --color-brand-slack: var(--brand-slack);
+  --color-brand-slack-hover: var(--brand-slack-hover);
+
+  /* Radius */
+  --radius-micro: var(--radius-micro);
+  --radius-standard: var(--radius-standard);
+  --radius-comfortable: var(--radius-comfortable);
+  --radius-card: var(--radius-card);
+  --radius-panel: var(--radius-panel);
+  --radius-large: var(--radius-large);
+  --radius-pill: var(--radius-pill);
+
+  /* Shadows */
+  --shadow-subtle: var(--shadow-subtle);
+  --shadow-ring: var(--shadow-ring);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-modal: var(--shadow-modal);
+  --shadow-focus: var(--shadow-focus);
+  --shadow-inset: var(--shadow-inset);
+  --shadow-card-selected: var(--shadow-card-selected);
+  --shadow-accent-selected: var(--shadow-accent-selected);
 }
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border-default outline-ring/50;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-surface-base text-text-primary;
+    font-feature-settings: "cv01", "ss03";
+  }
+
+  [style*="--depth"] {
+    padding-left: calc(8px + var(--depth, 0) * 16px);
+  }
+
+  [style*="--progress"] {
+    width: var(--progress, 0%);
   }
 
   .hide-scrollbar {
@@ -136,55 +257,77 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+}
 
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
+/* ============================================================
+   COMPONENT CLASSES
+   Reusable button variants, typography presets, etc.
+   ============================================================ */
 
-  html {
-    font-size: var(--font-size);
+@layer components {
+  /* --- Typography Presets --- */
+  .text-display-xl { font-size: 72px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.584px; }
+  .text-display-lg { font-size: 64px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.408px; }
+  .text-display    { font-size: 48px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.056px; }
+  .text-h1         { font-size: 32px; font-weight: var(--fw-regular); line-height: 1.13; letter-spacing: -0.704px; }
+  .text-h2         { font-size: 24px; font-weight: var(--fw-regular); line-height: 1.33; letter-spacing: -0.288px; }
+  .text-h3         { font-size: 20px; font-weight: var(--fw-semibold); line-height: 1.33; letter-spacing: -0.24px; }
+  .text-body-lg    { font-size: 18px; font-weight: var(--fw-regular); line-height: 1.60; letter-spacing: -0.165px; }
+  .text-body       { font-size: 16px; font-weight: var(--fw-regular); line-height: 1.50; letter-spacing: normal; }
+  .text-body-md    { font-size: 16px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: normal; }
+  .text-body-sb    { font-size: 16px; font-weight: var(--fw-semibold); line-height: 1.50; letter-spacing: normal; }
+  .text-sm         { font-size: 15px; font-weight: var(--fw-regular); line-height: 1.60; letter-spacing: -0.165px; }
+  .text-sm-md      { font-size: 15px; font-weight: var(--fw-medium); line-height: 1.60; letter-spacing: -0.165px; }
+  .text-caption-lg { font-size: 14px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
+  .text-caption    { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.13px; }
+  .text-label      { font-size: 12px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: normal; }
+  .text-label-sm   { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: normal; }
+  .text-tiny       { font-size: 10px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.15px; }
+  .text-section    { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* --- Button Variants --- */
+  .btn-primary {
+    height: 2.5rem;
+    border-radius: var(--radius-comfortable);
+    font-size: 14px;
+    font-weight: var(--fw-medium);
+    color: var(--text-on-primary);
+    background: var(--btn-primary-bg);
+    transition: background-color 150ms;
+    &:hover { background: var(--btn-primary-hover); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  .btn-ghost {
+    border-radius: var(--radius-comfortable);
+    border: 1px solid var(--border-default);
+    background: var(--surface-frost-02);
+    font-size: 13px;
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    transition: all 150ms;
+    &:hover { background: var(--surface-frost-04); color: var(--text-primary); }
   }
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  .btn-subtle {
+    border-radius: var(--radius-comfortable);
+    background: var(--surface-frost-04);
+    font-size: 13px;
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    transition: background-color 150ms;
+    &:hover { background: var(--surface-frost-05); }
   }
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+  .btn-destructive {
+    border-radius: var(--radius-comfortable);
+    border: 1px solid var(--status-error-border-strong);
+    background: var(--status-error-fill-muted);
+    font-size: 13px;
+    font-weight: var(--fw-medium);
+    color: var(--status-error);
+    transition: background-color 150ms;
+    &:hover { background: var(--status-error-fill-hover); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 }

@@ -129,13 +129,13 @@ The color system is almost entirely achromatic — dark backgrounds with white/g
 - Radius: 6px
 - Use: Toolbar actions, contextual buttons
 
-**Primary Brand Button (Inferred)**
-- Background: `#5e6ad2` (brand indigo)
-- Text: `#ffffff`
+**Primary Button**
+- Background: `#ffffff` (white)
+- Text: `#000000` (black)
 - Padding: 8px 16px
 - Radius: 6px
-- Hover: `#828fff` shift
-- Use: Primary CTAs ("Start building", "Sign up")
+- Hover: `#e0e0e0` shift
+- Use: Primary CTAs ("Sign in", "Create", "Submit")
 
 **Icon Button (Circle)**
 - Background: `rgba(255,255,255,0.03)` or `rgba(255,255,255,0.05)`
@@ -402,7 +402,7 @@ All popup menus, dropdowns, context menus, and action menus **must** use the bas
 ## 9. Agent Prompt Guide
 
 ### Quick Color Reference
-- Primary CTA: Brand Indigo (`#5e6ad2`)
+- Primary CTA: White (`#ffffff` bg, `#000000` text)
 - Page Background: Marketing Black (`#08090a`)
 - Panel Background: Panel Dark (`#0f1011`)
 - Surface: Level 3 (`#191a1b`)

@@ -58,17 +58,17 @@ export default function App() {
   const renderMainContent = () => {
     if (!selectedProjectId) {
       return (
-        <div className="flex-1 bg-[#0f1011] flex flex-col items-center justify-center text-[#62666d]">
+        <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
           <Folder size={48} className="mb-4 opacity-10" />
           <p className="text-[14px] mb-1">No project selected.</p>
-          <p className="text-[13px] text-[#4a4e54]">Create your first project from the sidebar to get started.</p>
+          <p className="text-[13px] text-text-empty">Create your first project from the sidebar to get started.</p>
         </div>
       );
     }
 
     if (dataState.status === 'idle' || dataState.status === 'loading') {
       return (
-        <div className="flex-1 flex items-center justify-center bg-[#0f1011]">
+        <div className="flex-1 flex items-center justify-center bg-surface-panel">
           <LoaderPinwheel className="animate-spin" size={24} />
         </div>
       );
@@ -76,12 +76,12 @@ export default function App() {
 
     if (dataState.status === 'error') {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-[#0f1011] space-y-4">
-          <AlertTriangle size={32} className="text-[#ef4444]" />
-          <p className="text-[14px] text-[#8a8f98]">{dataState.error}</p>
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface-panel space-y-4">
+          <AlertTriangle size={32} className="text-status-error" />
+          <p className="text-[14px] text-text-tertiary">{dataState.error}</p>
           <button
             onClick={() => loadEntities(selectedProjectId)}
-            className="flex items-center space-x-2 px-4 py-2 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] rounded-[6px] text-[13px] font-[510] transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-surface-frost-08 hover:bg-surface-frost-12 rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-colors"
           >
             <RotateCw size={14} />
             <span>Retry</span>
@@ -104,12 +104,12 @@ export default function App() {
             {selectedQuestionId ? (
               <AnswerColumn />
             ) : (
-              <div className="w-1/4 h-full border-r border-[rgba(255,255,255,0.05)] bg-[#0f1011]" />
+              <div className="w-1/4 h-full border-r border-border-subtle bg-surface-panel" />
             )}
             <SummaryColumn />
           </>
         ) : (
-          <div className="flex-1 bg-[#0f1011] flex flex-col items-center justify-center text-[#62666d]">
+          <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
             <Layers size={48} className="mb-4 opacity-10" />
             <p className="text-[14px]">Select a requirement to view its knowledge flow.</p>
           </div>
@@ -119,28 +119,28 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-row h-screen w-full bg-[#08090a] text-[#f7f8f8] antialiased" style={{ fontFeatureSettings: '"cv01", "ss03"' }}>
+    <div className="flex flex-row h-screen w-full bg-surface-base text-text-primary antialiased">
       <Sidebar isOpen={isSidebarOpen} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-14 border-b border-[rgba(255,255,255,0.05)] flex items-center px-4 bg-[#0f1011] shrink-0 z-10">
+        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 z-10">
           <div className="flex items-center space-x-3">
             <button 
               onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="p-1.5 text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.08)] rounded-[6px] transition-colors"
+              className="p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 rounded-comfortable transition-colors"
               title="Toggle Sidebar"
             >
               <PanelLeft size={16} />
             </button>
           </div>
           <div className="ml-auto flex items-center">
-            <button className="h-7 w-7 rounded-full bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[12px] font-[510] text-[#f7f8f8] flex items-center justify-center hover:bg-[rgba(255,255,255,0.15)] transition-colors">
+            <button className="h-7 w-7 rounded-full bg-surface-frost-10 border border-border-subtle text-[12px] font-[var(--fw-medium)] text-text-primary flex items-center justify-center hover:bg-surface-frost-15 transition-colors">
               U
             </button>
           </div>
         </header>
 
-        <main className="flex-1 flex w-full min-h-0 overflow-hidden bg-[#0f1011]">
+        <main className="flex-1 flex w-full min-h-0 overflow-hidden bg-surface-panel">
           {renderMainContent()}
         </main>
 

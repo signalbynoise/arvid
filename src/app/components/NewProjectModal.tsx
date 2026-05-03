@@ -71,12 +71,12 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
       <React.Fragment key={node.id}>
         <button
           onClick={() => setParentId(node.id)}
-          className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-[4px] text-[13px] font-[510] transition-colors text-left ${
+          className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-standard text-[13px] font-[var(--fw-medium)] transition-colors text-left ${
             isSelected
-              ? 'bg-[rgba(255,255,255,0.08)] text-[#f7f8f8]'
-              : 'text-[#8a8f98] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d0d6e0]'
+              ? 'bg-surface-frost-08 text-text-primary'
+              : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
           }`}
-          style={{ paddingLeft: `${8 + depth * 16}px` }}
+          style={{ '--depth': depth } as React.CSSProperties}
         >
           {depth === 0 ? <Folder size={14} /> : <Hash size={14} />}
           <span className="truncate">{node.name}</span>
@@ -95,7 +95,7 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
     >
       <div className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[12px] font-[510] text-[#8a8f98] uppercase tracking-widest">
+          <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
             Name
           </label>
           <input
@@ -105,64 +105,64 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
             onChange={(e) => { setName(e.target.value); setValidationError(null); }}
             onKeyDown={handleKeyDown}
             placeholder="e.g. Platform Migration"
-            className={`w-full bg-[rgba(255,255,255,0.02)] border rounded-[6px] px-3 py-2.5 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] focus:outline-none focus:border-[rgba(255,255,255,0.2)] focus:bg-[rgba(255,255,255,0.04)] transition-all ${
-              validationError ? 'border-[rgba(239,68,68,0.5)]' : 'border-[rgba(255,255,255,0.08)]'
+            className={`w-full bg-surface-frost-02 border rounded-comfortable px-3 py-2.5 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all ${
+              validationError ? 'border-status-error-border-focus' : 'border-border-default'
             }`}
           />
           {validationError && (
-            <p className="text-[12px] text-[#ef4444]">{validationError}</p>
+            <p className="text-[12px] text-status-error">{validationError}</p>
           )}
         </div>
 
         {tree.length > 0 && (
           <div className="space-y-2">
-            <label className="text-[12px] font-[510] text-[#8a8f98] uppercase tracking-widest">
+            <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
               Parent Project
-              <span className="text-[#62666d] normal-case tracking-normal ml-1">(optional)</span>
+              <span className="text-text-quaternary normal-case tracking-normal ml-1">(optional)</span>
             </label>
 
-            <div className="bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[8px] p-1.5 max-h-[160px] overflow-y-auto hide-scrollbar space-y-0.5">
+            <div className="bg-surface-frost-02 border border-border-default rounded-card p-1.5 max-h-[160px] overflow-y-auto hide-scrollbar space-y-0.5">
               <button
                 onClick={() => setParentId(undefined)}
-                className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-[4px] text-[13px] font-[510] transition-colors text-left ${
+                className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-standard text-[13px] font-[var(--fw-medium)] transition-colors text-left ${
                   !parentId
-                    ? 'bg-[rgba(255,255,255,0.08)] text-[#f7f8f8]'
-                    : 'text-[#8a8f98] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d0d6e0]'
+                    ? 'bg-surface-frost-08 text-text-primary'
+                    : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
                 }`}
               >
-                <span className="text-[#62666d]">&mdash;</span>
+                <span className="text-text-quaternary">&mdash;</span>
                 <span>None (top-level)</span>
               </button>
               {tree.map(node => renderParentOption(node))}
             </div>
 
             {selectedParent && (
-              <p className="text-[12px] text-[#62666d]">
-                Will be created as a sub-project of <span className="text-[#8a8f98] font-[510]">{selectedParent.name}</span>
+              <p className="text-[12px] text-text-quaternary">
+                Will be created as a sub-project of <span className="text-text-tertiary font-[var(--fw-medium)]">{selectedParent.name}</span>
               </p>
             )}
           </div>
         )}
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
+        <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
           <button 
             onClick={handleClose} 
-            className="px-4 py-2 text-[13px] font-[510] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors rounded-[6px]"
+            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable"
           >
             Cancel
           </button>
           <button 
             onClick={handleCreate}
             disabled={!name.trim() || isCreating}
-            className={`px-4 py-2 text-[13px] font-[510] rounded-[6px] transition-colors flex items-center space-x-2 ${
+            className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors flex items-center space-x-2 ${
               !name.trim() || isCreating
-                ? 'bg-[rgba(255,255,255,0.05)] text-[#62666d] cursor-not-allowed' 
-                : 'bg-white text-black hover:bg-[#e0e0e0]'
+                ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed' 
+                : 'bg-white text-black hover:bg-btn-primary-hover'
             }`}
           >
             {isCreating ? (
               <span className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 border-2 border-[rgba(0,0,0,0.2)] border-t-black rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-surface-frost-08 border-t-black rounded-full animate-spin" />
                 <span>Creating...</span>
               </span>
             ) : (

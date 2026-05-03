@@ -60,7 +60,7 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
     <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Project" size="sm">
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="text-[12px] font-[510] text-[#8a8f98] uppercase tracking-widest">
+          <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
             Name
           </label>
           <input
@@ -69,29 +69,29 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
             value={name}
             onChange={(e) => { setName(e.target.value); setValidationError(null); }}
             onKeyDown={handleKeyDown}
-            className={`w-full bg-[rgba(255,255,255,0.02)] border rounded-[6px] px-3 py-2.5 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] focus:outline-none focus:border-[rgba(255,255,255,0.2)] focus:bg-[rgba(255,255,255,0.04)] transition-all ${
-              validationError ? 'border-[rgba(239,68,68,0.5)]' : 'border-[rgba(255,255,255,0.08)]'
+            className={`w-full bg-surface-frost-02 border rounded-comfortable px-3 py-2.5 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all ${
+              validationError ? 'border-status-error-border-focus' : 'border-border-default'
             }`}
           />
           {validationError && (
-            <p className="text-[12px] text-[#ef4444]">{validationError}</p>
+            <p className="text-[12px] text-status-error">{validationError}</p>
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
+        <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-[510] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors rounded-[6px]"
+            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim() || isSaving}
-            className={`px-4 py-2 text-[13px] font-[510] rounded-[6px] transition-colors ${
+            className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
               !name.trim() || isSaving
-                ? 'bg-[rgba(255,255,255,0.05)] text-[#62666d] cursor-not-allowed'
-                : 'bg-white text-black hover:bg-[#e0e0e0]'
+                ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed'
+                : 'bg-white text-black hover:bg-btn-primary-hover'
             }`}
           >
             {isSaving ? 'Saving...' : 'Save'}

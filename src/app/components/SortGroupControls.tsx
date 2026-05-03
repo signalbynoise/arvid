@@ -35,15 +35,15 @@ export function SortGroupControls({
             </IconButton>
           </span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-[#1a1c1e] border-[rgba(255,255,255,0.1)] min-w-[160px]">
+        <DropdownMenuContent align="end" className="bg-surface-menu border-border-strong min-w-[160px]">
           {groupByOptions.map(opt => (
             <DropdownMenuItem
               key={opt.value}
               onClick={() => onGroupChange(opt.value)}
-              className="flex items-center justify-between text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] cursor-pointer"
+              className="flex items-center justify-between text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
             >
               <span>{opt.label}</span>
-              {currentGroup === opt.value && <Check size={12} className="text-[#10b981]" />}
+              {currentGroup === opt.value && <Check size={12} className="text-status-success" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -57,15 +57,15 @@ export function SortGroupControls({
             </IconButton>
           </span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-[#1a1c1e] border-[rgba(255,255,255,0.1)] min-w-[180px]">
+        <DropdownMenuContent align="end" className="bg-surface-menu border-border-strong min-w-[180px]">
           {sortByOptions.map(opt => (
             <DropdownMenuItem
               key={opt.value}
               onClick={() => onSortChange(opt.value)}
-              className="flex items-center justify-between text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] cursor-pointer"
+              className="flex items-center justify-between text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
             >
               <span>{opt.label}</span>
-              {currentSort === opt.value && <Check size={12} className="text-[#10b981]" />}
+              {currentSort === opt.value && <Check size={12} className="text-status-success" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

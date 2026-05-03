@@ -9,7 +9,7 @@ interface RulesAndConstraintsProps {
 export function RulesAndConstraints({ constraints }: RulesAndConstraintsProps) {
   return (
     <SummarySection icon={Shield} title="Rules & Constraints">
-      <p className="text-[13px] text-[#d0d6e0] leading-relaxed">{constraints}</p>
+      <p className="text-[13px] text-text-secondary leading-relaxed">{constraints}</p>
     </SummarySection>
   );
 }
