@@ -1,0 +1,54 @@
+services:
+  # Static site — Vite React frontend served via CDN
+  - type: web
+    name: arvid-web
+    runtime: static
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    buildFilter:
+      paths:
+        - src/**
+        - shared/**
+        - index.html
+        - package.json
+        - package-lock.json
+        - vite.config.ts
+        - postcss.config.mjs
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE
+        sync: false  # Set to https://arvid-api.onrender.com/api after first deploy
+      - key: NODE_VERSION
+        value: "20"
+
+  # API server — Express BFF proxying Supabase
+  - type: web
+    name: arvid-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci
+    startCommand: npx tsx server/index.ts
+    healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - server/**
+        - shared/**
+        - package.json
+        - package-lock.json
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false

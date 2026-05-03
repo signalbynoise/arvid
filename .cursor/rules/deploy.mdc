@@ -1,0 +1,59 @@
+---
+description: Render deployment and infrastructure rules
+globs:
+  - render.yaml
+  - server/**
+  - src/**
+  - shared/**
+  - package.json
+  - vite.config.ts
+alwaysApply: true
+---
+
+# Deploy Rules — Render Infrastructure
+
+## Blueprint Is the Single Source of Truth
+
+All Render infrastructure MUST be defined in `render.yaml` at the repository root.
+
+**Mandatory:**
+- Every service, database, env var group, and configuration lives in `render.yaml`
+- Changes to infrastructure go through a PR that modifies `render.yaml`
+- No manual service creation via the Render Dashboard or MCP direct-creation tools
+
+**Forbidden:**
+- Creating services via `create_web_service`, `create_static_site`, or any MCP creation tool
+- Manually adding env vars through the Dashboard (use `sync: false` in the blueprint)
+- Changing plans, regions, or scaling outside the blueprint
+
+## Architecture
+
+| Service          | Type     | Name         | Runtime  |
+| ---------------- | -------- | ------------ | -------- |
+| React frontend   | static   | arvid-web    | static   |
+| Express API (BFF)| web      | arvid-api    | node     |
+
+## Environment Variables
+
+### arvid-api (set in Dashboard after deploy)
+- `SUPABASE_URL` — Supabase project URL
+- `SUPABASE_KEY` — Supabase anon/service key
+- `NODE_ENV` — hardcoded to `production` in blueprint
+- `PORT` — auto-injected by Render
+
+### arvid-web (set in Dashboard after deploy)
+- `VITE_API_BASE` — full URL to the API server including path prefix, e.g. `https://arvid-api.onrender.com/api`
+
+## Code Constraints for Deployability
+
+- Server must bind to `0.0.0.0:$PORT` (Express default + explicit in `server/index.ts`)
+- No hardcoded credentials — all secrets via `process.env`
+- Frontend API base must read from `import.meta.env.VITE_API_BASE` with `/api` fallback for local dev
+- Shared schemas in `shared/` are consumed by both frontend and server — changes trigger both builds
+
+## Deploy Workflow
+
+1. Change `render.yaml`
+2. Commit and push to `main`
+3. Render auto-deploys both services
+4. Verify via `/api/health` on the API service
