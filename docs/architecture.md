@@ -1,6 +1,4 @@
-# Arvid — Architecture & Setup
-
-## Architecture
+# Architecture
 
 ```
 ┌────────────────┐       ┌─────────────────────┐       ┌──────────────┐
@@ -9,83 +7,92 @@
 └────────────────┘       └─────────────────────┘       └──────────────┘
 ```
 
-- **Frontend** — React 18 + TypeScript + Tailwind CSS (Vite dev server)
-- **BFF (Backend-For-Frontend)** — Express server that owns all database communication
-- **Database** — Supabase (hosted Postgres with RLS enabled)
+- **Frontend** — React 18, TypeScript, Tailwind CSS, Zustand, Vite
+- **BFF** — Express 5, validates with Zod, proxies all DB access
+- **Database** — Supabase (Postgres with RLS)
 
-The frontend never calls the database directly. All data flows through `/api/*` endpoints served by the BFF.
+The frontend never calls the database directly. All data flows through `/api/*`.
 
-Vite proxies `/api` requests to the BFF in development.
+## Client Layers
+
+| Layer | Responsibility | Location |
+|-------|---------------|----------|
+| UI | Rendering and interaction | `src/app/components/` |
+| State | Global state and transitions | `src/app/store/` |
+| Domain | Business rules and invariants | `src/app/domain/` |
+| Infrastructure | HTTP and adapters | `src/app/api.ts` |
+
+## State Management
+
+Zustand store with three slices:
+
+- **Entities** (`store/slices/entities.ts`) — requirements, questions, answers, data-loading state machine, mutations
+- **Selection** (`store/slices/selection.ts`) — selected requirement, question, project
+- **Projects** (`store/slices/projects.ts`) — project tree and CRUD
+
+Data loading uses an explicit state machine (`idle → loading → ready | error`). Derived data is computed via `useMemo`, never stored separately.
+
+## Schema Validation
+
+Zod schemas in `shared/schemas/` are the single source of truth, consumed by both client and server.
+
+Each entity has:
+1. **Row Schema** — matches DB columns (snake_case)
+2. **Domain Schema** — transforms to camelCase for the client
+3. **Mutation Schemas** — validates request bodies on the server
+
+| Boundary | Validated | Schema |
+|----------|----------|--------|
+| Server ingress | `req.body` via middleware | `Create*BodySchema`, `Update*BodySchema` |
+| Client response | Every fetch response | `RequirementSchema`, `QuestionSchema`, `AnswerSchema` |
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Health check |
-| GET | `/api/requirements` | List all requirements |
-| GET | `/api/requirements/:id` | Get single requirement |
-| POST | `/api/requirements` | Create requirement |
-| PATCH | `/api/requirements/:id` | Update requirement |
-| DELETE | `/api/requirements/:id` | Delete requirement |
-| GET | `/api/questions?requirement_id=` | List questions (optionally filtered) |
-| GET | `/api/questions/:id` | Get single question |
-| POST | `/api/questions` | Create question |
-| PATCH | `/api/questions/:id` | Update question |
-| DELETE | `/api/questions/:id` | Delete question |
-| GET | `/api/answers?question_id=` | List answers (optionally filtered) |
-| GET | `/api/answers/:id` | Get single answer |
-| POST | `/api/answers` | Create answer |
-| PATCH | `/api/answers/:id` | Update answer |
-| DELETE | `/api/answers/:id` | Delete answer |
+| GET | `/api/requirements` | List all |
+| GET | `/api/requirements/:id` | Get one |
+| POST | `/api/requirements` | Create |
+| PATCH | `/api/requirements/:id` | Update |
+| DELETE | `/api/requirements/:id` | Delete |
+| GET | `/api/questions?requirement_id=` | List (filterable) |
+| PATCH | `/api/questions/:id` | Update |
+| GET | `/api/answers?question_id=` | List (filterable) |
+| PATCH | `/api/answers/:id` | Update |
 
-## Database Schema
+## Database
 
-Three tables in the `public` schema with RLS enabled:
+Three tables with RLS enabled:
 
 - **requirements** — id, title, source, owner, owner_team, owner_role, created_at, description, completeness, clarity, risk
 - **questions** — id, requirement_id (FK), text, status, importance, type, category, is_suggested, is_hidden, author, author_team, author_role, created_at, description
 - **answers** — id, question_id (FK), text, author, date, is_current
 
-Enums: `clarity_level`, `risk_level`, `question_status`, `importance_level`, `question_type`, `question_category`.
+## Environment Variables
 
-## Local Setup
+| Variable | Where | Required |
+|----------|-------|----------|
+| `SUPABASE_URL` | Server | Yes |
+| `SUPABASE_KEY` | Server | Yes |
+| `PORT` | Server | No (default 3001) |
+| `VITE_API_BASE` | Frontend build | No (default `/api`) |
 
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start the BFF server (port 3001)
-npm run server
-
-# 3. Start the frontend dev server (port 5173)
-npm run dev
-```
-
-Both must be running simultaneously. The Vite dev server proxies `/api` to the BFF.
-
-## Environment Variables (optional overrides)
-
-The BFF reads these from the environment (defaults are set for the current project):
-
-| Variable | Default |
-|----------|---------|
-| `PORT` | `3001` |
-| `SUPABASE_URL` | `https://hjadkzfemzuvhpwbixbt.supabase.co` |
-| `SUPABASE_KEY` | *(publishable key embedded in code)* |
+Locally: set in `.env` (loaded via `--env-file`). On Render: set in Dashboard per `render.yaml`.
 
 ## Key Files
 
 ```
+shared/schemas/       Zod schemas shared by client and server
 server/
-  index.ts          — Express entry point
-  supabase.ts       — Supabase client init
-  routes/
-    requirements.ts — /api/requirements CRUD
-    questions.ts    — /api/questions CRUD
-    answers.ts      — /api/answers CRUD
+  index.ts            Express entry point
+  supabase.ts         Supabase client
+  middleware/          Request validation
+  routes/             CRUD route handlers
 src/app/
-  api.ts            — Frontend fetch client (snake_case ↔ camelCase mapping)
-  types.ts          — Shared TypeScript types
-  App.tsx           — Main app (loads data from API)
-vite.config.ts      — Includes /api proxy to BFF
+  api.ts              Fetch client with Zod parsing
+  store/              Zustand store and slices
+  domain/             Pure business logic
+  components/         UI layer
+render.yaml           Render Blueprint (static site + API)
 ```

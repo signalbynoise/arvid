@@ -1,11 +1,30 @@
+# Arvid
 
-  # Prototype for Requirements Management
+Requirements management tool. React frontend with an Express BFF server backed by Supabase.
 
-  This is a code bundle for Prototype for Requirements Management. The original project is available at https://www.figma.com/design/GCVSX9vDYrxFndXBjD6zV4/Prototype-for-Requirements-Management.
+## Local Setup
 
-  ## Running the code
+```bash
+cp .env.example .env   # fill in SUPABASE_URL and SUPABASE_KEY
+npm install
+npm run dev:all        # starts both frontend (:5173) and API server (:3001)
+```
 
-  Run `npm i` to install the dependencies.
+## Architecture
 
-  Run `npm run dev` to start the development server.
-  
+```
+Browser → React SPA (Vite) → /api → Express BFF → Supabase (Postgres)
+```
+
+See [docs/architecture.md](docs/architecture.md) for full details.
+
+## Deployment
+
+Infrastructure is defined in `render.yaml` (Render Blueprint). Two services:
+
+| Service | Type | URL |
+|---------|------|-----|
+| arvid-web | static | https://arvid-web.onrender.com |
+| arvid-api | web | https://arvid-api.onrender.com |
+
+Push to `main` triggers auto-deploy. See [.cursor/rules/deploy.mdc](.cursor/rules/deploy.mdc) for deploy rules.

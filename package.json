@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "server": "tsx watch server/index.ts",
+    "server": "tsx watch --env-file=.env server/index.ts",
     "dev:all": "npm run server & npm run dev",
     "test": "vitest",
     "test:run": "vitest run"
