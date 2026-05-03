@@ -3,7 +3,6 @@ services:
   - type: web
     name: arvid-web
     runtime: static
-    plan: free
     branch: main
     autoDeploy: true
     buildCommand: npm ci && npm run build
