@@ -4,7 +4,6 @@ services:
     name: arvid-web
     runtime: static
     plan: free
-    region: frankfurt
     branch: main
     autoDeploy: true
     buildCommand: npm ci && npm run build
