@@ -17,13 +17,17 @@ const RISK_COLOR: Record<string, string> = {
   High: 'bg-status-error',
 };
 
-export function RequirementCard({ title, owner, completeness, clarity, risk }: SampleRequirement) {
+export function RequirementCard({ title, description, owner, completeness, clarity, risk }: SampleRequirement) {
   return (
-    <div className="w-full h-full p-3 rounded-card border border-border-default bg-surface-frost-02 flex flex-col justify-between select-none pointer-events-none">
+    <div className="w-full h-full p-3 rounded-card border border-border-subtle bg-surface-frost-03 flex flex-col justify-between select-none pointer-events-none">
       <div>
-        <h3 className="font-[var(--fw-medium)] text-text-primary text-[11px] leading-tight tracking-[-0.165px] line-clamp-2">
+        <h3 className="font-[var(--fw-medium)] text-text-primary text-[11px] leading-tight tracking-[-0.165px] line-clamp-1">
           {title}
         </h3>
+
+        <p className="text-[9px] font-[var(--fw-regular)] text-text-quaternary leading-[1.4] mt-1 line-clamp-3">
+          {description}
+        </p>
 
         <div className="flex items-center text-[10px] text-text-tertiary mt-1.5 gap-1">
           <User size={10} className="opacity-70 shrink-0" />
