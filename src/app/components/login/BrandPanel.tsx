@@ -1,16 +1,20 @@
 import React from 'react';
-import Silk from '../../../components/Silk';
+import Dither from '../../../components/Dither';
 
 export function BrandPanel() {
   return (
     <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between bg-surface-panel overflow-hidden">
       <div className="absolute inset-0">
-        <Silk
-          speed={1}
-          scale={0.8}
-          color="#555158"
-          noiseIntensity={1.5}
-          rotation={0}
+        <Dither
+          waveColor={[0.3607843137254902, 0.3607843137254902, 0.3607843137254902]}
+          disableAnimation={false}
+          enableMouseInteraction
+          mouseRadius={0.4}
+          colorNum={4}
+          pixelSize={1}
+          waveAmplitude={0.2}
+          waveFrequency={5}
+          waveSpeed={0.03}
         />
       </div>
 
