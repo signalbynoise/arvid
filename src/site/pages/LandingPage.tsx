@@ -2,6 +2,7 @@ import React from 'react';
 import { TopNav } from '../components/TopNav';
 import { HeroSection } from '../components/HeroSection';
 import { FeatureSection } from '../components/FeatureSection';
+import { RequirementGridSection } from '../components/RequirementGridSection';
 import { LearnMoreSection } from '../components/LearnMoreSection';
 import { CtaSection } from '../components/CtaSection';
 
@@ -41,6 +42,10 @@ export function LandingPage() {
             imagePosition={feature.imagePosition}
           />
         ))}
+      </div>
+
+      <div className="pt-[120px]">
+        <RequirementGridSection />
       </div>
 
       <div className="pt-[120px]">
