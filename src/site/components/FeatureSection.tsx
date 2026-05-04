@@ -11,7 +11,7 @@ export function FeatureSection({ title, description, imagePosition }: FeatureSec
 
   return (
     <section className="w-full px-6">
-      <div className="mx-auto max-w-[1000px] overflow-hidden rounded-card bg-surface-panel">
+      <div className="mx-auto max-w-[1200px] overflow-hidden rounded-card bg-surface-panel">
         <div
           className={`flex flex-col md:flex-row md:h-[600px] ${isImageRight ? '' : 'md:flex-row-reverse'}`}
         >

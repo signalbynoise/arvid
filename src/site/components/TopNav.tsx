@@ -15,7 +15,7 @@ export function TopNav() {
 
   return (
     <header className="w-full pt-10 px-6">
-      <div className="mx-auto flex max-w-[1000px] items-center justify-between">
+      <div className="mx-auto flex max-w-[1200px] items-center justify-between">
         <a href="/" className="flex items-center shrink-0">
           <img src="/logo_wide.svg" alt="Arvid" className="h-6" />
         </a>
@@ -50,7 +50,7 @@ export function TopNav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden mt-6 mx-auto max-w-[1000px] flex flex-col gap-4 border-t border-border-subtle pt-4">
+        <div className="md:hidden mt-6 mx-auto max-w-[1200px] flex flex-col gap-4 border-t border-border-subtle pt-4">
           {NAV_LINKS.map(({ label, href }) => (
             <a
               key={label}

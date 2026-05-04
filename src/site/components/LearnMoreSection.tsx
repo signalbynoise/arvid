@@ -22,7 +22,7 @@ const ARTICLES = [
 export function LearnMoreSection() {
   return (
     <section className="w-full px-6">
-      <div className="mx-auto flex max-w-[1000px] flex-col gap-10">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
         <h2 className="text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
           Learn more about Arvid
         </h2>
