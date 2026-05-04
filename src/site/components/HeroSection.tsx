@@ -9,9 +9,9 @@ export function HeroSection() {
     <section className="w-full px-6 pt-[120px]">
       <div className="mx-auto flex max-w-[1000px] flex-col gap-6">
         <h1 className="text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
-          Arvid builds the missing knowledge graph,
+          Arvid builds the knowledge graph,
           <br />
-          all teams wanted.
+          all teams need.
         </h1>
 
         <div className="flex items-center gap-4">
