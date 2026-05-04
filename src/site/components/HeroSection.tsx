@@ -37,12 +37,12 @@ export function HeroSection() {
               waveColor={[0.3607843137254902, 0.3607843137254902, 0.3607843137254902]}
               disableAnimation={false}
               enableMouseInteraction
-              mouseRadius={1}
+              mouseRadius={0.4}
               colorNum={4}
-              pixelSize={2}
-              waveAmplitude={0.3}
-              waveFrequency={3}
-              waveSpeed={0.05}
+              pixelSize={1}
+              waveAmplitude={0.2}
+              waveFrequency={5}
+              waveSpeed={0.03}
             />
           </div>
 
