@@ -192,6 +192,15 @@ export const api = {
     return parseSingle(RequirementRowSchema, RequirementSchema, row, '/requirements');
   },
 
+  async updateRequirement(id: string, updates: { title?: string; description?: string; owner?: string }): Promise<Requirement> {
+    const row = await request<unknown>('PATCH', `/requirements/${id}`, updates);
+    return parseSingle(RequirementRowSchema, RequirementSchema, row, `/requirements/${id}`);
+  },
+
+  async deleteRequirement(id: string): Promise<void> {
+    await request<void>('DELETE', `/requirements/${id}`);
+  },
+
   async createQuestion(q: { text: string; requirementId: string; importance: string; category: string }): Promise<Question> {
     const body = {
       id: `q${Date.now()}`,

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { FileText, LoaderPinwheel, Loader2, ArrowUpRight, Sparkles } from 'lucide-react';
-import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectIsSuggestingQuestions } from '../store';
+import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState } from '../store';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
 import { ImplementationDetails } from './summary/ImplementationDetails';
@@ -18,8 +18,6 @@ export function SummaryColumn() {
   const loadSummary = useStore(s => s.loadSummary);
   const generateSummary = useStore(s => s.generateSummary);
   const clearSummary = useStore(s => s.clearSummary);
-  const isSuggestingQuestions = useStore(selectIsSuggestingQuestions);
-
   const requirement = useMemo(
     () => requirements.find(r => r.id === selectedReqId) ?? null,
     [requirements, selectedReqId],
@@ -54,31 +52,40 @@ export function SummaryColumn() {
   const prevFingerprintRef = useRef<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const triggerAutoUpdate = useCallback(() => {
-    if (!selectedReqId || !summary) return;
-    if (isSuggestingQuestions) return;
-    if (summaryDataState.status === 'generating') return;
+  const hasAcceptedQuestions = useMemo(
+    () => questions.some(q => !q.isSuggested && !q.isHidden),
+    [questions],
+  );
 
+  const isIdle = summaryDataState.status !== 'generating' && summaryDataState.status !== 'loading';
+
+  const doGenerate = useCallback(() => {
+    if (!selectedReqId || !hasAcceptedQuestions) return;
+    if (summaryDataState.status === 'generating') return;
     generateSummary(selectedReqId);
-  }, [selectedReqId, summary, isSuggestingQuestions, summaryDataState.status, generateSummary]);
+  }, [selectedReqId, hasAcceptedQuestions, summaryDataState.status, generateSummary]);
 
   useEffect(() => {
+    if (!selectedReqId || !hasAcceptedQuestions || !isIdle) return;
+
     if (prevFingerprintRef.current === null) {
       prevFingerprintRef.current = treeFingerprint;
+      if (!summary) {
+        debounceRef.current = setTimeout(doGenerate, 1500);
+      }
       return;
     }
 
     if (treeFingerprint !== prevFingerprintRef.current) {
       prevFingerprintRef.current = treeFingerprint;
-
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(triggerAutoUpdate, 2000);
+      debounceRef.current = setTimeout(doGenerate, 3000);
     }
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [treeFingerprint, triggerAutoUpdate]);
+  }, [treeFingerprint, selectedReqId, hasAcceptedQuestions, isIdle, summary, doGenerate]);
 
   if (!requirement) {
     return (
@@ -107,17 +114,12 @@ export function SummaryColumn() {
   return (
     <div className="w-1/4 h-full flex flex-col bg-surface-panel">
       <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10 flex items-center justify-between">
-        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase flex items-center space-x-2">
-          <span>4. Summary</span>
-        </h2>
-        {(isGenerating || isLoading) && (
-          <div className="flex items-center space-x-1.5">
-            <Loader2 size={12} className="text-text-tertiary animate-spin" />
-            <span className="text-[11px] font-[var(--fw-medium)] text-text-tertiary">
-              {isGenerating && summary ? 'Updating summary...' : isGenerating ? 'Generating...' : 'Loading...'}
-            </span>
-          </div>
-        )}
+        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
+        <div className="flex items-center">
+          {(isGenerating || isLoading) && (
+            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+          )}
+        </div>
       </div>
       
       <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-5">
@@ -143,24 +145,35 @@ export function SummaryColumn() {
               </>
             ) : (
               <div className="p-4 text-center">
-                {isGenerating ? (
-                  <div className="flex flex-col items-center space-y-3 py-4">
-                    <Loader2 size={20} className="text-text-tertiary animate-spin" />
-                    <p className="text-[13px] text-text-tertiary">Arvid is analyzing this requirement...</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center space-y-3 py-4">
-                    <Sparkles size={20} className="text-text-quaternary" />
-                    <p className="text-[13px] text-text-quaternary">No summary generated yet.</p>
-                    <button
-                      onClick={() => generateSummary(requirement.id)}
-                      className="px-4 py-2 bg-surface-frost-08 hover:bg-surface-frost-12 border border-border-default rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-primary transition-colors flex items-center space-x-2"
-                    >
-                      <Sparkles size={14} />
-                      <span>Generate Summary</span>
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-col items-center space-y-3 py-4">
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={20} className="text-text-tertiary animate-spin" />
+                      <p className="text-[13px] text-text-tertiary">Arvid is analyzing this requirement...</p>
+                    </>
+                  ) : summaryDataState.status === 'error' ? (
+                    <>
+                      <Sparkles size={20} className="text-status-error" />
+                      <p className="text-[13px] text-status-error">{summaryDataState.error || 'Summary generation failed'}</p>
+                      <button
+                        onClick={() => selectedReqId && generateSummary(selectedReqId)}
+                        className="px-3 py-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 border border-border-default rounded-comfortable text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </>
+                  ) : hasAcceptedQuestions ? (
+                    <>
+                      <Loader2 size={20} className="text-text-tertiary animate-spin" />
+                      <p className="text-[13px] text-text-tertiary">Summary will generate automatically...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} className="text-text-quaternary" />
+                      <p className="text-[13px] text-text-quaternary">Accept questions to generate a summary.</p>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
@@ -187,20 +200,6 @@ export function SummaryColumn() {
             )}
 
             <div className="pt-4 pb-2 px-2 mt-2 flex space-x-3">
-              {summary && (
-                <button
-                  onClick={() => generateSummary(requirement.id)}
-                  disabled={isGenerating}
-                  className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
-                    isGenerating
-                      ? 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
-                      : 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary'
-                  }`}
-                >
-                  <Sparkles size={14} className="opacity-50" />
-                  <span>{isGenerating ? 'Generating...' : 'Regenerate'}</span>
-                </button>
-              )}
               <button 
                 disabled={calculatedCompleteness < 100}
                 className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${

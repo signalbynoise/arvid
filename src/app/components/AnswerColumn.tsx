@@ -68,11 +68,11 @@ export function AnswerColumn() {
       key={ans.id}
       className={`relative z-[1] p-4 rounded-card border transition-all duration-200 ${
         ans.isCurrent 
-          ? 'border-accent-border bg-accent-surface-subtle shadow-accent-selected' 
+          ? 'border-border-focus bg-surface-frost-05 shadow-card-selected' 
           : 'border-border-default bg-surface-frost-02 opacity-70 hover:opacity-100 hover:bg-surface-frost-04'
       }`}
     >
-      <div className={`absolute top-1/2 -left-4 w-4 h-[1px] ${ans.isCurrent ? 'bg-accent-border' : 'bg-border-focus'}`} />
+      <div className={`absolute top-1/2 -left-4 w-4 h-[1px] ${ans.isCurrent ? 'bg-border-focus' : 'bg-border-focus'}`} />
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3 text-[12px] text-text-tertiary">
           <div className="flex items-center space-x-1.5">
@@ -93,7 +93,7 @@ export function AnswerColumn() {
           onClick={() => toggleCurrentAnswer(ans.id)}
           className={`flex items-center space-x-1.5 text-[12px] font-[var(--fw-medium)] px-2.5 py-1.5 rounded-comfortable transition-colors border ${
             ans.isCurrent 
-              ? 'border-accent bg-accent-surface text-accent hover:bg-accent-surface-hover' 
+              ? 'border-border-focus bg-surface-frost-08 text-text-primary hover:bg-surface-frost-10' 
               : 'border-border-subtle bg-surface-frost-02 text-text-secondary hover:bg-surface-frost-06'
           }`}
         >

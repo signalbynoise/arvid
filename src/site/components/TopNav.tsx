@@ -4,19 +4,20 @@ import { Menu, X } from 'lucide-react';
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 const NAV_LINKS = [
-  { label: 'Features', href: '#features' },
+  { label: 'Product', href: '#product' },
+  { label: 'Enterprise', href: '#enterprise' },
   { label: 'Pricing', href: '#pricing' },
-  { label: 'Docs', href: '#docs' },
+  { label: 'Resources', href: '#resources' },
 ];
 
 export function TopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border-subtle bg-surface-panel/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-6">
-        <a href="/" className="flex items-center">
-          <img src="/logo_wide.svg" alt="Arvid" className="h-5" />
+    <header className="w-full pt-10 px-6">
+      <div className="mx-auto flex max-w-[1000px] items-center justify-between">
+        <a href="/" className="flex items-center shrink-0">
+          <img src="/logo_wide.svg" alt="Arvid" className="h-6" />
         </a>
 
         <nav className="hidden md:flex items-center gap-6">
@@ -24,27 +25,19 @@ export function TopNav() {
             <a
               key={label}
               href={href}
-              className="text-[13px] font-[var(--fw-medium)] text-text-secondary transition-colors hover:text-text-primary"
+              className="text-[14px] font-[var(--fw-medium)] text-text-primary transition-colors hover:text-text-secondary"
             >
               {label}
             </a>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href={`${APP_URL}/login`}
-            className="flex h-8 items-center rounded-comfortable border border-border-default bg-surface-frost-02 px-3 text-[13px] font-[var(--fw-medium)] text-text-secondary transition-colors hover:bg-surface-frost-05 hover:text-text-primary"
-          >
-            Sign in
-          </a>
-          <a
-            href={`${APP_URL}/login`}
-            className="flex h-8 items-center rounded-comfortable bg-accent-brand px-4 text-[13px] font-[var(--fw-medium)] text-white transition-colors hover:bg-accent-hover"
-          >
-            Get started
-          </a>
-        </div>
+        <a
+          href={`${APP_URL}/login`}
+          className="hidden md:flex h-[36px] items-center rounded-pill bg-btn-primary px-4 text-[12px] font-[var(--fw-medium)] text-text-on-primary transition-colors hover:bg-btn-primary-hover"
+        >
+          Open App
+        </a>
 
         <button
           type="button"
@@ -57,7 +50,7 @@ export function TopNav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-border-subtle bg-surface-panel px-6 py-4 flex flex-col gap-4">
+        <div className="md:hidden mt-6 mx-auto max-w-[1000px] flex flex-col gap-4 border-t border-border-subtle pt-4">
           {NAV_LINKS.map(({ label, href }) => (
             <a
               key={label}
@@ -68,20 +61,12 @@ export function TopNav() {
               {label}
             </a>
           ))}
-          <div className="flex flex-col gap-3 pt-2 border-t border-border-subtle">
-            <a
-              href={`${APP_URL}/login`}
-              className="flex h-10 items-center justify-center rounded-comfortable border border-border-default bg-surface-frost-02 text-[14px] font-[var(--fw-medium)] text-text-secondary"
-            >
-              Sign in
-            </a>
-            <a
-              href={`${APP_URL}/login`}
-              className="flex h-10 items-center justify-center rounded-comfortable bg-accent-brand text-[14px] font-[var(--fw-medium)] text-white"
-            >
-              Get started
-            </a>
-          </div>
+          <a
+            href={`${APP_URL}/login`}
+            className="flex h-10 items-center justify-center rounded-pill bg-btn-primary text-[14px] font-[var(--fw-medium)] text-text-on-primary"
+          >
+            Open App
+          </a>
         </div>
       )}
     </header>

@@ -27,7 +27,9 @@ export interface EntitiesSlice {
   cancelLoad: () => void;
 
   enhanceRequirement: (text: string, projectId?: string | null) => Promise<{ title: string; description: string }>;
-  createRequirement: (text: string, title?: string) => Promise<void>;
+  createRequirement: (text: string, owner: string, title?: string) => Promise<void>;
+  updateRequirement: (id: string, updates: { title?: string; description?: string; owner?: string }) => Promise<void>;
+  deleteRequirement: (id: string) => Promise<void>;
   createQuestion: (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => Promise<void>;
   suggestQuestions: (requirementId: string) => Promise<void>;
   createAnswer: (text: string, questionId: string, author: string) => Promise<void>;
@@ -112,20 +114,22 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
-  createRequirement: async (text: string, explicitTitle?: string) => {
+  createRequirement: async (text: string, owner: string, explicitTitle?: string) => {
     const title = explicitTitle || (text.length > 80 ? text.substring(0, 80) + '...' : text);
     log.info('createRequirement', 'Creating requirement', { title });
 
+    const selectedProjectId = (get() as unknown as { selectedProjectId: string | null }).selectedProjectId;
     const newReq: Partial<Requirement> & { projectId?: string } = {
       id: `r${Date.now()}`,
       title,
       description: text,
       source: 'User',
-      owner: 'Unassigned',
+      owner,
       completeness: 0,
       clarity: 'Low',
       risk: 'Medium',
       createdAt: new Date().toISOString().split('T')[0],
+      projectId: selectedProjectId ?? undefined,
     };
 
     try {
@@ -137,6 +141,47 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createRequirement', 'Failed to create requirement', { error: message });
+    }
+  },
+
+  updateRequirement: async (id: string, updates: { title?: string; description?: string; owner?: string }) => {
+    log.info('updateRequirement', 'Updating requirement', { id, fields: Object.keys(updates) });
+
+    try {
+      const updated = await api.updateRequirement(id, updates);
+      set(state => ({
+        requirements: state.requirements.map(r => r.id === id ? updated : r),
+      }));
+      log.info('updateRequirement', 'Requirement updated', { id });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('updateRequirement', 'Failed to update requirement', { error: message });
+    }
+  },
+
+  deleteRequirement: async (id: string) => {
+    log.info('deleteRequirement', 'Deleting requirement', { id });
+
+    try {
+      await api.deleteRequirement(id);
+      set(state => ({
+        requirements: state.requirements.filter(r => r.id !== id),
+        questions: state.questions.filter(q => q.requirementId !== id),
+        answers: state.answers.filter(a => {
+          const questionIds = state.questions.filter(q => q.requirementId === id).map(q => q.id);
+          return !questionIds.includes(a.questionId);
+        }),
+      }));
+
+      const selection = get() as unknown as { selectedReqId: string | null; selectRequirement: (id: string | null) => void };
+      if (selection.selectedReqId === id) {
+        selection.selectRequirement(null);
+      }
+
+      log.info('deleteRequirement', 'Requirement deleted', { id });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('deleteRequirement', 'Failed to delete requirement', { error: message });
     }
   },
 
@@ -173,11 +218,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       const suggestions = await api.suggestQuestions(requirementId);
 
       set(state => {
-        const withoutOldSuggestions = state.questions.filter(
-          q => !(q.requirementId === requirementId && q.isSuggested),
+        const existingSuggestionIds = new Set(
+          state.questions
+            .filter(q => q.requirementId === requirementId && q.isSuggested)
+            .map(q => q.id),
         );
+        const newSuggestions = suggestions.filter(s => !existingSuggestionIds.has(s.id));
         return {
-          questions: [...withoutOldSuggestions, ...suggestions],
+          questions: [...state.questions, ...newSuggestions],
           isSuggestingQuestions: false,
         };
       });

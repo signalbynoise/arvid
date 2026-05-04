@@ -6,6 +6,7 @@ import { SummaryColumn } from './components/SummaryColumn';
 import { NewRequirementModal } from './components/NewRequirementModal';
 import { DetailsModal } from './components/DetailsModal';
 import { Sidebar } from './components/Sidebar';
+import { UserMenu } from './components/UserMenu';
 import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
 import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId } from './store';
@@ -134,9 +135,7 @@ export default function App() {
             </button>
           </div>
           <div className="ml-auto flex items-center">
-            <button className="h-7 w-7 rounded-full bg-surface-frost-10 border border-border-subtle text-[12px] font-[var(--fw-medium)] text-text-primary flex items-center justify-center hover:bg-surface-frost-15 transition-colors">
-              U
-            </button>
+            <UserMenu />
           </div>
         </header>
 

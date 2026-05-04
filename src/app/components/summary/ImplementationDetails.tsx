@@ -8,7 +8,7 @@ interface ImplementationDetailsProps {
 
 export function ImplementationDetails({ architecture }: ImplementationDetailsProps) {
   return (
-    <SummarySection icon={Settings} title="Implementation Details" defaultOpen>
+    <SummarySection icon={Settings} title="Implementation Details">
       <p className="text-[13px] text-text-secondary leading-relaxed">{architecture}</p>
     </SummarySection>
   );

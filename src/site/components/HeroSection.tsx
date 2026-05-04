@@ -1,66 +1,51 @@
 import React from 'react';
-import { Layers, Play } from 'lucide-react';
+import { ArrowUpRight, ArrowDown } from 'lucide-react';
+import Dither from '@/components/Dither';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 export function HeroSection() {
   return (
-    <section className="relative flex flex-col items-center px-6 pt-24 pb-32 md:pt-36 md:pb-40">
-      <div className="flex flex-col items-center max-w-[800px] text-center">
-        <div className="mb-6 flex items-center gap-2 rounded-full border border-border-default bg-surface-frost-02 px-3 py-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-status-success" />
-          <span className="text-[12px] font-[var(--fw-medium)] text-text-secondary">
-            Now in beta
-          </span>
-        </div>
-
-        <h1
-          className="text-[48px] md:text-[64px] font-[var(--fw-medium)] leading-[1.00] tracking-[-1.056px] md:tracking-[-1.408px] text-text-primary mb-6"
-        >
-          Build requirements
+    <section className="w-full px-6 pt-[120px]">
+      <div className="mx-auto flex max-w-[1000px] flex-col gap-6">
+        <h1 className="text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
+          Arvid builds the missing knowledge graph,
           <br />
-          <span className="text-text-tertiary">that actually ship.</span>
+          all teams wanted.
         </h1>
 
-        <p className="text-[18px] font-[var(--fw-regular)] leading-[1.6] tracking-[-0.165px] text-text-tertiary max-w-[560px] mb-10">
-          Arvid turns vague requirements into structured, validated knowledge. Ask the right questions, get clear answers, and ship with confidence.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex items-center gap-4">
           <a
             href={`${APP_URL}/login`}
-            className="flex h-10 items-center rounded-comfortable bg-accent-brand px-5 text-[14px] font-[var(--fw-medium)] text-white transition-colors hover:bg-accent-hover"
+            className="flex items-center gap-1 rounded-pill bg-btn-primary px-5 py-2.5 text-[14px] font-[var(--fw-medium)] text-text-on-primary transition-colors hover:bg-btn-primary-hover"
           >
-            Get started
+            Launch Arvid
+            <ArrowUpRight size={16} />
           </a>
           <a
-            href="#features"
-            className="flex h-10 items-center rounded-comfortable border border-border-default bg-surface-frost-02 px-5 text-[14px] font-[var(--fw-medium)] text-text-secondary transition-colors hover:bg-surface-frost-05 hover:text-text-primary"
+            href="#product"
+            className="flex items-center gap-1 rounded-pill bg-surface-frost-10 px-5 py-2.5 text-[14px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
           >
-            Learn more
+            Explore Features
+            <ArrowDown size={16} />
           </a>
         </div>
-      </div>
 
-      <div className="mt-20 w-full max-w-[1000px]">
-        <div className="relative overflow-hidden rounded-panel border border-border-default bg-surface-frost-02">
-          <div className="flex aspect-video items-center justify-center">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-border-default bg-surface-frost-03">
-                <Play size={24} className="text-text-quaternary ml-0.5" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-[15px] font-[var(--fw-medium)] text-text-tertiary">
-                  Product demo
-                </p>
-                <p className="text-[13px] font-[var(--fw-regular)] text-text-quaternary">
-                  Video coming soon
-                </p>
-              </div>
-            </div>
+        <div className="relative mt-[60px] h-[600px] w-full overflow-hidden rounded-card bg-surface-frost-08">
+          <div className="absolute inset-0">
+            <Dither
+              waveColor={[0.3607843137254902, 0.3607843137254902, 0.3607843137254902]}
+              disableAnimation={false}
+              enableMouseInteraction
+              mouseRadius={1}
+              colorNum={4}
+              pixelSize={2}
+              waveAmplitude={0.3}
+              waveFrequency={3}
+              waveSpeed={0.05}
+            />
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border-default to-transparent" />
         </div>
       </div>
     </section>

@@ -15,7 +15,7 @@ export function KnowledgeGraph({ requirementOwner, questions, answers }: Knowled
   const ansAuthors = Array.from(new Set(answers.map(a => a.author).filter(Boolean))) as string[];
 
   return (
-    <SummarySection icon={Sparkles} title="Knowledge Graph & Authors" defaultOpen>
+    <SummarySection icon={Sparkles} title="Knowledge Graph & Authors">
       <div>
         <h5 className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest mb-3">Context Chain</h5>
         <div className="relative pl-4 border-l border-border-strong space-y-4 ml-2">

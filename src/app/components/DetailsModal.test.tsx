@@ -78,7 +78,7 @@ describe('DetailsModal', () => {
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
     render(<DetailsModal isOpen={true} onClose={onClose} type="requirement" data={mockReq} />);
-    const closeBtn = screen.getByRole('button');
+    const closeBtn = screen.getByLabelText('Close');
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });

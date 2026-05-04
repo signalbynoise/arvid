@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore, selectSelectedProjectId } from '../store';
+import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
 import { BaseModal } from './BaseModal';
 import { WriteStep } from './requirement/WriteStep';
@@ -29,6 +30,12 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const createRequirement = useStore(s => s.createRequirement);
   const enhanceRequirement = useStore(s => s.enhanceRequirement);
   const selectedProjectId = useStore(selectSelectedProjectId);
+  const { user } = useAuth();
+
+  const ownerName = user?.user_metadata?.full_name
+    || user?.user_metadata?.name
+    || user?.email
+    || 'Unknown';
 
   const [step, setStep] = useState<Step>('WRITE');
   const [rawText, setRawText] = useState('');
@@ -68,13 +75,13 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
 
   const handleCreate = () => {
     if (!description.trim()) return;
-    createRequirement(description.trim(), title.trim() || undefined);
+    createRequirement(description.trim(), ownerName, title.trim() || undefined);
     handleClose();
   };
 
   const handleImportComplete = (text: string) => {
     setStep('SUCCESS');
-    setTimeout(() => { createRequirement(text); handleClose(); }, 1500);
+    setTimeout(() => { createRequirement(text, ownerName); handleClose(); }, 1500);
   };
 
   const renderStep = () => {

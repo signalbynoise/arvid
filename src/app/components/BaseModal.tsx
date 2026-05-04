@@ -39,12 +39,13 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
       />
 
       <div
-        className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-strong rounded-panel shadow-modal overflow-hidden flex flex-col`}
+        className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
       >
         <div className="flex items-center justify-between p-4 border-b border-border-subtle">
           <h2 className="text-[14px] font-[var(--fw-medium)] text-text-primary">{title}</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="text-text-quaternary hover:text-text-primary transition-colors p-1 rounded-standard hover:bg-surface-frost-05"
           >
             <X size={16} />

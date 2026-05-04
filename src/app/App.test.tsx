@@ -140,10 +140,10 @@ describe('App', () => {
     });
   });
 
-  it('renders user avatar button in header', async () => {
+  it('renders user menu in header', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('U')).toBeInTheDocument();
+      expect(screen.getByTitle('Test User')).toBeInTheDocument();
     });
   });
 

@@ -9,7 +9,7 @@ interface TaskOverviewProps {
 
 export function TaskOverview({ synthesis, coreObjective }: TaskOverviewProps) {
   return (
-    <SummarySection icon={Network} title="Task Overview" defaultOpen>
+    <SummarySection icon={Network} title="Task Overview">
       <div className="space-y-4">
         <div>
           <h5 className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest mb-1.5">Context</h5>

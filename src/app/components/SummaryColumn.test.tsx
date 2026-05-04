@@ -65,10 +65,10 @@ describe('SummaryColumn', () => {
     expect(screen.getByText('Knowledge Completeness')).toBeInTheDocument();
   });
 
-  it('shows generate button when no summary exists', () => {
+  it('shows auto-generate message when no summary exists and has questions', () => {
     setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
     render(<SummaryColumn />);
-    expect(screen.getByText('Generate Summary')).toBeInTheDocument();
+    expect(screen.getByText('Summary will generate automatically...')).toBeInTheDocument();
   });
 
   it('shows summary content when summary exists', () => {

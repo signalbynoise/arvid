@@ -24,12 +24,17 @@ export const SummarySchema = SummaryRowSchema.transform(row => ({
   generatedAt: row.generated_at ?? undefined,
 }));
 
+const coerceToString = z.union([
+  z.string(),
+  z.array(z.string()).transform(arr => arr.join('\n')),
+]);
+
 export const GenerateSummaryResponseSchema = z.object({
-  synthesis: z.string(),
-  core_objective: z.string(),
-  architecture: z.string(),
-  constraints: z.string(),
-  unverified_risks: z.string(),
+  synthesis: coerceToString,
+  core_objective: coerceToString,
+  architecture: coerceToString,
+  constraints: coerceToString,
+  unverified_risks: coerceToString,
 });
 
 export type SummaryRow = z.infer<typeof SummaryRowSchema>;

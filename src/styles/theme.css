@@ -105,7 +105,7 @@
   --shadow-subtle: 0 1.2px 0 0 rgba(0, 0, 0, 0.03);
   --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-modal: 0 24px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-modal: 0 24px 40px rgba(0, 0, 0, 0.5);
   --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.2);
   --shadow-card-selected: inset 0 0 0 1px rgba(255, 255, 255, 0.1);

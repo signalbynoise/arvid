@@ -16,7 +16,7 @@ export function OpenQuestionsAndBlockers({ unverifiedRisks, missingCritical, con
     <SummarySection
       icon={AlertTriangle}
       title="Open Questions & Blockers"
-      defaultOpen={hasIssues}
+      defaultOpen={false}
       titleClassName={hasIssues ? 'text-status-warning' : 'text-text-secondary'}
     >
       <div className="space-y-4">
