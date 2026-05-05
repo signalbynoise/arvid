@@ -16,5 +16,8 @@ export const selectIsSuggestingQuestions = (state: AppState) =>
 export const selectIsSuggestingAnswer = (state: AppState) =>
   state.selectedQuestionId ? state.suggestingAnswerForQuestions.has(state.selectedQuestionId) : false;
 
+export const selectIsAnswerSuggestionSkipped = (state: AppState) =>
+  state.selectedQuestionId ? state.skippedAnswerSuggestions.has(state.selectedQuestionId) : false;
+
 export const selectSummary = (state: AppState) => state.summary;
 export const selectSummaryDataState = (state: AppState) => state.summaryDataState;

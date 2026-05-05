@@ -56,6 +56,26 @@ Zustand store with four slices:
 
 Data loading uses an explicit state machine (`idle → loading → ready | error`). Derived data is computed via `useMemo`, never stored separately.
 
+## Real-Time Data
+
+**Rule: prefer streaming over polling.** When external systems modify data (e.g. Linear webhook updates a requirement status), the frontend must reflect changes instantly without page refreshes or timed intervals.
+
+**Pattern: Supabase Realtime → Zustand refresh**
+
+1. Enable Realtime on the table: `ALTER PUBLICATION supabase_realtime ADD TABLE <table>;`
+2. Subscribe to `postgres_changes` events via the frontend Supabase client
+3. On change, call a lightweight store action that re-fetches the affected data silently (no loading spinners, no state reset)
+4. Clean up the channel subscription on component unmount
+
+Current Realtime subscriptions:
+
+- **`requirements`** — listens for `UPDATE` events to sync Linear status changes pushed by webhooks (`App.tsx` → `refreshRequirements`)
+
+**When to use Realtime vs. fetch-on-action:**
+
+- **Realtime** — data modified by external systems (webhooks, other users, background jobs)
+- **Fetch-on-action** — data modified by the current user's own actions (create, update, delete) where the response already contains the new state
+
 ## Schema Validation
 
 Zod schemas in `shared/schemas/` are the single source of truth, consumed by both client and server.

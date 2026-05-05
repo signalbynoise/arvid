@@ -10,6 +10,7 @@ import { UserMenu } from './components/UserMenu';
 import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
 import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId } from './store';
+import { supabase } from './lib/supabase';
 
 export default function App() {
   const dataState = useStore(selectDataState);
@@ -19,8 +20,10 @@ export default function App() {
   const requirements = useStore(selectRequirements);
   const questions = useStore(selectQuestions);
   const loadEntities = useStore(s => s.loadEntities);
+  const refreshRequirements = useStore(s => s.refreshRequirements);
   const cancelLoad = useStore(s => s.cancelLoad);
   const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
+  const loadLinearStatus = useStore(s => s.loadLinearStatus);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -30,7 +33,32 @@ export default function App() {
         loadGitHubStatus();
       }
     }
-  }, [loadGitHubStatus]);
+    if (params.has('linear_connected') || params.has('linear_error')) {
+      window.history.replaceState({}, '', window.location.pathname);
+      if (params.has('linear_connected')) {
+        loadLinearStatus();
+      }
+    }
+  }, [loadGitHubStatus, loadLinearStatus]);
+
+  useEffect(() => {
+    if (!selectedProjectId || dataState.status !== 'ready') return;
+
+    const channel = supabase
+      .channel('requirements-status')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'requirements' },
+        () => {
+          refreshRequirements(selectedProjectId);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedProjectId, dataState.status, refreshRequirements]);
 
   const selectedReq = useMemo(
     () => requirements.find(r => r.id === selectedReqId) ?? null,

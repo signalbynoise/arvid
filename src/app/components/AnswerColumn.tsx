@@ -5,7 +5,7 @@ import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { NewAnswerModal } from './NewAnswerModal';
 import { SuggestedAnswerCard } from './SuggestedAnswerCard';
-import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer } from '../store';
+import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer, selectIsAnswerSuggestionSkipped } from '../store';
 
 const GROUP_OPTIONS = [
   { label: 'None', value: 'none' },
@@ -134,6 +134,7 @@ export function AnswerColumn() {
   const allAnswers = useStore(selectAnswers);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
   const isSuggestingAnswer = useStore(selectIsSuggestingAnswer);
+  const isAnswerSkipped = useStore(selectIsAnswerSuggestionSkipped);
   const questionSelected = selectedQuestionId !== null;
 
   const allForQuestion = useMemo(
@@ -157,10 +158,10 @@ export function AnswerColumn() {
   const suggestAnswer = useStore(s => s.suggestAnswer);
 
   useEffect(() => {
-    if (selectedQuestionId && allForQuestion.length === 0 && !isSuggestingAnswer) {
+    if (selectedQuestionId && allForQuestion.length === 0 && !isSuggestingAnswer && !isAnswerSkipped) {
       suggestAnswer(selectedQuestionId);
     }
-  }, [selectedQuestionId, allForQuestion.length, isSuggestingAnswer, suggestAnswer]);
+  }, [selectedQuestionId, allForQuestion.length, isSuggestingAnswer, isAnswerSkipped, suggestAnswer]);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('date_desc');

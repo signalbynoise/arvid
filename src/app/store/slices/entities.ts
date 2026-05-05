@@ -24,8 +24,10 @@ export interface EntitiesSlice {
   isSuggestingQuestions: boolean;
   suggestingForRequirements: Set<string>;
   suggestingAnswerForQuestions: Set<string>;
+  skippedAnswerSuggestions: Set<string>;
 
   loadEntities: (projectId?: string) => Promise<void>;
+  refreshRequirements: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
 
   enhanceRequirement: (text: string, projectId?: string | null) => Promise<{ title: string; description: string }>;
@@ -54,6 +56,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   isSuggestingQuestions: false,
   suggestingForRequirements: new Set(),
   suggestingAnswerForQuestions: new Set(),
+  skippedAnswerSuggestions: new Set(),
 
   loadEntities: async (projectId?: string) => {
     const current = get();
@@ -98,6 +101,15 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
         abortController: null,
       });
       log.error('loadEntities', 'Failed to load data', { error: message });
+    }
+  },
+
+  refreshRequirements: async (projectId?: string) => {
+    try {
+      const reqs = await api.getRequirements(projectId);
+      set({ requirements: reqs });
+    } catch {
+      // Silent refresh -- don't disrupt UI on failure
     }
   },
 
@@ -313,9 +325,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   },
 
   suggestAnswer: async (questionId: string) => {
-    const { suggestingAnswerForQuestions, answers, questions } = get();
+    const { suggestingAnswerForQuestions, skippedAnswerSuggestions, answers, questions } = get();
     if (suggestingAnswerForQuestions.has(questionId)) {
       log.debug('suggestAnswer', 'Already suggesting for this question, skipping', { questionId });
+      return;
+    }
+
+    if (skippedAnswerSuggestions.has(questionId)) {
+      log.debug('suggestAnswer', 'LLM already classified as requires-human, skipping', { questionId });
       return;
     }
 
@@ -345,7 +362,9 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
 
         if ('skipped' in result) {
           log.info('suggestAnswer', 'Question requires human answer', { questionId, reasoning: result.reasoning });
-          return { suggestingAnswerForQuestions: updatedSet };
+          const nextSkipped = new Set(state.skippedAnswerSuggestions);
+          nextSkipped.add(questionId);
+          return { suggestingAnswerForQuestions: updatedSet, skippedAnswerSuggestions: nextSkipped };
         }
 
         const alreadyExists = state.answers.some(a => a.id === result.id);
