@@ -2,6 +2,7 @@ import React from 'react';
 import GridMotion from '@/components/GridMotion';
 import { RequirementCard } from './RequirementCard';
 import { SAMPLE_REQUIREMENTS } from '../data/sampleRequirements';
+import { PageGrid } from './PageGrid';
 
 const gridItems = SAMPLE_REQUIREMENTS.map((req, i) => (
   <RequirementCard key={i} {...req} />
@@ -9,10 +10,10 @@ const gridItems = SAMPLE_REQUIREMENTS.map((req, i) => (
 
 export function RequirementGridSection() {
   return (
-    <section className="w-full px-6">
-      <div className="mx-auto max-w-[1200px] overflow-hidden rounded-card relative h-[600px]">
+    <PageGrid as="section" className="w-full">
+      <div className="col-span-full overflow-hidden rounded-card relative h-[600px]">
         <GridMotion items={gridItems} gradientColor="black" />
       </div>
-    </section>
+    </PageGrid>
   );
 }

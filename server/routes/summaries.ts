@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createUserClient } from '../supabase';
 import { generateSummary, SummaryGenerationInput } from '../openrouter';
 import { fetchRequirementContext } from '../context';
+import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const summariesRouter = Router();
 
@@ -111,10 +112,33 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
       return res.status(500).json({ error: upsertError.message });
     }
 
+    const { error: reqUpdateError } = await db
+      .from('requirements')
+      .update({ completeness: generated.completeness })
+      .eq('id', requirementId);
+
+    if (reqUpdateError) {
+      console.warn(
+        '[WARN] [summaries:generate] Failed to sync completeness to requirement',
+        JSON.stringify({ requirementId, error: reqUpdateError.message }),
+      );
+    }
+
     console.info(
       '[INFO] [summaries:generate] Summary generated and saved',
       JSON.stringify({ requirementId, summaryId: upserted.id }),
     );
+
+    if (context.requirement.project_id) {
+      sendSlackNotification({
+        projectId: context.requirement.project_id,
+        eventType: 'summary_generated',
+        title: context.requirement.title,
+        summary: `Summary generated with ${generated.completeness}% completeness`,
+        entityId: upserted.id,
+        db,
+      });
+    }
 
     res.status(201).json(upserted);
   } catch (err) {
@@ -125,4 +149,28 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
     );
     res.status(500).json({ error: `Summary generation failed: ${message}` });
   }
+});
+
+summariesRouter.post('/notify-cursor/:requirementId', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { requirementId } = req.params;
+
+  const { data: requirement } = await db
+    .from('requirements')
+    .select('title, project_id')
+    .eq('id', requirementId)
+    .single();
+
+  if (requirement?.project_id) {
+    sendSlackNotification({
+      projectId: requirement.project_id,
+      eventType: 'sent_to_cursor',
+      title: requirement.title,
+      summary: 'Specification sent to Cursor for implementation',
+      entityId: requirementId,
+      db,
+    });
+  }
+
+  res.status(204).send();
 });

@@ -5,6 +5,7 @@ import { CreateAnswerBodySchema, UpdateAnswerBodySchema } from '../../shared/sch
 import { suggestAnswer } from '../openrouter';
 import { fetchRequirementContext } from '../context';
 import { nextShortId } from '../lib/shortId';
+import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const answersRouter = Router();
 
@@ -46,6 +47,32 @@ answersRouter.post('/', validateBody(CreateAnswerBodySchema), async (req, res) =
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  const { data: question } = await db
+    .from('questions')
+    .select('text, requirement_id')
+    .eq('id', req.body.question_id)
+    .single();
+
+  if (question?.requirement_id) {
+    const { data: requirement } = await db
+      .from('requirements')
+      .select('project_id')
+      .eq('id', question.requirement_id)
+      .single();
+
+    if (requirement?.project_id) {
+      sendSlackNotification({
+        projectId: requirement.project_id,
+        eventType: 'question_answered',
+        title: question.text,
+        summary: `Answer: ${data.text.slice(0, 200)}${data.text.length > 200 ? '...' : ''}`,
+        entityId: data.id,
+        db,
+      });
+    }
+  }
+
   res.status(201).json(data);
 });
 

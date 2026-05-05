@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { FileText, LoaderPinwheel, Loader2, ArrowUpRight, Sparkles } from 'lucide-react';
 import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
 import { buildCursorPrompt, openInCursor } from '../lib/cursorDeeplink';
+import { api } from '../api';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
 import { ImplementationDetails } from './summary/ImplementationDetails';
@@ -100,7 +101,7 @@ export function SummaryColumn() {
 
   if (!requirement) {
     return (
-      <div className="w-1/4 h-full flex flex-col">
+      <div className="w-1/4 min-w-[320px] shrink-0 h-full flex flex-col">
         <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10">
           <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
         </div>
@@ -126,7 +127,7 @@ export function SummaryColumn() {
   const isLoading = summaryDataState.status === 'loading';
 
   return (
-    <div className="w-1/4 h-full flex flex-col bg-surface-panel">
+    <div className="w-1/4 min-w-[320px] shrink-0 h-full flex flex-col bg-surface-panel">
       <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10 flex items-center justify-between">
         <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
         <div className="flex items-center">
@@ -257,6 +258,7 @@ export function SummaryColumn() {
                 onClick={() => {
                   if (!summary) return;
                   openInCursor(buildCursorPrompt(summary, requirement.title));
+                  api.notifyCursorSent(requirement.id);
                 }}
                 className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
                   completeness >= 80 && summary

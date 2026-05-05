@@ -226,6 +226,10 @@ export const api = {
     return parseArray(QuestionRowSchema, QuestionSchema, rows, `/questions/suggest/${requirementId}`);
   },
 
+  async deleteQuestion(id: string): Promise<void> {
+    await request<void>('DELETE', `/questions/${id}`);
+  },
+
   async updateQuestion(id: string, updates: Record<string, unknown>): Promise<Question> {
     const body: Record<string, unknown> = {};
     if (updates.status !== undefined) body.status = updates.status;
@@ -311,6 +315,10 @@ export const api = {
     return parseSingle(SummaryRowSchema, SummarySchema, row, `/summaries/generate/${requirementId}`);
   },
 
+  async notifyCursorSent(requirementId: string): Promise<void> {
+    await request<void>('POST', `/summaries/notify-cursor/${requirementId}`);
+  },
+
   // --- Linear ---
 
   async getLinearAuthUrl(): Promise<{ url: string }> {
@@ -336,5 +344,61 @@ export const api = {
   async sendToLinear(requirementId: string): Promise<Requirement> {
     const row = await request<unknown>('POST', `/linear/send/${requirementId}`);
     return parseSingle(RequirementRowSchema, RequirementSchema, row, `/linear/send/${requirementId}`);
+  },
+
+  // --- Slack ---
+
+  async getSlackAuthUrl(): Promise<{ url: string }> {
+    return request<{ url: string }>('GET', '/slack/auth');
+  },
+
+  async getSlackStatus(signal?: AbortSignal): Promise<{ connected: boolean; teamName?: string; teamId?: string }> {
+    return request<{ connected: boolean; teamName?: string; teamId?: string }>('GET', '/slack/status', undefined, signal);
+  },
+
+  async disconnectSlack(): Promise<void> {
+    await request<unknown>('DELETE', '/slack/connect');
+  },
+
+  async getSlackChannels(signal?: AbortSignal): Promise<Array<Record<string, unknown>>> {
+    return request<Array<Record<string, unknown>>>('GET', '/slack/channels', undefined, signal);
+  },
+
+  async linkSlackChannels(projectId: string, channelIds: string[]): Promise<{ linked: number }> {
+    return request<{ linked: number }>('POST', `/slack/link-channel/${projectId}`, { channelIds });
+  },
+
+  async extractSlackMessages(projectId: string): Promise<{ results: Record<string, number> }> {
+    return request<{ results: Record<string, number> }>('POST', `/slack/extract/${projectId}`);
+  },
+
+  async setSlackNotificationChannel(projectId: string, channelId: string | null): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>('PATCH', `/slack/notify-channel/${projectId}`, { channelId });
+  },
+
+  async extractSlackChannelMessages(projectId: string, channelId: string): Promise<{
+    messages: Array<{ slack_ts: string; thread_ts?: string; username: string; text: string }>;
+  }> {
+    return request<{
+      messages: Array<{ slack_ts: string; thread_ts?: string; username: string; text: string }>;
+    }>('POST', `/slack/extract-messages/${projectId}`, { channelId });
+  },
+
+  async analyzeSlackChannel(projectId: string, channelId: string): Promise<{
+    messages: Array<{ slack_ts: string; thread_ts?: string; username: string; text: string }>;
+    suggestions: Array<{ title: string; description: string; sourceMessageTs: string[] }>;
+  }> {
+    return request<{
+      messages: Array<{ slack_ts: string; thread_ts?: string; username: string; text: string }>;
+      suggestions: Array<{ title: string; description: string; sourceMessageTs: string[] }>;
+    }>('POST', `/slack/analyze/${projectId}`, { channelId });
+  },
+
+  async reanalyzeSlackMessages(projectId: string, messages: Array<{ slack_ts: string; thread_ts?: string; username: string; text: string }>): Promise<{
+    suggestions: Array<{ title: string; description: string; sourceMessageTs: string[] }>;
+  }> {
+    return request<{
+      suggestions: Array<{ title: string; description: string; sourceMessageTs: string[] }>;
+    }>('POST', `/slack/reanalyze/${projectId}`, { messages });
   },
 };

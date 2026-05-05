@@ -14,6 +14,7 @@ interface Props {
 export function DetailsModal({ isOpen, onClose, type, data }: Props) {
   const updateRequirement = useStore(s => s.updateRequirement);
   const deleteRequirement = useStore(s => s.deleteRequirement);
+  const deleteQuestion = useStore(s => s.deleteQuestion);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -56,7 +57,11 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    await deleteRequirement(req.id);
+    if (isReq) {
+      await deleteRequirement(req.id);
+    } else {
+      await deleteQuestion(q.id);
+    }
     setIsDeleting(false);
     setConfirmDelete(false);
     onClose();
@@ -76,15 +81,17 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
             <h3 className="text-text-tertiary text-[12px] uppercase tracking-wider font-[var(--fw-medium)]">
               {isReq ? 'Title' : 'Question'}
             </h3>
-            {isReq && !isEditing && (
+            {!isEditing && (
               <div className="flex items-center gap-1">
-                <button
-                  onClick={handleStartEdit}
-                  className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-                  title="Edit"
-                >
-                  <Pencil size={13} />
-                </button>
+                {isReq && (
+                  <button
+                    onClick={handleStartEdit}
+                    className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
+                    title="Edit"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                )}
                 <button
                   onClick={() => setConfirmDelete(true)}
                   className="p-1.5 rounded-standard text-text-tertiary hover:text-status-error hover:bg-surface-frost-08 transition-all"
@@ -111,7 +118,9 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
         {confirmDelete && (
           <div className="flex items-center justify-between p-3 rounded-card border border-status-error-border-focus bg-[rgba(212,24,61,0.08)]">
             <p className="text-[13px] text-status-error font-[var(--fw-medium)]">
-              Delete this requirement and all its questions, answers, and summaries?
+              {isReq
+                ? 'Delete this requirement and all its questions, answers, and summaries?'
+                : 'Delete this question and all its answers?'}
             </p>
             <div className="flex items-center gap-2 ml-4 shrink-0">
               <button

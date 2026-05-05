@@ -5,6 +5,7 @@ import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../
 import { enhanceRequirement } from '../openrouter';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 import { nextShortId } from '../lib/shortId';
+import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const requirementsRouter = Router();
 
@@ -21,6 +22,27 @@ requirementsRouter.get('/', async (req, res) => {
 
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
+
+  const reqIds = (data || []).map((r: { id: string }) => r.id);
+  if (reqIds.length > 0) {
+    const { data: summaries } = await db
+      .from('summaries')
+      .select('requirement_id, completeness')
+      .in('requirement_id', reqIds);
+
+    if (summaries && summaries.length > 0) {
+      const completenessMap = new Map(
+        summaries.map((s: { requirement_id: string; completeness: number }) => [s.requirement_id, s.completeness]),
+      );
+      for (const r of data!) {
+        const summaryVal = completenessMap.get(r.id);
+        if (summaryVal !== undefined) {
+          r.completeness = summaryVal;
+        }
+      }
+    }
+  }
+
   res.json(data);
 });
 
@@ -49,6 +71,18 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  if (data.project_id) {
+    sendSlackNotification({
+      projectId: data.project_id,
+      eventType: 'requirement_created',
+      title: data.title,
+      summary: `New requirement added to project`,
+      entityId: data.id,
+      db,
+    });
+  }
+
   res.status(201).json(data);
 });
 

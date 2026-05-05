@@ -35,6 +35,7 @@ export interface EntitiesSlice {
   updateRequirement: (id: string, updates: { title?: string; description?: string; owner?: string }) => Promise<void>;
   deleteRequirement: (id: string) => Promise<void>;
   createQuestion: (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => Promise<void>;
+  deleteQuestion: (questionId: string) => Promise<void>;
   updateQuestionText: (questionId: string, text: string) => Promise<void>;
   suggestQuestions: (requirementId: string) => Promise<void>;
   createAnswer: (text: string, questionId: string, author: string) => Promise<void>;
@@ -226,6 +227,37 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
+  deleteQuestion: async (questionId: string) => {
+    log.info('deleteQuestion', 'Deleting question', { questionId });
+
+    const question = get().questions.find(q => q.id === questionId);
+    const previousQuestions = get().questions;
+    const previousAnswers = get().answers;
+
+    set(state => ({
+      questions: state.questions.filter(q => q.id !== questionId),
+      answers: state.answers.filter(a => a.questionId !== questionId),
+    }));
+
+    const selection = get() as unknown as { selectedQuestionId: string | null; selectQuestion: (id: string | null) => void };
+    if (selection.selectedQuestionId === questionId) {
+      selection.selectQuestion(null);
+    }
+
+    try {
+      await api.deleteQuestion(questionId);
+      log.info('deleteQuestion', 'Question deleted', { questionId });
+
+      if (question?.requirementId) {
+        get().suggestQuestions(question.requirementId);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('deleteQuestion', 'Failed to delete question, rolling back', { questionId, error: message });
+      set({ questions: previousQuestions, answers: previousAnswers });
+    }
+  },
+
   updateQuestionText: async (questionId: string, text: string) => {
     log.info('updateQuestionText', 'Updating question text', { questionId });
 
@@ -260,12 +292,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       const suggestions = await api.suggestQuestions(requirementId);
 
       set(state => {
-        const existingSuggestionIds = new Set(
+        const existingTexts = new Set(
           state.questions
-            .filter(q => q.requirementId === requirementId && q.isSuggested)
-            .map(q => q.id),
+            .filter(q => q.requirementId === requirementId)
+            .map(q => q.text.toLowerCase().trim()),
         );
-        const newSuggestions = suggestions.filter(s => !existingSuggestionIds.has(s.id));
+        const newSuggestions = suggestions.filter(
+          s => !existingTexts.has(s.text.toLowerCase().trim()),
+        );
         const updatedSet = new Set(state.suggestingForRequirements);
         updatedSet.delete(requirementId);
         return {

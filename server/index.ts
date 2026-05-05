@@ -8,6 +8,7 @@ import { projectsRouter } from './routes/projects';
 import { summariesRouter } from './routes/summaries';
 import { githubRouter, githubCallbackRouter } from './routes/github';
 import { linearRouter, linearCallbackRouter } from './routes/linear';
+import { slackRouter, slackCallbackRouter } from './routes/slack';
 import { webhooksRouter } from './routes/webhooks';
 
 const app = express();
@@ -36,6 +37,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/github/callback', githubCallbackRouter);
 app.use('/api/linear/callback', linearCallbackRouter);
+app.use('/api/slack/callback', slackCallbackRouter);
 
 app.use('/api', requireAuth);
 
@@ -46,6 +48,7 @@ app.use('/api/projects', projectsRouter);
 app.use('/api/summaries', summariesRouter);
 app.use('/api/github', githubRouter);
 app.use('/api/linear', linearRouter);
+app.use('/api/slack', slackRouter);
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`BFF server running on http://0.0.0.0:${PORT}`);

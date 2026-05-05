@@ -7,7 +7,8 @@ import { DeleteProjectModal } from './DeleteProjectModal';
 import { ProjectItemMenu } from './ProjectItemMenu';
 import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
-import { useStore, selectProjects, selectSelectedProjectId } from '../store';
+import { SlackNotifySelector } from './SlackNotifySelector';
+import { useStore, selectProjects, selectSelectedProjectId, selectPendingModal } from '../store';
 import { buildProjectTree, ProjectTreeNode } from '../domain/projects';
 
 interface SidebarProps {
@@ -23,6 +24,12 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const githubConnection = useStore(s => s.githubConnection);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const linearConnection = useStore(s => s.linearConnection);
+  const slackConnection = useStore(s => s.slackConnection);
+  const slackChannels = useStore(s => s.slackChannels);
+  const loadSlackStatus = useStore(s => s.loadSlackStatus);
+  const loadSlackChannels = useStore(s => s.loadSlackChannels);
+  const pendingModal = useStore(selectPendingModal);
+  const clearPendingModal = useStore(s => s.clearPendingModal);
 
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId),
@@ -44,7 +51,21 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
   useEffect(() => {
     loadProjects();
-  }, [loadProjects]);
+    loadSlackStatus();
+  }, [loadProjects, loadSlackStatus]);
+
+  useEffect(() => {
+    if (slackConnection.status === 'connected') {
+      loadSlackChannels();
+    }
+  }, [slackConnection.status, loadSlackChannels]);
+
+  useEffect(() => {
+    if (pendingModal?.type === 'createProject') {
+      openCreate();
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal]);
 
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
@@ -155,7 +176,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
   };
 
   return (
-    <div className="w-[240px] h-full flex-shrink-0 bg-surface-panel border-r border-border-subtle flex flex-col z-20">
+    <div className="w-[240px] h-full flex-shrink-0 bg-surface-panel border-r border-border-subtle flex flex-col">
       <div className="h-14 flex items-center px-4 border-b border-border-subtle shrink-0">
         <img src="/logo_wide.svg" alt="Arvid" className="h-5" />
       </div>
@@ -232,6 +253,32 @@ export function Sidebar({ isOpen }: SidebarProps) {
             </div>
           ) : (
             <LinearProjectSelector projectId={selectedProject.id} onLinked={() => loadProjects()} />
+          )}
+        </div>
+      )}
+
+      {selectedProject && slackConnection.status === 'connected' && (
+        <div className="border-t border-border-subtle px-4 py-3 shrink-0">
+          <div className="flex items-center gap-1.5 mb-2">
+            <img src="/slack.svg" alt="" className="w-4 h-4 opacity-40" />
+            <span className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
+              Slack Notifications
+            </span>
+          </div>
+          {selectedProject.slackNotificationChannelId ? (
+            (() => {
+              const ch = slackChannels.find(c => c.id === selectedProject.slackNotificationChannelId);
+              return (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] text-text-secondary truncate" title={ch ? `#${ch.name}` : 'Channel set'}>
+                    {ch ? `#${ch.name}` : 'Channel set'}
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-status-success shrink-0" />
+                </div>
+              );
+            })()
+          ) : (
+            <SlackNotifySelector projectId={selectedProject.id} />
           )}
         </div>
       )}

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { supabase, createUserClient } from '../supabase';
 import { requireLinear } from '../middleware/requireAuth';
 import { listLinearTeams, listLinearProjects, createLinearIssue, exchangeLinearCode, fetchLinearViewer } from '../lib/linearClient';
+import { sendSlackNotification } from '../lib/slackNotifier';
 import type { Summary } from '../../shared/schemas';
 
 export const linearRouter = Router();
@@ -283,6 +284,17 @@ linearRouter.post('/send/:requirementId', requireLinear, async (req, res) => {
       issueIdentifier: issue.identifier,
       issueUrl: issue.url,
     }));
+
+    if (requirement.project_id) {
+      sendSlackNotification({
+        projectId: requirement.project_id,
+        eventType: 'sent_to_linear',
+        title: requirement.title,
+        summary: `Sent as ${issue.identifier} to Linear`,
+        entityId: requirementId,
+        db,
+      });
+    }
 
     res.status(201).json(updated);
   } catch (err) {

@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Toaster } from 'sonner';
 import { RequirementColumn } from './components/RequirementColumn';
 import { QuestionColumn } from './components/QuestionColumn';
 import { AnswerColumn } from './components/AnswerColumn';
 import { SummaryColumn } from './components/SummaryColumn';
 import { NewRequirementModal } from './components/NewRequirementModal';
 import { DetailsModal } from './components/DetailsModal';
+import { CommandPalette } from './components/command-palette/CommandPalette';
 import { Sidebar } from './components/Sidebar';
 import { UserMenu } from './components/UserMenu';
 import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
-import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId } from './store';
+import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId, selectPendingModal } from './store';
+import { SlackChannelPicker } from './components/SlackChannelPicker';
 import { supabase } from './lib/supabase';
 
 export default function App() {
@@ -24,6 +27,9 @@ export default function App() {
   const cancelLoad = useStore(s => s.cancelLoad);
   const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
   const loadLinearStatus = useStore(s => s.loadLinearStatus);
+  const loadSlackStatus = useStore(s => s.loadSlackStatus);
+  const pendingModal = useStore(selectPendingModal);
+  const clearPendingModal = useStore(s => s.clearPendingModal);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -39,7 +45,13 @@ export default function App() {
         loadLinearStatus();
       }
     }
-  }, [loadGitHubStatus, loadLinearStatus]);
+    if (params.has('slack_connected') || params.has('slack_error')) {
+      window.history.replaceState({}, '', window.location.pathname);
+      if (params.has('slack_connected')) {
+        loadSlackStatus();
+      }
+    }
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus]);
 
   useEffect(() => {
     if (!selectedProjectId || dataState.status !== 'ready') return;
@@ -74,6 +86,7 @@ export default function App() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsModalType, setDetailsModalType] = useState<'requirement' | 'question' | null>(null);
   const [detailsModalData, setDetailsModalData] = useState<Requirement | Question | null>(null);
+  const [isSlackPickerOpen, setIsSlackPickerOpen] = useState(false);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -81,6 +94,17 @@ export default function App() {
     }
     return () => cancelLoad();
   }, [selectedProjectId, loadEntities, cancelLoad]);
+
+  useEffect(() => {
+    if (pendingModal?.type === 'createRequirement') {
+      setIsModalOpen(true);
+      clearPendingModal();
+    }
+    if (pendingModal?.type === 'slackChannelPicker') {
+      setIsSlackPickerOpen(true);
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal]);
 
 
   const openDetails = (type: 'requirement' | 'question', id: string) => {
@@ -144,7 +168,7 @@ export default function App() {
             {selectedQuestionId ? (
               <AnswerColumn />
             ) : (
-              <div className="w-1/4 h-full border-r border-border-subtle bg-surface-panel" />
+              <div className="w-1/4 min-w-[280px] shrink-0 h-full border-r border-border-subtle bg-surface-panel" />
             )}
             <SummaryColumn />
           </>
@@ -163,7 +187,7 @@ export default function App() {
       <Sidebar isOpen={isSidebarOpen} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 z-30">
+        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 relative z-30">
           <div className="flex items-center space-x-3">
             <button 
               onClick={() => setIsSidebarOpen(prev => !prev)}
@@ -178,21 +202,33 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 flex w-full min-h-0 overflow-hidden bg-surface-panel">
+        <main className="flex-1 flex w-full min-h-0 overflow-x-auto overflow-y-hidden bg-surface-panel">
           {renderMainContent()}
         </main>
-
-        <NewRequirementModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-        <DetailsModal 
-          isOpen={detailsModalOpen}
-          onClose={() => setDetailsModalOpen(false)}
-          type={detailsModalType}
-          data={detailsModalData}
-        />
       </div>
+
+      <NewRequirementModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+      <DetailsModal 
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        type={detailsModalType}
+        data={detailsModalData}
+      />
+      <SlackChannelPicker
+        isOpen={isSlackPickerOpen}
+        onClose={() => setIsSlackPickerOpen(false)}
+      />
+      <CommandPalette />
+      <Toaster
+        theme="dark"
+        position="bottom-right"
+        toastOptions={{
+          className: 'bg-surface-elevated border border-border-subtle text-text-primary text-[13px] shadow-modal',
+        }}
+      />
     </div>
   );
 }

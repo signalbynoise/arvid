@@ -41,11 +41,15 @@ export function UserMenu() {
   const linearConnection = useStore(s => s.linearConnection);
   const loadLinearStatus = useStore(s => s.loadLinearStatus);
   const disconnectLinear = useStore(s => s.disconnectLinear);
+  const slackConnection = useStore(s => s.slackConnection);
+  const loadSlackStatus = useStore(s => s.loadSlackStatus);
+  const disconnectSlack = useStore(s => s.disconnectSlack);
 
   useEffect(() => {
     loadGitHubStatus();
     loadLinearStatus();
-  }, [loadGitHubStatus, loadLinearStatus]);
+    loadSlackStatus();
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus]);
 
   const fullName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -97,6 +101,16 @@ export function UserMenu() {
     }
   };
 
+  const handleConnectSlack = async () => {
+    log.info('connect', 'Initiating Slack OAuth');
+    try {
+      const { url } = await api.getSlackAuthUrl();
+      window.location.href = url;
+    } catch (err) {
+      log.error('connect', 'Failed to get Slack auth URL', { error: err instanceof Error ? err.message : 'Unknown' });
+    }
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -105,7 +119,7 @@ export function UserMenu() {
         title={fullName || email}
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          <img src={avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
         ) : (
           <span className="bg-surface-frost-10 h-full w-full flex items-center justify-center text-text-primary">
             {initials}
@@ -118,7 +132,7 @@ export function UserMenu() {
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-full border border-border-subtle flex items-center justify-center shrink-0 overflow-hidden">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                <img src={avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
               ) : (
                 <span className="bg-surface-frost-10 h-full w-full flex items-center justify-center text-[11px] font-[var(--fw-medium)] text-text-primary">
                   {initials}
@@ -147,6 +161,13 @@ export function UserMenu() {
               connected={linearConnection.status === 'connected'}
               onConnect={handleConnectLinear}
               onDisconnect={disconnectLinear}
+            />
+            <IntegrationRow
+              icon={<img src="/slack.svg" alt="" className="w-4 h-4 opacity-60" />}
+              label="Slack"
+              connected={slackConnection.status === 'connected'}
+              onConnect={handleConnectSlack}
+              onDisconnect={disconnectSlack}
             />
           </div>
 

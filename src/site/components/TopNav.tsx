@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { PageGrid } from './PageGrid';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
@@ -14,8 +15,8 @@ export function TopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="w-full pt-10 px-6">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between">
+    <PageGrid as="header" className="w-full pt-6">
+      <div className="col-span-full flex items-center justify-between">
         <a href="/" className="flex items-center shrink-0">
           <img src="/logo_wide.svg" alt="Arvid" className="h-6" />
         </a>
@@ -50,7 +51,7 @@ export function TopNav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden mt-6 mx-auto max-w-[1200px] flex flex-col gap-4 border-t border-border-subtle pt-4">
+        <div className="col-span-full md:hidden mt-6 flex flex-col gap-4 border-t border-border-subtle pt-4">
           {NAV_LINKS.map(({ label, href }) => (
             <a
               key={label}
@@ -69,6 +70,6 @@ export function TopNav() {
           </a>
         </div>
       )}
-    </header>
+    </PageGrid>
   );
 }

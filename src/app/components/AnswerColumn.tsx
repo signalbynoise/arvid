@@ -5,7 +5,7 @@ import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { NewAnswerModal } from './NewAnswerModal';
 import { SuggestedAnswerCard } from './SuggestedAnswerCard';
-import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer, selectIsAnswerSuggestionSkipped } from '../store';
+import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer, selectIsAnswerSuggestionSkipped, selectPendingModal } from '../store';
 
 const GROUP_OPTIONS = [
   { label: 'None', value: 'none' },
@@ -167,6 +167,15 @@ export function AnswerColumn() {
   const [sortBy, setSortBy] = useState('date_desc');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [isNewAnswerOpen, setIsNewAnswerOpen] = useState(false);
+  const pendingModal = useStore(selectPendingModal);
+  const clearPendingModal = useStore(s => s.clearPendingModal);
+
+  useEffect(() => {
+    if (pendingModal?.type === 'createAnswer') {
+      setIsNewAnswerOpen(true);
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
@@ -202,7 +211,7 @@ export function AnswerColumn() {
 
   if (!questionSelected) {
     return (
-      <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+      <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
         <div className="p-4 border-b border-border-subtle bg-surface-panel flex items-center justify-between sticky top-0 z-10">
           <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">3. Answers</h2>
         </div>
@@ -215,7 +224,7 @@ export function AnswerColumn() {
   }
 
   return (
-    <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+    <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
       <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
         <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">3. Answers</h2>
         <div className="flex items-center">

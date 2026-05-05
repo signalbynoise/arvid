@@ -83,6 +83,27 @@ export {
 export type { LinearConnectionRow, LinearConnection } from './linearConnection';
 
 export {
+  SlackConnectionRowSchema,
+  SlackConnectionSchema,
+} from './slackConnection';
+
+export type { SlackConnectionRow, SlackConnection } from './slackConnection';
+
+export {
+  SlackChannelRowSchema,
+  SlackChannelSchema,
+} from './slackChannel';
+
+export type { SlackChannelRow, SlackChannel } from './slackChannel';
+
+export {
+  SlackMessageRowSchema,
+  SlackMessageSchema,
+} from './slackMessage';
+
+export type { SlackMessageRow, SlackMessage } from './slackMessage';
+
+export {
   FileTreeEntrySchema,
   CommitEntrySchema,
   RepoAnalysisSchema,

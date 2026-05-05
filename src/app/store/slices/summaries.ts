@@ -21,7 +21,7 @@ export interface SummariesSlice {
   clearSummary: () => void;
 }
 
-export const createSummariesSlice: StateCreator<SummariesSlice, [], [], SummariesSlice> = (set) => ({
+export const createSummariesSlice: StateCreator<SummariesSlice, [], [], SummariesSlice> = (set, get) => ({
   summary: null,
   summaryDataState: { status: 'idle' },
 
@@ -35,6 +35,19 @@ export const createSummariesSlice: StateCreator<SummariesSlice, [], [], Summarie
         summary,
         summaryDataState: { status: 'ready' },
       });
+
+      if (summary?.completeness !== undefined) {
+        const state = get() as unknown as { requirements: { id: string; completeness: number }[] };
+        const req = state.requirements.find(r => r.id === requirementId);
+        if (req && req.completeness !== summary.completeness) {
+          set({
+            requirements: state.requirements.map(r =>
+              r.id === requirementId ? { ...r, completeness: summary.completeness } : r,
+            ),
+          } as Partial<SummariesSlice>);
+        }
+      }
+
       log.info('loadSummary', 'Summary loaded', { requirementId, found: !!summary });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -53,6 +66,16 @@ export const createSummariesSlice: StateCreator<SummariesSlice, [], [], Summarie
         summary,
         summaryDataState: { status: 'ready' },
       });
+
+      if (summary?.completeness !== undefined) {
+        const state = get() as unknown as { requirements: { id: string; completeness: number }[] };
+        set({
+          requirements: state.requirements.map(r =>
+            r.id === requirementId ? { ...r, completeness: summary.completeness } : r,
+          ),
+        } as Partial<SummariesSlice>);
+      }
+
       log.info('generateSummary', 'Summary generated', { requirementId, summaryId: summary.id });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';

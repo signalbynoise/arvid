@@ -1,6 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RepoAnalysis } from '../shared/schemas/repoContext';
 
+export type SuggestionDisposition = 'pending' | 'accepted' | 'rejected';
+
+export interface PriorSuggestion {
+  text: string;
+  importance: string;
+  category: string;
+  disposition: SuggestionDisposition;
+}
+
 export interface RequirementFullContext {
   requirement: {
     id: string;
@@ -23,6 +32,7 @@ export interface RequirementFullContext {
     author?: string;
     answers: { text: string; author: string; isCurrent: boolean }[];
   }[];
+  suggestionHistory: PriorSuggestion[];
   repoContext?: RepoAnalysis;
 }
 
@@ -116,6 +126,20 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
         })),
     }));
 
+  const suggestionHistory: PriorSuggestion[] = (dbQuestions || [])
+    .filter((q: { type: string | null }) => q.type === 'Auto-generated')
+    .map((q: { text: string; importance: string; category: string; is_suggested: boolean | null; is_hidden: boolean | null }): PriorSuggestion => {
+      let disposition: SuggestionDisposition;
+      if (q.is_hidden) {
+        disposition = 'rejected';
+      } else if (q.is_suggested) {
+        disposition = 'pending';
+      } else {
+        disposition = 'accepted';
+      }
+      return { text: q.text, importance: q.importance, category: q.category, disposition };
+    });
+
   return {
     requirement: {
       id: requirement.id,
@@ -130,6 +154,7 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     projectName,
     siblingRequirements,
     questions,
+    suggestionHistory,
     repoContext,
   };
 }

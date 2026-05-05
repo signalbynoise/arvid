@@ -5,6 +5,7 @@ import { CreateQuestionBodySchema, UpdateQuestionBodySchema } from '../../shared
 import { suggestQuestions, classifyQuestion } from '../openrouter';
 import { fetchRequirementContext } from '../context';
 import { nextShortId, formatShortId } from '../lib/shortId';
+import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const questionsRouter = Router();
 
@@ -46,6 +47,24 @@ questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, re
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  const { data: requirement } = await db
+    .from('requirements')
+    .select('project_id, title')
+    .eq('id', req.body.requirement_id)
+    .single();
+
+  if (requirement?.project_id) {
+    sendSlackNotification({
+      projectId: requirement.project_id,
+      eventType: 'question_posed',
+      title: data.text,
+      summary: `New question on requirement "${requirement.title}"`,
+      entityId: data.id,
+      db,
+    });
+  }
+
   res.status(201).json(data);
 });
 
@@ -114,8 +133,37 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
         category: q.category,
         answers: q.answers.map(a => ({ text: a.text, author: a.author })),
       })),
+      suggestionHistory: context.suggestionHistory,
       repoContext: context.repoContext,
     });
+
+    const existingTexts = new Set(
+      context.suggestionHistory.map(s => s.text.toLowerCase().trim()),
+    );
+    for (const q of context.questions) {
+      existingTexts.add(q.text.toLowerCase().trim());
+    }
+
+    const dedupedSuggestions = suggestions.filter(s => {
+      const normalized = s.text.toLowerCase().trim();
+      if (existingTexts.has(normalized)) {
+        console.debug(
+          '[DEBUG] [questions:suggest] Filtered duplicate suggestion',
+          JSON.stringify({ text: s.text.substring(0, 60) }),
+        );
+        return false;
+      }
+      existingTexts.add(normalized);
+      return true;
+    });
+
+    if (dedupedSuggestions.length === 0) {
+      console.info(
+        '[INFO] [questions:suggest] No new suggestions after dedup',
+        JSON.stringify({ requirementId, rawCount: suggestions.length }),
+      );
+      return res.status(200).json([]);
+    }
 
     const { count: existingCount } = await db
       .from('questions')
@@ -124,7 +172,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
 
     const baseCount = existingCount ?? 0;
 
-    const rows = suggestions.map((s, i) => ({
+    const rows = dedupedSuggestions.map((s, i) => ({
       id: `qs-${requirementId}-${Date.now()}-${i}`,
       requirement_id: requirementId,
       short_id: formatShortId('Q', baseCount + i),

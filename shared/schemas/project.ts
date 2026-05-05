@@ -13,6 +13,7 @@ export const ProjectRowSchema = z.object({
   linear_project_id: z.string().nullable().optional(),
   linear_project_name: z.string().nullable().optional(),
   linear_team_id: z.string().nullable().optional(),
+  slack_notification_channel_id: z.string().nullable().optional(),
 });
 
 export const ProjectSchema = ProjectRowSchema.transform(row => ({
@@ -27,6 +28,7 @@ export const ProjectSchema = ProjectRowSchema.transform(row => ({
   linearProjectId: row.linear_project_id ?? undefined,
   linearProjectName: row.linear_project_name ?? undefined,
   linearTeamId: row.linear_team_id ?? undefined,
+  slackNotificationChannelId: row.slack_notification_channel_id ?? undefined,
 }));
 
 export const CreateProjectBodySchema = z.object({
@@ -42,6 +44,7 @@ export const UpdateProjectBodySchema = z.object({
   linear_project_id: z.string().nullable().optional(),
   linear_project_name: z.string().nullable().optional(),
   linear_team_id: z.string().nullable().optional(),
+  slack_notification_channel_id: z.string().nullable().optional(),
 });
 
 export type ProjectRow = z.infer<typeof ProjectRowSchema>;

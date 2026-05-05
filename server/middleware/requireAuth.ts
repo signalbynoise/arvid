@@ -12,6 +12,7 @@ declare global {
       accessToken?: string;
       githubToken?: string;
       linearToken?: string;
+      slackToken?: string;
     }
   }
 }
@@ -122,5 +123,30 @@ export async function requireLinear(req: Request, res: Response, next: NextFunct
     req.linearToken = data.access_token;
   }
 
+  next();
+}
+
+export async function requireSlack(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('slack_connections')
+    .select('access_token')
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (error || !data) {
+    console.warn(
+      `[WARN] [auth:requireSlack] No Slack connection found`,
+      JSON.stringify({ userId: req.user.id }),
+    );
+    res.status(403).json({ error: 'Slack workspace not connected. Please connect your Slack workspace first.' });
+    return;
+  }
+
+  req.slackToken = data.access_token;
   next();
 }

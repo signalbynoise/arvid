@@ -37,13 +37,15 @@ function computeLocalCompleteness(reqId: string, allQuestions: { requirementId: 
   return totalWeight > 0 ? Math.round((answeredWeight / totalWeight) * 100) : 0;
 }
 
+function effectiveCompleteness(req: { id: string; completeness: number }, allQuestions: { requirementId: string; status: string; importance: string }[]): number {
+  return req.completeness > 0 ? req.completeness : computeLocalCompleteness(req.id, allQuestions);
+}
+
 export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
   const requirements = useStore(selectRequirements);
   const allQuestions = useStore(selectQuestions);
   const selectedId = useStore(selectSelectedReqId);
   const selectRequirement = useStore(s => s.selectRequirement);
-  const summary = useStore(s => s.summary);
-  const selectedReqId = useStore(selectSelectedReqId);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
@@ -55,8 +57,8 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
 
   const processedRequirements = useMemo(() => {
     let sorted = [...requirements];
-    if (sortBy === 'completeness_desc') sorted.sort((a, b) => computeLocalCompleteness(b.id, allQuestions) - computeLocalCompleteness(a.id, allQuestions));
-    else if (sortBy === 'completeness_asc') sorted.sort((a, b) => computeLocalCompleteness(a.id, allQuestions) - computeLocalCompleteness(b.id, allQuestions));
+    if (sortBy === 'completeness_desc') sorted.sort((a, b) => effectiveCompleteness(b, allQuestions) - effectiveCompleteness(a, allQuestions));
+    else if (sortBy === 'completeness_asc') sorted.sort((a, b) => effectiveCompleteness(a, allQuestions) - effectiveCompleteness(b, allQuestions));
     else if (sortBy === 'risk_desc') sorted.sort((a, b) => (riskScore[b.risk as keyof typeof riskScore] || 0) - (riskScore[a.risk as keyof typeof riskScore] || 0));
     else if (sortBy === 'clarity_asc') sorted.sort((a, b) => (clarityScore[a.clarity as keyof typeof clarityScore] || 0) - (clarityScore[b.clarity as keyof typeof clarityScore] || 0));
 
@@ -79,9 +81,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
   const renderRequirement = (req: Requirement) => {
     const isSelected = req.id === selectedId;
     const isDimmed = selectedId !== null && !isSelected;
-    const liveCompleteness = (isSelected && summary?.completeness !== undefined)
-      ? summary.completeness
-      : computeLocalCompleteness(req.id, allQuestions);
+    const liveCompleteness = effectiveCompleteness(req, allQuestions);
     
     return (
       <div
@@ -165,7 +165,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
   };
 
   return (
-    <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+    <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
       <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
         <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">1. Requirements</h2>
         <div className="flex items-center">

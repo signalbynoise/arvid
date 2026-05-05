@@ -21,3 +21,9 @@ export const selectIsAnswerSuggestionSkipped = (state: AppState) =>
 
 export const selectSummary = (state: AppState) => state.summary;
 export const selectSummaryDataState = (state: AppState) => state.summaryDataState;
+
+export const selectCommandPaletteOpen = (state: AppState) => state.commandPaletteOpen;
+export const selectPendingModal = (state: AppState) => state.pendingModal;
+
+export const selectSlackConnection = (state: AppState) => state.slackConnection;
+export const selectSlackChannels = (state: AppState) => state.slackChannels;

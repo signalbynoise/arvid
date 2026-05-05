@@ -260,6 +260,135 @@ Respond ONLY with the JSON object, no markdown fences, no explanation.`,
   return { title, description };
 }
 
+export interface SlackMessageInput {
+  slack_ts: string;
+  username: string;
+  text: string;
+  thread_ts?: string;
+}
+
+export interface AnalyzedRequirement {
+  title: string;
+  description: string;
+  sourceMessageTs: string[];
+}
+
+export async function analyzeSlackMessages(messages: SlackMessageInput[], existingRequirements: string[] = []): Promise<AnalyzedRequirement[]> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  console.info(
+    `[INFO] [openrouter:analyzeSlackMessages] Calling ${OPENROUTER_MODEL}`,
+    JSON.stringify({ messageCount: messages.length, existingCount: existingRequirements.length }),
+  );
+
+  const messageBlock = messages.map(m => {
+    const threadTag = m.thread_ts ? ` [thread:${m.thread_ts}]` : '';
+    return `[${m.slack_ts}] @${m.username}${threadTag}: ${m.text}`;
+  }).join('\n');
+
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://arvid.work',
+      'X-Title': 'Arvid',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are Arvid, an AI specification writer. You analyze Slack messages from a team channel and identify actionable software requirements, feature requests, or technical decisions.
+
+Your task:
+1. Read the messages and identify distinct requirements, feature requests, bugs, or technical decisions.
+2. For each one, produce a structured requirement with a title and professional description.
+3. Tag each requirement with the slack_ts timestamps of the messages it was derived from.
+
+Rules:
+- Only extract genuine requirements/requests — ignore casual chat, greetings, or off-topic messages.
+- If messages form a thread discussing the same topic, group them into one requirement.
+- Write descriptions in third person, present tense ("The system shall...").
+- Be specific about what is expected: inputs, outputs, constraints.
+- If no actionable requirements exist in the messages, return an empty array.
+- Return between 0 and 5 requirements maximum.
+- Do NOT suggest requirements that overlap with or duplicate any existing requirements listed below.
+
+Respond with valid JSON in this exact format:
+{
+  "requirements": [
+    {
+      "title": "Short descriptive title (3-8 words)",
+      "description": "Professional requirement description...",
+      "sourceMessageTs": ["1234567890.123456", "1234567891.654321"]
+    }
+  ]
+}`,
+        },
+        {
+          role: 'user',
+          content: existingRequirements.length > 0
+            ? `Existing requirements in this project (do NOT duplicate these):\n${existingRequirements.map(t => `- ${t}`).join('\n')}\n\nAnalyze these Slack messages and extract NEW requirements:\n\n${messageBlock}`
+            : `Analyze these Slack messages and extract requirements:\n\n${messageBlock}`,
+        },
+      ],
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      '[ERROR] [openrouter:analyzeSlackMessages] API call failed',
+      JSON.stringify({ status: response.status, body: errorBody }),
+    );
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    console.error('[ERROR] [openrouter:analyzeSlackMessages] No content in response');
+    return [];
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error('[ERROR] [openrouter:analyzeSlackMessages] Failed to parse JSON');
+    return [];
+  }
+
+  const result = parsed as { requirements?: unknown[] };
+  if (!Array.isArray(result.requirements)) {
+    return [];
+  }
+
+  const analyzed: AnalyzedRequirement[] = result.requirements
+    .filter((r): r is Record<string, unknown> => typeof r === 'object' && r !== null)
+    .map(r => ({
+      title: typeof r.title === 'string' ? r.title : 'Untitled',
+      description: typeof r.description === 'string' ? r.description : '',
+      sourceMessageTs: Array.isArray(r.sourceMessageTs)
+        ? r.sourceMessageTs.filter((ts): ts is string => typeof ts === 'string')
+        : [],
+    }))
+    .filter(r => r.description.length > 0);
+
+  console.info(
+    '[INFO] [openrouter:analyzeSlackMessages] Analysis complete',
+    JSON.stringify({ requirementCount: analyzed.length }),
+  );
+
+  return analyzed;
+}
+
 export async function generateSummary(input: SummaryGenerationInput): Promise<GenerateSummaryResponse> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured');
@@ -477,12 +606,20 @@ export interface ExistingQuestionContext {
   answers: { text: string; author: string }[];
 }
 
+export interface PriorSuggestionContext {
+  text: string;
+  importance: string;
+  category: string;
+  disposition: 'pending' | 'accepted' | 'rejected';
+}
+
 export interface SuggestQuestionsInput {
   requirementTitle: string;
   requirementDescription?: string;
   projectName?: string;
   existingRequirements?: string[];
   existingQuestions?: ExistingQuestionContext[];
+  suggestionHistory?: PriorSuggestionContext[];
   repoContext?: RepoAnalysis;
 }
 
@@ -514,6 +651,7 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
       requirementTitle: input.requirementTitle,
       project: input.projectName,
       existingQuestionCount: input.existingQuestions?.length ?? 0,
+      priorSuggestionCount: input.suggestionHistory?.length ?? 0,
     }),
   );
 
@@ -540,6 +678,14 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
       } else {
         qaTreeBlock += `\n  No answers yet.`;
       }
+    }
+  }
+
+  let suggestionHistoryBlock = '';
+  if (input.suggestionHistory && input.suggestionHistory.length > 0) {
+    suggestionHistoryBlock += `\n\n## Your Prior Suggestions (${input.suggestionHistory.length} total)\nThese are questions YOU previously suggested for this requirement. DO NOT repeat or rephrase any of them.\n`;
+    for (const s of input.suggestionHistory) {
+      suggestionHistoryBlock += `\n- [${s.disposition.toUpperCase()}] [${s.importance}] [${s.category}]: ${s.text}`;
     }
   }
 
@@ -590,8 +736,16 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
 - Good: "Is there a deadline for this?"
 - Bad: "What are the SLA requirements and time-to-completion constraints for the delivery timeline?"
 
+## Duplicate Avoidance (CRITICAL)
+You will receive a full history of your prior suggestions and their outcomes:
+- PENDING: User hasn't reviewed yet — still visible in their queue.
+- ACCEPTED: User found it valuable and promoted it to a real question.
+- REJECTED: User dismissed it — they do not want this question.
+
+You MUST NOT repeat, rephrase, or closely paraphrase ANY prior suggestion, regardless of its disposition. Every new suggestion must cover a genuinely different topic or angle not already addressed by prior suggestions or existing questions.
+
 ## Process
-1. Review what's already been asked and answered.
+1. Review what's already been asked, answered, AND previously suggested (including rejected suggestions).
 2. Identify only the MOST IMPORTANT remaining gaps — things that would block or derail work.
 3. Skip dimensions that are already well-covered OR where the answer is obvious from context.
 4. If coverage is good enough to start work, return an EMPTY questions array.
@@ -611,7 +765,7 @@ Respond ONLY with the JSON object, no markdown fences.`,
 
 Title: ${input.requirementTitle}
 ${input.requirementDescription ? `Description: ${input.requirementDescription}` : ''}
-${contextBlock}${qaTreeBlock}${input.repoContext ? `\n${buildCodebaseContextBlock(input.repoContext)}` : ''}`,
+${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${input.repoContext ? `\n${buildCodebaseContextBlock(input.repoContext)}` : ''}`,
         },
       ],
       temperature: 0.4,

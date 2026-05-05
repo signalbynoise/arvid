@@ -3,7 +3,7 @@ import { TopNav } from '../components/TopNav';
 import { HeroSection } from '../components/HeroSection';
 import { IntegrationsSection } from '../components/IntegrationsSection';
 import { FeatureSection } from '../components/FeatureSection';
-import { GitHubDemo } from '../components/GitHubDemo';
+import { GitHubDemo } from '../components/github-demo';
 
 import { RequirementGridSection } from '../components/RequirementGridSection';
 import { ProductFeaturesSection } from '../components/ProductFeaturesSection';

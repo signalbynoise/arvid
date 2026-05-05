@@ -4,7 +4,7 @@ import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, C
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { NewQuestionModal } from './NewQuestionModal';
-import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions } from '../store';
+import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions, selectPendingModal } from '../store';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
@@ -245,6 +245,15 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   const [sortBy, setSortBy] = useState('default');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [isNewQuestionOpen, setIsNewQuestionOpen] = useState(false);
+  const pendingModal = useStore(selectPendingModal);
+  const clearPendingModal = useStore(s => s.clearPendingModal);
+
+  useEffect(() => {
+    if (pendingModal?.type === 'createQuestion') {
+      setIsNewQuestionOpen(true);
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
@@ -350,7 +359,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
 
   if (questions.length === 0) {
     return (
-      <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+      <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
         <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
           <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
           {headerControls}
@@ -375,7 +384,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   }
 
   return (
-    <div className="w-1/4 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
+    <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
       <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
         <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
         {headerControls}

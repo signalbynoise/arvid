@@ -1,12 +1,14 @@
 import React, { useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
+import { useStore, selectCommandPaletteOpen } from '../store';
 
-type ModalSize = 'sm' | 'md' | 'lg';
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_CLASSES: Record<ModalSize, string> = {
   sm: 'max-w-[400px]',
   md: 'max-w-[480px]',
   lg: 'max-w-[520px]',
+  xl: 'max-w-4xl',
 };
 
 interface BaseModalProps {
@@ -18,9 +20,11 @@ interface BaseModalProps {
 }
 
 export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: BaseModalProps) {
+  const commandPaletteOpen = useStore(selectCommandPaletteOpen);
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
-  }, [onClose]);
+    if (e.key === 'Escape' && !commandPaletteOpen) onClose();
+  }, [onClose, commandPaletteOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,7 +56,7 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
           </button>
         </div>
 
-        <div className="p-5">
+        <div className={size === 'xl' ? '' : 'p-5'}>
           {children}
         </div>
       </div>

@@ -49,6 +49,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const [description, setDescription] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [slackWideMode, setSlackWideMode] = useState(false);
 
   const reset = () => {
     setStep('WRITE');
@@ -57,6 +58,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     setDescription('');
     setValidationError(null);
     setIsEnhancing(false);
+    setSlackWideMode(false);
   };
 
   const handleClose = () => { onClose(); reset(); };
@@ -90,6 +92,14 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     setTimeout(() => { createRequirement(text, ownerName); handleClose(); }, 1500);
   };
 
+  const handleImportMultiple = async (items: Array<{ title: string; description: string }>) => {
+    setStep('SUCCESS');
+    for (const item of items) {
+      await createRequirement(item.description, ownerName, item.title);
+    }
+    setTimeout(() => handleClose(), 1200);
+  };
+
   const renderStep = () => {
     switch (step) {
       case 'WRITE':
@@ -121,14 +131,16 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
       case 'EMAIL_IMPORT':
         return <ImportFromEmail onBack={() => setStep('WRITE')} onImport={handleImportComplete} />;
       case 'SLACK_IMPORT':
-        return <ImportFromSlack onBack={() => setStep('WRITE')} onImport={handleImportComplete} />;
+        return <ImportFromSlack onBack={() => { setStep('WRITE'); setSlackWideMode(false); }} onImport={handleImportComplete} onImportMultiple={handleImportMultiple} onWideChange={setSlackWideMode} />;
       case 'SUCCESS':
         return <SuccessStep />;
     }
   };
 
+  const modalSize = step === 'SLACK_IMPORT' && slackWideMode ? 'xl' : 'lg';
+
   return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title={STEP_TITLES[step]} size="lg">
+    <BaseModal isOpen={isOpen} onClose={handleClose} title={STEP_TITLES[step]} size={modalSize}>
       {renderStep()}
     </BaseModal>
   );
