@@ -6,6 +6,7 @@ import { Requirement, Question, Summary } from '../types';
 
 const mockReq: Requirement = {
   id: 'r1',
+  shortId: 'R01',
   title: 'SOC2 Automated Access Review Workflows',
   source: 'User',
   owner: 'Fiona R.',
@@ -21,12 +22,15 @@ const mockQuestions: Question[] = [
 
 const mockSummary: Summary = {
   id: 's1',
+  shortId: 'S01',
   requirementId: 'r1',
   synthesis: 'Test synthesis content.',
   coreObjective: 'Test objective content.',
   architecture: 'Test architecture content.',
   constraints: 'Test constraints content.',
   unverifiedRisks: 'Test risks content.',
+  completeness: 72,
+  completenessReasoning: 'Critical questions about token format remain unanswered.',
   model: 'x-ai/grok-4.1-fast',
 };
 
@@ -47,10 +51,11 @@ describe('SummaryColumn', () => {
     expect(screen.getByText('4. Summary')).toBeInTheDocument();
   });
 
-  it('shows the requirement title', () => {
-    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
+  it('shows the requirement title with summary short ID', () => {
+    setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1', summary: mockSummary });
     render(<SummaryColumn />);
     expect(screen.getByText('SOC2 Automated Access Review Workflows')).toBeInTheDocument();
+    expect(screen.getByText('S01')).toBeInTheDocument();
   });
 
   it('shows the Arvid Specification label', () => {

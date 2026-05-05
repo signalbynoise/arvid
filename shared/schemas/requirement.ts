@@ -4,6 +4,7 @@ import { ClarityEnum, RiskEnum } from './enums';
 export const RequirementRowSchema = z.object({
   id: z.string(),
   title: z.string(),
+  short_id: z.string().nullable().optional(),
   source: z.string(),
   owner: z.string(),
   owner_team: z.string().nullable().optional(),
@@ -14,11 +15,17 @@ export const RequirementRowSchema = z.object({
   clarity: ClarityEnum,
   risk: RiskEnum,
   project_id: z.string().nullable().optional(),
+  linear_issue_id: z.string().nullable().optional(),
+  linear_issue_identifier: z.string().nullable().optional(),
+  linear_issue_url: z.string().nullable().optional(),
+  linear_status: z.string().nullable().optional(),
+  linear_status_type: z.string().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
   id: row.id,
   title: row.title,
+  shortId: row.short_id ?? undefined,
   source: row.source,
   owner: row.owner,
   ownerTeam: row.owner_team ?? undefined,
@@ -29,6 +36,11 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   clarity: row.clarity,
   risk: row.risk,
   projectId: row.project_id ?? undefined,
+  linearIssueId: row.linear_issue_id ?? undefined,
+  linearIssueIdentifier: row.linear_issue_identifier ?? undefined,
+  linearIssueUrl: row.linear_issue_url ?? undefined,
+  linearStatus: row.linear_status ?? 'Pre-backlog',
+  linearStatusType: row.linear_status_type ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({

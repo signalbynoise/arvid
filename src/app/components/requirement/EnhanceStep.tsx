@@ -1,17 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowLeft, LoaderPinwheel } from 'lucide-react';
+import { ArrowLeft, LoaderPinwheel, GitBranch } from 'lucide-react';
 
 interface Props {
   isEnhancing: boolean;
   title: string;
   description: string;
+  hasRepoContext: boolean;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onBack: () => void;
   onCreate: () => void;
 }
 
-export function EnhanceStep({ isEnhancing, title, description, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
+export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -25,13 +26,26 @@ export function EnhanceStep({ isEnhancing, title, description, onTitleChange, on
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <LoaderPinwheel size={28} className="text-text-tertiary animate-spin" />
         <p className="text-[14px] font-[var(--fw-medium)] text-text-primary">Arvid is enhancing the requirement</p>
-        <p className="text-[13px] text-text-quaternary">Generating title and structured specification...</p>
+        <p className="text-[13px] text-text-quaternary">
+          {hasRepoContext
+            ? 'Generating specification using your codebase context...'
+            : 'Generating title and structured specification...'}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
+      {hasRepoContext && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-surface-frost-02 border border-border-default rounded-comfortable">
+          <GitBranch size={13} className="shrink-0 text-green-500" />
+          <span className="text-[12px] text-text-secondary">
+            Enhanced with codebase context from your linked repository
+          </span>
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Title</label>
         <input

@@ -1,0 +1,27 @@
+# Design System Enforcement
+
+All visual styling **must** use the centralized token system defined in `src/styles/theme.css`.
+Read `docs/design_system.md` for the complete token reference before writing any UI code.
+
+## Non-Negotiable Rules
+
+1. **No hardcoded colors.** Use `bg-surface-*`, `text-text-*`, `border-border-*`, `text-status-*`, `bg-accent-*`, etc.
+2. **No hardcoded rgba values.** Every opacity variant has a named token.
+3. **No arbitrary font weights.** Use `font-[var(--fw-medium)]` (510), `font-[var(--fw-regular)]` (400), `font-[var(--fw-semibold)]` (590).
+4. **No arbitrary border radii.** Use `rounded-micro` (2px), `rounded-standard` (4px), `rounded-comfortable` (6px), `rounded-card` (8px), `rounded-panel` (12px), `rounded-pill` (9999px).
+5. **No arbitrary shadows.** Use `shadow-subtle`, `shadow-ring`, `shadow-elevated`, `shadow-modal`, `shadow-focus`, `shadow-inset`, `shadow-card-selected`, `shadow-accent-selected`.
+6. **No inline `style={{}}` for visual properties.** Only `--depth` (tree indentation) and `--progress` (bar width) are permitted as CSS custom property assignments.
+7. **Typography presets exist.** Use `.text-h1`, `.text-caption`, `.text-label`, `.text-section`, etc. instead of combining `text-[Npx] font-[N] tracking-[...] leading-[...]` manually.
+8. **Button variant classes exist.** Use `.btn-primary`, `.btn-ghost`, `.btn-subtle`, `.btn-destructive` instead of rebuilding button styles inline.
+9. **`font-feature-settings` is global.** Set on `body` in `theme.css`. Never set inline.
+10. **New tokens must be added to `theme.css` `:root`, registered in `@theme inline`, and documented in `docs/design_system.md`.**
+
+## Quick Reference
+
+### Common Replacements
+- Background: `bg-surface-base`, `bg-surface-panel`, `bg-surface-frost-02`, `bg-surface-frost-04`
+- Text: `text-text-primary`, `text-text-secondary`, `text-text-tertiary`, `text-text-quaternary`
+- Borders: `border-border-subtle`, `border-border-default`, `border-border-strong`, `border-border-focus`
+- Status: `text-status-success`, `text-status-warning`, `text-status-error`
+- Buttons: `bg-btn-primary`, `hover:bg-btn-primary-hover`
+- Overlay: `bg-overlay-scrim`

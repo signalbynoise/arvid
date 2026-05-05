@@ -66,3 +66,34 @@ export {
   AnswerInputSchema,
   ProjectNameSchema,
 } from './input';
+
+export {
+  GitHubConnectionRowSchema,
+  GitHubConnectionSchema,
+  GitHubRepoSchema,
+} from './githubConnection';
+
+export type { GitHubConnectionRow, GitHubConnection, GitHubRepo } from './githubConnection';
+
+export {
+  LinearConnectionRowSchema,
+  LinearConnectionSchema,
+} from './linearConnection';
+
+export type { LinearConnectionRow, LinearConnection } from './linearConnection';
+
+export {
+  FileTreeEntrySchema,
+  CommitEntrySchema,
+  RepoAnalysisSchema,
+  RepoContextRowSchema,
+  RepoContextSchema,
+} from './repoContext';
+
+export type {
+  FileTreeEntry,
+  CommitEntry,
+  RepoAnalysis,
+  RepoContextRow,
+  RepoContext,
+} from './repoContext';

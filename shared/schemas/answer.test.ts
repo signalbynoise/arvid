@@ -46,7 +46,8 @@ describe('AnswerSchema (transform)', () => {
   };
 
   it('transforms snake_case to camelCase', () => {
-    const result = AnswerSchema.parse(validRow);
+    const result = AnswerSchema.parse({ ...validRow, short_id: 'A01' });
+    expect(result.shortId).toBe('A01');
     expect(result.questionId).toBe('q1');
     expect(result.isCurrent).toBe(false);
   });
@@ -100,5 +101,57 @@ describe('UpdateAnswerBodySchema', () => {
   it('rejects non-boolean is_current', () => {
     const result = UpdateAnswerBodySchema.safeParse({ is_current: 'yes' });
     expect(result.success).toBe(false);
+  });
+
+  it('accepts is_suggested update', () => {
+    const result = UpdateAnswerBodySchema.safeParse({ is_suggested: false });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts is_hidden update', () => {
+    const result = UpdateAnswerBodySchema.safeParse({ is_hidden: true });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('AnswerSchema suggested answer fields', () => {
+  const baseRow = {
+    id: 'a1',
+    question_id: 'q1',
+    text: 'Best practice suggests using OAuth2.',
+    author: 'Arvid',
+    date: '2026-05-04',
+    is_current: false,
+  };
+
+  it('transforms is_suggested to isSuggested', () => {
+    const result = AnswerSchema.parse({ ...baseRow, is_suggested: true, is_hidden: false });
+    expect(result.isSuggested).toBe(true);
+    expect(result.isHidden).toBe(false);
+  });
+
+  it('defaults isSuggested to undefined when null', () => {
+    const result = AnswerSchema.parse({ ...baseRow, is_suggested: null, is_hidden: null });
+    expect(result.isSuggested).toBeUndefined();
+    expect(result.isHidden).toBeUndefined();
+  });
+
+  it('defaults isSuggested to undefined when missing', () => {
+    const result = AnswerSchema.parse(baseRow);
+    expect(result.isSuggested).toBeUndefined();
+    expect(result.isHidden).toBeUndefined();
+  });
+
+  it('accepts is_suggested in CreateAnswerBodySchema', () => {
+    const body = {
+      question_id: 'q1',
+      text: 'AI answer',
+      author: 'Arvid',
+      date: '2026-05-04',
+      is_suggested: true,
+      is_hidden: false,
+    };
+    const result = CreateAnswerBodySchema.safeParse(body);
+    expect(result.success).toBe(true);
   });
 });

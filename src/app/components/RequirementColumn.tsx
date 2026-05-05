@@ -3,7 +3,8 @@ import { Requirement } from '../types';
 import { User, Plus, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
-import { useStore, selectRequirements, selectSelectedReqId } from '../store';
+import { LinearStatusPill } from './LinearStatusPill';
+import { useStore, selectRequirements, selectQuestions, selectSelectedReqId } from '../store';
 
 interface Props {
   onNewReqClick?: () => void;
@@ -29,10 +30,20 @@ const SORT_OPTIONS = [
 const riskScore = { 'High': 3, 'Medium': 2, 'Low': 1 };
 const clarityScore = { 'High': 3, 'Medium': 2, 'Low': 1 };
 
+function computeLocalCompleteness(reqId: string, allQuestions: { requirementId: string; status: string; importance: string }[]): number {
+  const questions = allQuestions.filter(q => q.requirementId === reqId);
+  const totalWeight = questions.reduce((acc, q) => acc + (q.importance === 'Critical' ? 3 : q.importance === 'Important' ? 2 : 1), 0);
+  const answeredWeight = questions.filter(q => q.status === 'Answered').reduce((acc, q) => acc + (q.importance === 'Critical' ? 3 : q.importance === 'Important' ? 2 : 1), 0);
+  return totalWeight > 0 ? Math.round((answeredWeight / totalWeight) * 100) : 0;
+}
+
 export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
   const requirements = useStore(selectRequirements);
+  const allQuestions = useStore(selectQuestions);
   const selectedId = useStore(selectSelectedReqId);
   const selectRequirement = useStore(s => s.selectRequirement);
+  const summary = useStore(s => s.summary);
+  const selectedReqId = useStore(selectSelectedReqId);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
@@ -44,8 +55,8 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
 
   const processedRequirements = useMemo(() => {
     let sorted = [...requirements];
-    if (sortBy === 'completeness_desc') sorted.sort((a, b) => b.completeness - a.completeness);
-    else if (sortBy === 'completeness_asc') sorted.sort((a, b) => a.completeness - b.completeness);
+    if (sortBy === 'completeness_desc') sorted.sort((a, b) => computeLocalCompleteness(b.id, allQuestions) - computeLocalCompleteness(a.id, allQuestions));
+    else if (sortBy === 'completeness_asc') sorted.sort((a, b) => computeLocalCompleteness(a.id, allQuestions) - computeLocalCompleteness(b.id, allQuestions));
     else if (sortBy === 'risk_desc') sorted.sort((a, b) => (riskScore[b.risk as keyof typeof riskScore] || 0) - (riskScore[a.risk as keyof typeof riskScore] || 0));
     else if (sortBy === 'clarity_asc') sorted.sort((a, b) => (clarityScore[a.clarity as keyof typeof clarityScore] || 0) - (clarityScore[b.clarity as keyof typeof clarityScore] || 0));
 
@@ -63,11 +74,14 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
       grouped[key].push(req);
     });
     return grouped;
-  }, [requirements, groupBy, sortBy]);
+  }, [requirements, allQuestions, groupBy, sortBy]);
 
   const renderRequirement = (req: Requirement) => {
     const isSelected = req.id === selectedId;
     const isDimmed = selectedId !== null && !isSelected;
+    const liveCompleteness = (isSelected && summary?.completeness !== undefined)
+      ? summary.completeness
+      : computeLocalCompleteness(req.id, allQuestions);
     
     return (
       <div
@@ -94,13 +108,19 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
           <Eye size={14} />
         </button>
 
-        <h3 className="font-[var(--fw-medium)] text-text-primary text-[15px] mb-2 pr-6 leading-tight tracking-[-0.165px]">{req.title}</h3>
+        <div className="flex items-baseline gap-2 mb-2 pr-6">
+          {req.shortId && (
+            <span className="text-[11px] font-mono text-text-quaternary shrink-0">{req.shortId}</span>
+          )}
+          <h3 className="font-[var(--fw-medium)] text-text-primary text-[15px] leading-tight tracking-[-0.165px]">{req.title}</h3>
+        </div>
         
         <div className="flex items-center text-[13px] text-text-tertiary mb-3 space-x-3">
           <div className="flex items-center space-x-1.5">
             <User size={14} className="opacity-70" />
             <span className="truncate max-w-[80px]" title={req.owner}>{req.owner}</span>
           </div>
+          <LinearStatusPill status={req.linearStatus} statusType={req.linearStatusType} />
         </div>
 
         <div className="flex items-center justify-between text-[12px] mt-3">
@@ -110,12 +130,12 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
               <div className="w-12 h-1.5 bg-surface-frost-10 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${
-                    req.completeness >= 80 ? 'bg-status-success' : req.completeness >= 50 ? 'bg-status-warning' : 'bg-status-error'
+                    liveCompleteness >= 80 ? 'bg-status-success' : liveCompleteness >= 50 ? 'bg-status-warning' : 'bg-status-error'
                   }`} 
-                  style={{ '--progress': `${req.completeness}%` } as React.CSSProperties} 
+                  style={{ '--progress': `${liveCompleteness}%` } as React.CSSProperties} 
                 />
               </div>
-              <span className="font-[var(--fw-medium)] text-text-secondary">{req.completeness}%</span>
+              <span className="font-[var(--fw-medium)] text-text-secondary">{liveCompleteness}%</span>
             </div>
           </div>
 

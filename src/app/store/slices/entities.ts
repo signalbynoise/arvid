@@ -22,6 +22,8 @@ export interface EntitiesSlice {
   dataState: DataState;
   abortController: AbortController | null;
   isSuggestingQuestions: boolean;
+  suggestingForRequirements: Set<string>;
+  suggestingAnswerForQuestions: Set<string>;
 
   loadEntities: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
@@ -31,8 +33,13 @@ export interface EntitiesSlice {
   updateRequirement: (id: string, updates: { title?: string; description?: string; owner?: string }) => Promise<void>;
   deleteRequirement: (id: string) => Promise<void>;
   createQuestion: (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => Promise<void>;
+  updateQuestionText: (questionId: string, text: string) => Promise<void>;
   suggestQuestions: (requirementId: string) => Promise<void>;
   createAnswer: (text: string, questionId: string, author: string) => Promise<void>;
+  updateAnswerText: (answerId: string, text: string) => Promise<void>;
+  suggestAnswer: (questionId: string) => Promise<void>;
+  useSuggestedAnswer: (answerId: string) => Promise<void>;
+  hideSuggestedAnswer: (answerId: string) => Promise<void>;
   useSuggestion: (id: string) => Promise<void>;
   hideSuggestion: (id: string) => Promise<void>;
   toggleCurrentAnswer: (answerId: string) => Promise<void>;
@@ -45,6 +52,8 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   dataState: { status: 'idle' },
   abortController: null,
   isSuggestingQuestions: false,
+  suggestingForRequirements: new Set(),
+  suggestingAnswerForQuestions: new Set(),
 
   loadEntities: async (projectId?: string) => {
     const current = get();
@@ -205,14 +214,35 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
+  updateQuestionText: async (questionId: string, text: string) => {
+    log.info('updateQuestionText', 'Updating question text', { questionId });
+
+    const previousQuestions = get().questions;
+    set(state => ({
+      questions: state.questions.map(q => q.id === questionId ? { ...q, text } : q),
+    }));
+
+    try {
+      await api.updateQuestion(questionId, { text });
+      log.info('updateQuestionText', 'Question text updated', { questionId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('updateQuestionText', 'Failed to update question, rolling back', { questionId, error: message });
+      set({ questions: previousQuestions });
+    }
+  },
+
   suggestQuestions: async (requirementId: string) => {
-    if (get().isSuggestingQuestions) {
-      log.debug('suggestQuestions', 'Already suggesting, skipping', { requirementId });
+    const { suggestingForRequirements } = get();
+    if (suggestingForRequirements.has(requirementId)) {
+      log.debug('suggestQuestions', 'Already suggesting for this requirement, skipping', { requirementId });
       return;
     }
 
     log.info('suggestQuestions', 'Requesting AI question suggestions', { requirementId });
-    set({ isSuggestingQuestions: true });
+    const nextSet = new Set(suggestingForRequirements);
+    nextSet.add(requirementId);
+    set({ suggestingForRequirements: nextSet, isSuggestingQuestions: nextSet.size > 0 });
 
     try {
       const suggestions = await api.suggestQuestions(requirementId);
@@ -224,9 +254,12 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
             .map(q => q.id),
         );
         const newSuggestions = suggestions.filter(s => !existingSuggestionIds.has(s.id));
+        const updatedSet = new Set(state.suggestingForRequirements);
+        updatedSet.delete(requirementId);
         return {
           questions: [...state.questions, ...newSuggestions],
-          isSuggestingQuestions: false,
+          suggestingForRequirements: updatedSet,
+          isSuggestingQuestions: updatedSet.size > 0,
         };
       });
 
@@ -236,7 +269,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      set({ isSuggestingQuestions: false });
+      set(state => {
+        const updatedSet = new Set(state.suggestingForRequirements);
+        updatedSet.delete(requirementId);
+        return {
+          suggestingForRequirements: updatedSet,
+          isSuggestingQuestions: updatedSet.size > 0,
+        };
+      });
       log.error('suggestQuestions', 'Failed to generate suggestions', { requirementId, error: message });
     }
   },
@@ -251,6 +291,131 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createAnswer', 'Failed to create answer', { error: message });
+    }
+  },
+
+  updateAnswerText: async (answerId: string, text: string) => {
+    log.info('updateAnswerText', 'Updating answer text', { answerId });
+
+    const previousAnswers = get().answers;
+    set(state => ({
+      answers: state.answers.map(a => a.id === answerId ? { ...a, text } : a),
+    }));
+
+    try {
+      await api.updateAnswer(answerId, { text });
+      log.info('updateAnswerText', 'Answer text updated', { answerId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('updateAnswerText', 'Failed to update answer, rolling back', { answerId, error: message });
+      set({ answers: previousAnswers });
+    }
+  },
+
+  suggestAnswer: async (questionId: string) => {
+    const { suggestingAnswerForQuestions, answers, questions } = get();
+    if (suggestingAnswerForQuestions.has(questionId)) {
+      log.debug('suggestAnswer', 'Already suggesting for this question, skipping', { questionId });
+      return;
+    }
+
+    const question = questions.find(q => q.id === questionId);
+    if (question?.status === 'Answered') {
+      log.debug('suggestAnswer', 'Question already answered, skipping', { questionId });
+      return;
+    }
+
+    const hasSuggestedAnswer = answers.some(a => a.questionId === questionId && a.isSuggested && !a.isHidden);
+    if (hasSuggestedAnswer) {
+      log.debug('suggestAnswer', 'Suggested answer already exists, skipping', { questionId });
+      return;
+    }
+
+    log.info('suggestAnswer', 'Requesting AI answer suggestion', { questionId });
+    const nextSet = new Set(suggestingAnswerForQuestions);
+    nextSet.add(questionId);
+    set({ suggestingAnswerForQuestions: nextSet });
+
+    try {
+      const result = await api.suggestAnswer(questionId);
+
+      set(state => {
+        const updatedSet = new Set(state.suggestingAnswerForQuestions);
+        updatedSet.delete(questionId);
+
+        if ('skipped' in result) {
+          log.info('suggestAnswer', 'Question requires human answer', { questionId, reasoning: result.reasoning });
+          return { suggestingAnswerForQuestions: updatedSet };
+        }
+
+        const alreadyExists = state.answers.some(a => a.id === result.id);
+        return {
+          answers: alreadyExists ? state.answers : [...state.answers, result],
+          suggestingAnswerForQuestions: updatedSet,
+        };
+      });
+
+      if (!('skipped' in result)) {
+        log.info('suggestAnswer', 'Suggested answer added', { questionId, answerId: result.id });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      set(state => {
+        const updatedSet = new Set(state.suggestingAnswerForQuestions);
+        updatedSet.delete(questionId);
+        return { suggestingAnswerForQuestions: updatedSet };
+      });
+      log.error('suggestAnswer', 'Failed to generate answer suggestion', { questionId, error: message });
+    }
+  },
+
+  useSuggestedAnswer: async (answerId: string) => {
+    log.info('useSuggestedAnswer', 'Accepting suggested answer', { answerId });
+
+    set(state => ({
+      answers: state.answers.map(a =>
+        a.id === answerId ? { ...a, isSuggested: false } : a,
+      ),
+    }));
+
+    try {
+      await api.updateAnswer(answerId, { isSuggested: false });
+      log.info('useSuggestedAnswer', 'Suggested answer accepted', { answerId });
+    } catch (err) {
+      log.error('useSuggestedAnswer', 'Failed to persist answer acceptance, rolling back', {
+        answerId,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+      set(state => ({
+        answers: state.answers.map(a =>
+          a.id === answerId ? { ...a, isSuggested: true } : a,
+        ),
+      }));
+    }
+  },
+
+  hideSuggestedAnswer: async (answerId: string) => {
+    log.info('hideSuggestedAnswer', 'Hiding suggested answer', { answerId });
+
+    set(state => ({
+      answers: state.answers.map(a =>
+        a.id === answerId ? { ...a, isHidden: true } : a,
+      ),
+    }));
+
+    try {
+      await api.updateAnswer(answerId, { isHidden: true });
+      log.info('hideSuggestedAnswer', 'Suggested answer hidden', { answerId });
+    } catch (err) {
+      log.error('hideSuggestedAnswer', 'Failed to persist answer hide, rolling back', {
+        answerId,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+      set(state => ({
+        answers: state.answers.map(a =>
+          a.id === answerId ? { ...a, isHidden: false } : a,
+        ),
+      }));
     }
   },
 
@@ -270,6 +435,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       if (question?.requirementId) {
         get().suggestQuestions(question.requirementId);
       }
+      get().suggestAnswer(id);
     } catch (err) {
       log.error('useSuggestion', 'Failed to persist suggestion acceptance', {
         id,

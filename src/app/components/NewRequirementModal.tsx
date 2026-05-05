@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useStore, selectSelectedProjectId } from '../store';
+import React, { useState, useMemo } from 'react';
+import { useStore, selectSelectedProjectId, selectProjects } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
 import { BaseModal } from './BaseModal';
@@ -30,7 +30,13 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const createRequirement = useStore(s => s.createRequirement);
   const enhanceRequirement = useStore(s => s.enhanceRequirement);
   const selectedProjectId = useStore(selectSelectedProjectId);
+  const projects = useStore(selectProjects);
   const { user } = useAuth();
+
+  const hasRepoContext = useMemo(() => {
+    const project = projects.find(p => p.id === selectedProjectId);
+    return !!project?.githubRepo;
+  }, [projects, selectedProjectId]);
 
   const ownerName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -103,6 +109,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
             isEnhancing={isEnhancing}
             title={title}
             description={description}
+            hasRepoContext={hasRepoContext}
             onTitleChange={setTitle}
             onDescriptionChange={setDescription}
             onBack={() => setStep('WRITE')}

@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Question } from '../types';
-import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, ChevronDown, ChevronRight, Check, X, Eye, User, LoaderPinwheel } from 'lucide-react';
+import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, ChevronDown, ChevronRight, Check, X, Eye, User, LoaderPinwheel, Pencil } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { NewQuestionModal } from './NewQuestionModal';
@@ -27,6 +27,199 @@ const SORT_OPTIONS = [
 const importanceScore = { 'Critical': 3, 'Important': 2, 'Optional': 1 };
 const statusScore = { 'Unanswered': 3, 'Conflicting': 2, 'Answered': 1 };
 
+interface QuestionCardProps {
+  q: Question;
+  isSelected: boolean;
+  isDimmed: boolean;
+  onSelect: (id: string) => void;
+  onOpenDetails?: (id: string) => void;
+  onUseSuggestion: (id: string) => void;
+  onHideSuggestion: (id: string) => void;
+  getStatusIcon: (status: string) => React.ReactNode;
+  getStatusClass: (status: string) => string;
+  getImportanceClass: (importance: string) => string;
+}
+
+function QuestionCard({ q, isSelected, isDimmed, onSelect, onOpenDetails, onUseSuggestion, onHideSuggestion, getStatusIcon, getStatusClass, getImportanceClass }: QuestionCardProps) {
+  const updateQuestionText = useStore(s => s.updateQuestionText);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const isSuggested = q.isSuggested;
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditText(q.text);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === q.text) {
+      setIsEditing(false);
+      return;
+    }
+    await updateQuestionText(q.id, trimmed);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  };
+
+  return (
+    <div
+      id={`question-${q.id}`}
+      onClick={() => !isSuggested && !isEditing && onSelect(q.id)}
+      className={`group relative z-[1] p-4 rounded-card transition-all duration-200 ease-in-out ${
+        isSuggested 
+          ? 'border border-dashed border-border-strong bg-surface-frost-01 opacity-70 hover:opacity-100'
+          : isSelected 
+            ? 'border border-border-focus bg-surface-frost-05 shadow-card-selected cursor-pointer' 
+            : 'border border-border-default bg-surface-frost-02 hover:bg-surface-frost-04 hover:border-border-hover cursor-pointer'
+      } ${isDimmed && !isSuggested ? 'opacity-30 saturate-50 hover:opacity-100 hover:saturate-100' : ''}`}
+    >
+      {isSelected && !isSuggested && (
+        <div className="absolute top-1/2 -right-4 w-4 h-[1px] bg-border-focus" />
+      )}
+      {!isSuggested && (
+        <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-border-focus" />
+      )}
+      
+      <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+        {!isSuggested && !isEditing && (
+          <button
+            onClick={handleStartEdit}
+            className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
+            title="Edit question"
+          >
+            <Pencil size={13} />
+          </button>
+        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetails?.(q.id);
+          }}
+          className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
+        >
+          <Eye size={14} />
+        </button>
+      </div>
+
+      {isSuggested && (
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-[var(--fw-medium)] text-text-tertiary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard uppercase tracking-wider border border-border-subtle">AI Suggestion</span>
+          </div>
+        </div>
+      )}
+      
+      {isEditing ? (
+        <div className="mb-4 pr-4">
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            autoFocus
+            className="w-full h-20 bg-surface-frost-02 border border-border-focus rounded-card p-3 text-[14px] text-text-primary leading-snug focus:outline-none resize-none"
+          />
+          <div className="flex items-center justify-end gap-2 mt-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsEditing(false); }}
+              className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary rounded-comfortable transition-colors"
+            >
+              <X size={12} />
+              Cancel
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }}
+              disabled={!editText.trim()}
+              className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-[var(--fw-medium)] text-black bg-white rounded-comfortable hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
+            >
+              <Check size={12} />
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-2 mb-4 pr-8">
+          {q.shortId && (
+            <span className="text-[11px] font-mono text-text-quaternary shrink-0">{q.shortId}</span>
+          )}
+          <h3 className={`font-[var(--fw-regular)] text-[14px] leading-snug ${isSuggested ? 'text-text-tertiary' : 'text-text-primary'}`}>{q.text}</h3>
+        </div>
+      )}
+      
+      <div className="flex items-center text-[12px] text-text-tertiary mb-3 space-x-2">
+        <div className="flex items-center space-x-1.5">
+          {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? (
+            <LoaderPinwheel size={13} className="opacity-70" />
+          ) : (
+            <User size={13} className="opacity-70" />
+          )}
+          <span className="truncate max-w-[120px]" title={(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : q.author}>
+            {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : (q.author || 'Unknown')}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-auto pt-2">
+        {isSuggested ? (
+          <div className="flex flex-col space-y-3 w-full">
+            <div className="flex items-center justify-end space-x-2">
+              <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
+                {q.category}
+              </span>
+              <div 
+                className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
+                title={q.importance}
+              />
+            </div>
+            <div className="flex items-center space-x-2 w-full">
+              <button 
+                onClick={(e) => { e.stopPropagation(); onUseSuggestion(q.id); }}
+                className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
+              >
+                <Check size={12} />
+                <span>Use Question</span>
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onHideSuggestion(q.id); }}
+                className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-05 hover:bg-surface-frost-10 text-text-tertiary hover:text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
+              >
+                <X size={12} />
+                <span>Hide</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-standard border text-[11px] font-[var(--fw-medium)] ${getStatusClass(q.status)}`}>
+              {getStatusIcon(q.status)}
+              <span>{q.status}</span>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
+                {q.category}
+              </span>
+              <div 
+                className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
+                title={q.importance}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function QuestionColumn({ onOpenDetails }: Props) {
   const allQuestions = useStore(selectQuestions);
   const selectedReqId = useStore(selectSelectedReqId);
@@ -40,6 +233,13 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   const selectQuestion = useStore(s => s.selectQuestion);
   const useSuggestion = useStore(s => s.useSuggestion);
   const hideSuggestion = useStore(s => s.hideSuggestion);
+  const suggestQuestions = useStore(s => s.suggestQuestions);
+
+  useEffect(() => {
+    if (selectedReqId && questions.length === 0 && !isSuggestingQuestions) {
+      suggestQuestions(selectedReqId);
+    }
+  }, [selectedReqId, questions.length, isSuggestingQuestions, suggestQuestions]);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
@@ -101,115 +301,21 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     return grouped;
   }, [questions, groupBy, sortBy]);
 
-  const renderQuestion = (q: Question) => {
-    const isSelected = q.id === selectedId;
-    const isDimmed = selectedId !== null && !isSelected;
-    const isSuggested = q.isSuggested;
-    
-    return (
-      <div
-        id={`question-${q.id}`}
-        key={q.id}
-        onClick={() => !isSuggested && selectQuestion(q.id)}
-        className={`group relative z-[1] p-4 rounded-card transition-all duration-200 ease-in-out ${
-          isSuggested 
-            ? 'border border-dashed border-border-strong bg-surface-frost-01 opacity-70 hover:opacity-100'
-            : isSelected 
-              ? 'border border-border-focus bg-surface-frost-05 shadow-card-selected cursor-pointer' 
-              : 'border border-border-default bg-surface-frost-02 hover:bg-surface-frost-04 hover:border-border-hover cursor-pointer'
-        } ${isDimmed && !isSuggested ? 'opacity-30 saturate-50 hover:opacity-100 hover:saturate-100' : ''}`}
-      >
-        {isSelected && !isSuggested && (
-          <div className="absolute top-1/2 -right-4 w-4 h-[1px] bg-border-focus" />
-        )}
-        {!isSuggested && (
-          <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-border-focus" />
-        )}
-        
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails?.(q.id);
-          }}
-          className="absolute top-3 right-3 p-1.5 rounded-standard text-text-tertiary opacity-0 group-hover:opacity-100 hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-        >
-          <Eye size={14} />
-        </button>
-
-        {isSuggested && (
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-[var(--fw-medium)] text-text-tertiary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard uppercase tracking-wider border border-border-subtle">AI Suggestion</span>
-            </div>
-          </div>
-        )}
-        
-        <h3 className={`font-[var(--fw-regular)] text-[14px] mb-4 pr-4 leading-snug ${isSuggested ? 'text-text-tertiary' : 'text-text-primary'}`}>{q.text}</h3>
-        
-        <div className="flex items-center text-[12px] text-text-tertiary mb-3 space-x-2">
-          <div className="flex items-center space-x-1.5">
-            {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? (
-              <LoaderPinwheel size={13} className="opacity-70" />
-            ) : (
-              <User size={13} className="opacity-70" />
-            )}
-            <span className="truncate max-w-[120px]" title={(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : q.author}>
-              {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : (q.author || 'Unknown')}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mt-auto pt-2">
-          {isSuggested ? (
-            <div className="flex flex-col space-y-3 w-full">
-              <div className="flex items-center justify-end space-x-2">
-                <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-                  {q.category}
-                </span>
-                <div 
-                  className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
-                  title={q.importance}
-                />
-              </div>
-              <div className="flex items-center space-x-2 w-full">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); useSuggestion(q.id); }}
-                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
-                >
-                  <Check size={12} />
-                  <span>Use Question</span>
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); hideSuggestion(q.id); }}
-                  className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-05 hover:bg-surface-frost-10 text-text-tertiary hover:text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
-                >
-                  <X size={12} />
-                  <span>Hide</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-standard border text-[11px] font-[var(--fw-medium)] ${getStatusClass(q.status)}`}>
-                {getStatusIcon(q.status)}
-                <span>{q.status}</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-                  {q.category}
-                </span>
-                <div 
-                  className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
-                  title={q.importance}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
+  const renderQuestion = (q: Question) => (
+    <QuestionCard
+      key={q.id}
+      q={q}
+      isSelected={q.id === selectedId}
+      isDimmed={selectedId !== null && q.id !== selectedId}
+      onSelect={selectQuestion}
+      onOpenDetails={onOpenDetails}
+      onUseSuggestion={useSuggestion}
+      onHideSuggestion={hideSuggestion}
+      getStatusIcon={getStatusIcon}
+      getStatusClass={getStatusClass}
+      getImportanceClass={getImportanceClass}
+    />
+  );
 
   const headerControls = (
     <div className="flex items-center">

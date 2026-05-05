@@ -3,6 +3,8 @@ import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
 import { enhanceRequirement } from '../openrouter';
+import type { RepoAnalysis } from '../../shared/schemas/repoContext';
+import { nextShortId } from '../lib/shortId';
 
 export const requirementsRouter = Router();
 
@@ -36,9 +38,13 @@ requirementsRouter.get('/:id', async (req, res) => {
 
 requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const projectId = req.body.project_id;
+  const shortId = projectId
+    ? await nextShortId(db, 'requirements', 'R', 'project_id', projectId)
+    : `R${String(Date.now()).slice(-2)}`;
   const { data, error } = await db
     .from('requirements')
-    .insert(req.body)
+    .insert({ ...req.body, short_id: shortId })
     .select()
     .single();
 
@@ -68,7 +74,7 @@ requirementsRouter.post('/enhance', async (req, res) => {
   }
 
   try {
-    let context: { projectName?: string; existingRequirements?: string[] } | undefined;
+    let context: { projectName?: string; existingRequirements?: string[]; repoContext?: RepoAnalysis } | undefined;
 
     if (project_id) {
       const { data: project } = await db
@@ -83,14 +89,22 @@ requirementsRouter.post('/enhance', async (req, res) => {
         .eq('project_id', project_id)
         .order('created_at', { ascending: true });
 
+      const { data: repoCtx } = await db
+        .from('repo_contexts')
+        .select('analysis')
+        .eq('project_id', project_id)
+        .eq('status', 'ready')
+        .single();
+
       context = {
         projectName: project?.name,
         existingRequirements: (existingReqs || []).map((r: { title: string }) => r.title),
+        repoContext: repoCtx?.analysis as RepoAnalysis | undefined,
       };
 
       console.info(
         '[INFO] [requirements:enhance] Context loaded',
-        JSON.stringify({ projectId: project_id, projectName: context.projectName, existingCount: context.existingRequirements?.length }),
+        JSON.stringify({ projectId: project_id, projectName: context.projectName, existingCount: context.existingRequirements?.length, hasRepoContext: !!context.repoContext }),
       );
     }
 

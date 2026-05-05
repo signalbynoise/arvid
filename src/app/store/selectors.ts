@@ -10,7 +10,11 @@ export const selectSelectedReqId = (state: AppState) => state.selectedReqId;
 export const selectSelectedQuestionId = (state: AppState) => state.selectedQuestionId;
 export const selectSelectedProjectId = (state: AppState) => state.selectedProjectId;
 
-export const selectIsSuggestingQuestions = (state: AppState) => state.isSuggestingQuestions;
+export const selectIsSuggestingQuestions = (state: AppState) =>
+  state.selectedReqId ? state.suggestingForRequirements.has(state.selectedReqId) : false;
+
+export const selectIsSuggestingAnswer = (state: AppState) =>
+  state.selectedQuestionId ? state.suggestingAnswerForQuestions.has(state.selectedQuestionId) : false;
 
 export const selectSummary = (state: AppState) => state.summary;
 export const selectSummaryDataState = (state: AppState) => state.summaryDataState;

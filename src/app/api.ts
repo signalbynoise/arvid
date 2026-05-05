@@ -138,7 +138,7 @@ export const api = {
     return parseSingle(ProjectRowSchema, ProjectSchema, row, '/projects');
   },
 
-  async updateProject(id: string, updates: { name?: string }): Promise<Project> {
+  async updateProject(id: string, updates: { name?: string; github_repo_full_name?: string | null; github_repo_default_branch?: string | null }): Promise<Project> {
     const row = await request<unknown>('PATCH', `/projects/${id}`, updates);
     return parseSingle(ProjectRowSchema, ProjectSchema, row, `/projects/${id}`);
   },
@@ -232,6 +232,7 @@ export const api = {
     if (updates.isSuggested !== undefined) body.is_suggested = updates.isSuggested;
     if (updates.isHidden !== undefined) body.is_hidden = updates.isHidden;
     if (updates.type !== undefined) body.type = updates.type;
+    if (updates.text !== undefined) body.text = updates.text;
 
     const row = await request<unknown>('PATCH', `/questions/${id}`, body);
     return parseSingle(QuestionRowSchema, QuestionSchema, row, `/questions/${id}`);
@@ -250,12 +251,51 @@ export const api = {
     return parseSingle(AnswerRowSchema, AnswerSchema, row, '/answers');
   },
 
+  async suggestAnswer(questionId: string): Promise<Answer | { skipped: true; reasoning: string }> {
+    const endpoint = `/answers/suggest/${questionId}`;
+    const raw = await request<unknown>('POST', endpoint);
+    const obj = raw as Record<string, unknown>;
+    if (obj.skipped === true) {
+      return { skipped: true, reasoning: String(obj.reasoning ?? '') };
+    }
+    return parseSingle(AnswerRowSchema, AnswerSchema, raw, endpoint);
+  },
+
   async updateAnswer(id: string, updates: Record<string, unknown>): Promise<Answer> {
     const body: Record<string, unknown> = {};
     if (updates.isCurrent !== undefined) body.is_current = updates.isCurrent;
+    if (updates.text !== undefined) body.text = updates.text;
+    if (updates.isSuggested !== undefined) body.is_suggested = updates.isSuggested;
+    if (updates.isHidden !== undefined) body.is_hidden = updates.isHidden;
 
     const row = await request<unknown>('PATCH', `/answers/${id}`, body);
     return parseSingle(AnswerRowSchema, AnswerSchema, row, `/answers/${id}`);
+  },
+
+  // --- GitHub ---
+
+  async getGitHubStatus(signal?: AbortSignal): Promise<{ connected: boolean; username?: string; avatarUrl?: string }> {
+    return request<{ connected: boolean; username?: string; avatarUrl?: string }>('GET', '/github/status', undefined, signal);
+  },
+
+  async getGitHubAuthUrl(): Promise<{ url: string }> {
+    return request<{ url: string }>('GET', '/github/auth');
+  },
+
+  async disconnectGitHub(): Promise<void> {
+    await request<unknown>('DELETE', '/github/connect');
+  },
+
+  async getGitHubRepos(signal?: AbortSignal): Promise<Array<{ id: number; full_name: string; private: boolean; default_branch: string; language: string | null; description: string | null }>> {
+    return request<Array<{ id: number; full_name: string; private: boolean; default_branch: string; language: string | null; description: string | null }>>('GET', '/github/repos', undefined, signal);
+  },
+
+  async fetchRepoContext(projectId: string): Promise<{ status: string; analysis: unknown }> {
+    return request<{ status: string; analysis: unknown }>('POST', `/github/fetch/${projectId}`);
+  },
+
+  async deepFetchRepoContext(projectId: string, paths: string[]): Promise<{ status: string; fetchedCount: number; analysis: unknown }> {
+    return request<{ status: string; fetchedCount: number; analysis: unknown }>('POST', `/github/fetch/${projectId}/deep`, { paths });
   },
 
   // --- Summaries ---
@@ -269,5 +309,32 @@ export const api = {
   async generateSummary(requirementId: string): Promise<Summary> {
     const row = await request<unknown>('POST', `/summaries/generate/${requirementId}`);
     return parseSingle(SummaryRowSchema, SummarySchema, row, `/summaries/generate/${requirementId}`);
+  },
+
+  // --- Linear ---
+
+  async getLinearAuthUrl(): Promise<{ url: string }> {
+    return request<{ url: string }>('GET', '/linear/auth');
+  },
+
+  async getLinearStatus(signal?: AbortSignal): Promise<{ connected: boolean; username?: string; avatarUrl?: string }> {
+    return request<{ connected: boolean; username?: string; avatarUrl?: string }>('GET', '/linear/status', undefined, signal);
+  },
+
+  async disconnectLinear(): Promise<void> {
+    await request<unknown>('DELETE', '/linear/connect');
+  },
+
+  async getLinearTeams(): Promise<Array<{ id: string; name: string; key: string }>> {
+    return request<Array<{ id: string; name: string; key: string }>>('GET', '/linear/teams');
+  },
+
+  async getLinearProjects(teamId: string): Promise<Array<{ id: string; name: string }>> {
+    return request<Array<{ id: string; name: string }>>('GET', `/linear/projects?team_id=${teamId}`);
+  },
+
+  async sendToLinear(requirementId: string): Promise<Requirement> {
+    const row = await request<unknown>('POST', `/linear/send/${requirementId}`);
+    return parseSingle(RequirementRowSchema, RequirementSchema, row, `/linear/send/${requirementId}`);
   },
 };

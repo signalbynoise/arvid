@@ -4,9 +4,10 @@ interface FeatureSectionProps {
   title: string;
   description: string;
   imagePosition: 'left' | 'right';
+  children?: React.ReactNode;
 }
 
-export function FeatureSection({ title, description, imagePosition }: FeatureSectionProps) {
+export function FeatureSection({ title, description, imagePosition, children }: FeatureSectionProps) {
   const isImageRight = imagePosition === 'right';
 
   return (
@@ -29,11 +30,17 @@ export function FeatureSection({ title, description, imagePosition }: FeatureSec
               isImageRight ? 'px-5 md:pl-0 md:pr-0' : 'px-5 md:pr-0 md:pl-0'
             }`}
           >
-            <div
-              className={`h-[280px] md:h-full w-full bg-surface-frost-10 ${
-                isImageRight ? 'rounded-l-card' : 'rounded-r-card'
-              }`}
-            />
+            {children ? (
+              <div className={`h-[280px] md:h-full w-full ${isImageRight ? 'rounded-l-card' : 'rounded-r-card'} overflow-hidden`}>
+                {children}
+              </div>
+            ) : (
+              <div
+                className={`h-[280px] md:h-full w-full bg-surface-frost-10 ${
+                  isImageRight ? 'rounded-l-card' : 'rounded-r-card'
+                }`}
+              />
+            )}
           </div>
         </div>
       </div>

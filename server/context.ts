@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { RepoAnalysis } from '../shared/schemas/repoContext';
 
 export interface RequirementFullContext {
   requirement: {
@@ -22,6 +23,7 @@ export interface RequirementFullContext {
     author?: string;
     answers: { text: string; author: string; isCurrent: boolean }[];
   }[];
+  repoContext?: RepoAnalysis;
 }
 
 export async function fetchRequirementContext(db: SupabaseClient, requirementId: string): Promise<RequirementFullContext | null> {
@@ -35,6 +37,7 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
 
   let projectName: string | undefined;
   let siblingRequirements: string[] = [];
+  let repoContext: RepoAnalysis | undefined;
 
   if (requirement.project_id) {
     const { data: project } = await db
@@ -53,6 +56,28 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
       .order('created_at', { ascending: true });
 
     siblingRequirements = (siblings || []).map((r: { title: string }) => r.title);
+
+    const { data: repoCtx, error: repoErr } = await db
+      .from('repo_contexts')
+      .select('analysis')
+      .eq('project_id', requirement.project_id)
+      .eq('status', 'ready')
+      .single();
+
+    if (repoErr) {
+      console.debug(
+        `[DEBUG] [context:repoContext] No repo context found`,
+        JSON.stringify({ projectId: requirement.project_id, error: repoErr.message }),
+      );
+    }
+
+    if (repoCtx?.analysis) {
+      repoContext = repoCtx.analysis as RepoAnalysis;
+      console.info(
+        `[INFO] [context:repoContext] Repo context loaded`,
+        JSON.stringify({ projectId: requirement.project_id, languages: (repoContext as RepoAnalysis).languages?.length }),
+      );
+    }
   }
 
   const { data: dbQuestions } = await db
@@ -105,5 +130,6 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     projectName,
     siblingRequirements,
     questions,
+    repoContext,
   };
 }

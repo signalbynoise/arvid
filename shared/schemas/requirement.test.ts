@@ -62,6 +62,7 @@ describe('RequirementSchema (transform)', () => {
   const validRow = {
     id: 'r1',
     title: 'Test',
+    short_id: 'R01',
     source: 'User',
     owner: 'Bob',
     owner_team: 'Platform',
@@ -75,11 +76,31 @@ describe('RequirementSchema (transform)', () => {
 
   it('transforms snake_case row to camelCase domain object', () => {
     const result = RequirementSchema.parse(validRow);
+    expect(result.shortId).toBe('R01');
     expect(result.ownerTeam).toBe('Platform');
     expect(result.ownerRole).toBeUndefined();
     expect(result.createdAt).toBe('2026-03-01');
     expect(result.description).toBeUndefined();
     expect(result.projectId).toBeUndefined();
+    expect(result.linearStatus).toBe('Pre-backlog');
+    expect(result.linearIssueId).toBeUndefined();
+  });
+
+  it('transforms Linear fields when present', () => {
+    const rowWithLinear = {
+      ...validRow,
+      linear_issue_id: 'lin-123',
+      linear_issue_identifier: 'ARV-42',
+      linear_issue_url: 'https://linear.app/arvid/issue/ARV-42',
+      linear_status: 'In Progress',
+      linear_status_type: 'started',
+    };
+    const result = RequirementSchema.parse(rowWithLinear);
+    expect(result.linearIssueId).toBe('lin-123');
+    expect(result.linearIssueIdentifier).toBe('ARV-42');
+    expect(result.linearIssueUrl).toBe('https://linear.app/arvid/issue/ARV-42');
+    expect(result.linearStatus).toBe('In Progress');
+    expect(result.linearStatusType).toBe('started');
   });
 
   it('preserves non-transformed fields', () => {

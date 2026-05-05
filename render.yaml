@@ -81,7 +81,17 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
       - key: SITE_ORIGIN
         sync: false  # https://arvid.work
       - key: APP_ORIGIN
         sync: false  # https://app.arvid.work
+      - key: LINEAR_CLIENT_ID
+        sync: false
+      - key: LINEAR_CLIENT_SECRET
+        sync: false
+      - key: LINEAR_WEBHOOK_SECRET
+        sync: false

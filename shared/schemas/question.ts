@@ -4,6 +4,7 @@ import { StatusEnum, ImportanceEnum, QuestionTypeEnum, CategoryEnum } from './en
 export const QuestionRowSchema = z.object({
   id: z.string(),
   requirement_id: z.string(),
+  short_id: z.string().nullable().optional(),
   text: z.string(),
   status: StatusEnum,
   importance: ImportanceEnum,
@@ -21,6 +22,7 @@ export const QuestionRowSchema = z.object({
 export const QuestionSchema = QuestionRowSchema.transform(row => ({
   id: row.id,
   requirementId: row.requirement_id,
+  shortId: row.short_id ?? undefined,
   text: row.text,
   status: row.status,
   importance: row.importance,

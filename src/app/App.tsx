@@ -20,6 +20,17 @@ export default function App() {
   const questions = useStore(selectQuestions);
   const loadEntities = useStore(s => s.loadEntities);
   const cancelLoad = useStore(s => s.cancelLoad);
+  const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('github_connected') || params.has('github_error')) {
+      window.history.replaceState({}, '', window.location.pathname);
+      if (params.has('github_connected')) {
+        loadGitHubStatus();
+      }
+    }
+  }, [loadGitHubStatus]);
 
   const selectedReq = useMemo(
     () => requirements.find(r => r.id === selectedReqId) ?? null,
@@ -124,7 +135,7 @@ export default function App() {
       <Sidebar isOpen={isSidebarOpen} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 z-10">
+        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 z-30">
           <div className="flex items-center space-x-3">
             <button 
               onClick={() => setIsSidebarOpen(prev => !prev)}

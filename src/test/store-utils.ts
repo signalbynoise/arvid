@@ -26,6 +26,8 @@ export function setStoreState(overrides: StoreOverrides) {
     summary: overrides.summary ?? null,
     summaryDataState: { status: 'idle' },
     isSuggestingQuestions: false,
+    suggestingForRequirements: new Set(),
+    suggestingAnswerForQuestions: new Set(),
   });
 }
 
@@ -41,6 +43,8 @@ export function resetStore() {
     dataState: { status: 'idle' },
     abortController: null,
     isSuggestingQuestions: false,
+    suggestingForRequirements: new Set(),
+    suggestingAnswerForQuestions: new Set(),
     summary: null,
     summaryDataState: { status: 'idle' },
     projectsDataState: { status: 'idle' },

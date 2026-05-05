@@ -29,10 +29,14 @@ describe('ProjectRowSchema', () => {
 
 describe('ProjectSchema (transform)', () => {
   it('transforms snake_case to camelCase', () => {
-    const row = { id: 'p1', name: 'Test', parent_id: 'p0', created_at: '2026-01-01' };
+    const row = { id: 'p1', name: 'Test', parent_id: 'p0', created_at: '2026-01-01', short_id: 'P01', linear_project_id: 'lp-1', linear_project_name: 'My Linear Project', linear_team_id: 'lt-1' };
     const result = ProjectSchema.parse(row);
     expect(result.parentId).toBe('p0');
     expect(result.createdAt).toBe('2026-01-01');
+    expect(result.shortId).toBe('P01');
+    expect(result.linearProjectId).toBe('lp-1');
+    expect(result.linearProjectName).toBe('My Linear Project');
+    expect(result.linearTeamId).toBe('lt-1');
   });
 
   it('transforms null parent_id to undefined', () => {
@@ -40,6 +44,7 @@ describe('ProjectSchema (transform)', () => {
     const result = ProjectSchema.parse(row);
     expect(result.parentId).toBeUndefined();
     expect(result.createdAt).toBeUndefined();
+    expect(result.shortId).toBeUndefined();
   });
 });
 

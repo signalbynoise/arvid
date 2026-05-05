@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { FileText, LoaderPinwheel, Loader2, ArrowUpRight, Sparkles } from 'lucide-react';
-import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState } from '../store';
+import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
+import { buildCursorPrompt, openInCursor } from '../lib/cursorDeeplink';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
 import { ImplementationDetails } from './summary/ImplementationDetails';
@@ -18,6 +19,16 @@ export function SummaryColumn() {
   const loadSummary = useStore(s => s.loadSummary);
   const generateSummary = useStore(s => s.generateSummary);
   const clearSummary = useStore(s => s.clearSummary);
+  const projects = useStore(selectProjects);
+  const selectedProjectId = useStore(selectSelectedProjectId);
+  const sendToLinear = useStore(s => s.sendToLinear);
+  const sendToLinearStatus = useStore(s => s.sendToLinearStatus);
+  const resetSendToLinearStatus = useStore(s => s.resetSendToLinearStatus);
+  const selectedProject = useMemo(
+    () => projects.find(p => p.id === selectedProjectId) ?? null,
+    [projects, selectedProjectId],
+  );
+  const hasLinearProject = !!selectedProject?.linearProjectId;
   const requirement = useMemo(
     () => requirements.find(r => r.id === selectedReqId) ?? null,
     [requirements, selectedReqId],
@@ -106,7 +117,10 @@ export function SummaryColumn() {
 
   const totalWeight = questions.reduce((acc, q) => acc + (q.importance === 'Critical' ? 3 : q.importance === 'Important' ? 2 : 1), 0);
   const answeredWeight = questions.filter(q => q.status === 'Answered').reduce((acc, q) => acc + (q.importance === 'Critical' ? 3 : q.importance === 'Important' ? 2 : 1), 0);
-  const calculatedCompleteness = totalWeight > 0 ? Math.round((answeredWeight / totalWeight) * 100) : 0;
+  const localCompleteness = totalWeight > 0 ? Math.round((answeredWeight / totalWeight) * 100) : 0;
+
+  const completeness = summary?.completeness ?? localCompleteness;
+  const completenessReasoning = summary?.completenessReasoning;
 
   const isGenerating = summaryDataState.status === 'generating';
   const isLoading = summaryDataState.status === 'loading';
@@ -126,7 +140,12 @@ export function SummaryColumn() {
         <div className="bg-surface-frost-02 border border-border-default rounded-panel shadow-ring overflow-hidden mb-6">
           <div className="bg-surface-frost-02 p-4 border-b border-border-subtle flex items-start justify-between">
             <div>
-              <h3 className="font-[var(--fw-medium)] text-text-primary text-[16px] leading-tight tracking-[-0.165px]">{requirement.title}</h3>
+              <div className="flex items-baseline gap-2">
+                {summary?.shortId && (
+                  <span className="text-[12px] font-mono text-text-quaternary shrink-0">{summary.shortId}</span>
+                )}
+                <h3 className="font-[var(--fw-medium)] text-text-primary text-[16px] leading-tight tracking-[-0.165px]">{requirement.title}</h3>
+              </div>
               <div className="flex items-center space-x-2 mt-2">
                 <LoaderPinwheel size={12} className="text-text-tertiary" />
                 <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Arvid Specification</span>
@@ -135,7 +154,7 @@ export function SummaryColumn() {
           </div>
           
           <div className="p-2 space-y-1">
-            <KnowledgeCompleteness completeness={calculatedCompleteness} />
+            <KnowledgeCompleteness completeness={completeness} reasoning={completenessReasoning} />
 
             {summary ? (
               <>
@@ -200,21 +219,47 @@ export function SummaryColumn() {
             )}
 
             <div className="pt-4 pb-2 px-2 mt-2 flex space-x-3">
+              {requirement.linearIssueUrl ? (
+                <a
+                  href={requirement.linearIssueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2 px-4 border border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-primary transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle"
+                >
+                  <span>{requirement.linearIssueIdentifier || 'View in Linear'}</span>
+                  <ArrowUpRight size={14} className="opacity-50" />
+                </a>
+              ) : (
+                <button 
+                  disabled={completeness < 80 || !hasLinearProject || sendToLinearStatus === 'sending'}
+                  onClick={() => {
+                    if (!selectedReqId) return;
+                    sendToLinear(selectedReqId);
+                  }}
+                  className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
+                    completeness >= 80 && hasLinearProject
+                      ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
+                      : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
+                  }`}
+                >
+                  {sendToLinearStatus === 'sending' ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <span>Send to Linear</span>
+                      <ArrowUpRight size={14} className="opacity-50" />
+                    </>
+                  )}
+                </button>
+              )}
               <button 
-                disabled={calculatedCompleteness < 100}
+                disabled={completeness < 80 || !summary}
+                onClick={() => {
+                  if (!summary) return;
+                  openInCursor(buildCursorPrompt(summary, requirement.title));
+                }}
                 className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
-                  calculatedCompleteness === 100 
-                    ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
-                    : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
-                }`}
-              >
-                <span>Send to Linear</span>
-                <ArrowUpRight size={14} className="opacity-50" />
-              </button>
-              <button 
-                disabled={calculatedCompleteness < 100}
-                className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
-                  calculatedCompleteness === 100 
+                  completeness >= 80 && summary
                     ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
                     : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
                 }`}

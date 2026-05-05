@@ -64,6 +64,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
       author: q.author,
       answers: q.answers,
     })),
+    repoContext: context.repoContext,
   };
 
   try {
@@ -71,17 +72,29 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
 
     const summaryId = `s-${requirementId}-${Date.now()}`;
 
+    const { data: reqRow } = await db
+      .from('requirements')
+      .select('short_id')
+      .eq('id', requirementId)
+      .single();
+    const summaryShortId = reqRow?.short_id
+      ? reqRow.short_id.replace(/^R/, 'S')
+      : null;
+
     const { data: upserted, error: upsertError } = await db
       .from('summaries')
       .upsert(
         {
           id: summaryId,
           requirement_id: requirementId,
+          short_id: summaryShortId,
           synthesis: generated.synthesis,
           core_objective: generated.core_objective,
           architecture: generated.architecture,
           constraints: generated.constraints,
           unverified_risks: generated.unverified_risks,
+          completeness: generated.completeness,
+          completeness_reasoning: generated.completeness_reasoning,
           model: 'x-ai/grok-4.1-fast',
           generated_at: new Date().toISOString(),
         },

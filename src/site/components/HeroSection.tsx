@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDown } from 'lucide-react';
 import Grainient from '@/components/Grainient';
+import { AppDemo } from './AppDemo';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
@@ -57,6 +58,9 @@ export function HeroSection() {
               centerY={0}
               zoom={0.9}
             />
+          </div>
+          <div className="absolute inset-0 z-10 flex items-center justify-center p-10">
+            <AppDemo />
           </div>
         </div>
       </div>

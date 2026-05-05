@@ -5,6 +5,8 @@ import { NewProjectModal } from './NewProjectModal';
 import { RenameProjectModal } from './RenameProjectModal';
 import { DeleteProjectModal } from './DeleteProjectModal';
 import { ProjectItemMenu } from './ProjectItemMenu';
+import { RepoSelector } from './RepoSelector';
+import { LinearProjectSelector } from './LinearProjectSelector';
 import { useStore, selectProjects, selectSelectedProjectId } from '../store';
 import { buildProjectTree, ProjectTreeNode } from '../domain/projects';
 
@@ -18,6 +20,14 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const selectedProjectId = useStore(selectSelectedProjectId);
   const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
   const loadProjects = useStore(s => s.loadProjects);
+  const githubConnection = useStore(s => s.githubConnection);
+  const repoFetchStatus = useStore(s => s.repoFetchStatus);
+  const linearConnection = useStore(s => s.linearConnection);
+
+  const selectedProject = useMemo(
+    () => projects.find(p => p.id === selectedProjectId),
+    [projects, selectedProjectId],
+  );
 
   const tree = useMemo(() => buildProjectTree(projects), [projects]);
 
@@ -89,6 +99,8 @@ export function Sidebar({ isOpen }: SidebarProps) {
     const isExpanded = expandedProjects[node.id];
     const isSelected = selectedProjectId === node.id;
     const hasChildren = node.children.length > 0;
+    const project = projects.find(p => p.id === node.id);
+    const hasRepo = !!project?.githubRepo;
 
     return (
       <div key={node.id}>
@@ -109,7 +121,13 @@ export function Sidebar({ isOpen }: SidebarProps) {
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             </button>
             {depth === 0 ? <Folder size={14} className={isSelected ? 'text-text-primary' : 'text-text-quaternary'} /> : <Hash size={14} className={isSelected ? 'text-text-primary' : 'text-text-quaternary'} />}
+            {project?.shortId && (
+              <span className="text-[10px] font-mono text-text-quaternary shrink-0">{project.shortId}</span>
+            )}
             <span className="truncate">{node.name}</span>
+            {hasRepo && (
+              <img src="/github.svg" alt="" className="w-4 h-4 shrink-0 opacity-50" />
+            )}
           </div>
           
           <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -172,6 +190,51 @@ export function Sidebar({ isOpen }: SidebarProps) {
           </div>
         )}
       </div>
+
+      {selectedProject && githubConnection.status === 'connected' && (
+        <div className="border-t border-border-subtle px-4 py-3 shrink-0">
+          <div className="flex items-center gap-1.5 mb-2">
+            <img src="/github.svg" alt="" className="w-4 h-4 opacity-40" />
+            <span className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
+              Repository
+            </span>
+            {repoFetchStatus === 'fetching' && (
+              <Loader2 size={10} className="animate-spin text-text-quaternary ml-auto" />
+            )}
+          </div>
+          {selectedProject.githubRepo ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[12px] text-text-secondary truncate" title={selectedProject.githubRepo}>
+                {selectedProject.githubRepo}
+              </span>
+              <span className="h-2 w-2 rounded-full bg-status-success shrink-0" />
+            </div>
+          ) : (
+            <RepoSelector projectId={selectedProject.id} onLinked={() => loadProjects()} />
+          )}
+        </div>
+      )}
+
+      {selectedProject && linearConnection.status === 'connected' && (
+        <div className="border-t border-border-subtle px-4 py-3 shrink-0">
+          <div className="flex items-center gap-1.5 mb-2">
+            <img src="/linear.svg" alt="" className="w-4 h-4 opacity-40" />
+            <span className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
+              Linear
+            </span>
+          </div>
+          {selectedProject.linearProjectName ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[12px] text-text-secondary truncate" title={selectedProject.linearProjectName}>
+                {selectedProject.linearProjectName}
+              </span>
+              <span className="h-2 w-2 rounded-full bg-status-success shrink-0" />
+            </div>
+          ) : (
+            <LinearProjectSelector projectId={selectedProject.id} onLinked={() => loadProjects()} />
+          )}
+        </div>
+      )}
 
       <NewProjectModal
         isOpen={isCreateOpen}

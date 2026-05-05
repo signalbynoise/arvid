@@ -4,12 +4,13 @@ import { SummarySection } from './SummarySection';
 
 interface KnowledgeCompletenessProps {
   completeness: number;
+  reasoning?: string;
 }
 
-export function KnowledgeCompleteness({ completeness }: KnowledgeCompletenessProps) {
+export function KnowledgeCompleteness({ completeness, reasoning }: KnowledgeCompletenessProps) {
   return (
     <SummarySection icon={Target} title="Knowledge Completeness" defaultOpen>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-3 w-full">
           <div className="flex-1 h-1.5 bg-surface-frost-10 rounded-full overflow-hidden">
             <div 
@@ -22,6 +23,9 @@ export function KnowledgeCompleteness({ completeness }: KnowledgeCompletenessPro
           <span className="font-[var(--fw-medium)] text-text-primary text-[13px] w-8 text-right">{completeness}%</span>
         </div>
       </div>
+      {reasoning && (
+        <p className="text-[12px] text-text-tertiary leading-relaxed mt-1">{reasoning}</p>
+      )}
     </SummarySection>
   );
 }

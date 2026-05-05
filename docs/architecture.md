@@ -92,6 +92,7 @@ All endpoints (except `/api/health`) require `Authorization: Bearer <jwt>`.
 | PATCH | `/api/questions/:id` | Update |
 | GET | `/api/answers?question_id=` | List (filterable) |
 | POST | `/api/answers` | Create |
+| POST | `/api/answers/suggest/:questionId` | Generate AI-suggested answer |
 | PATCH | `/api/answers/:id` | Update |
 | GET | `/api/summaries?requirement_id=` | Get cached summary |
 | POST | `/api/summaries/generate/:requirementId` | Generate AI summary |
@@ -103,7 +104,7 @@ Five tables with RLS enabled, user-scoped via FK chain from `projects.user_id`:
 - **projects** — id, name, parent_id (self-FK for sub-projects), user_id (FK to auth.users), created_at
 - **requirements** — id, title, source, owner, owner_team, owner_role, created_at, description, completeness, clarity, risk, project_id (FK)
 - **questions** — id, requirement_id (FK), text, status, importance, type, category, is_suggested, is_hidden, author, author_team, author_role, created_at, description
-- **answers** — id, question_id (FK), text, author, date, is_current
+- **answers** — id, question_id (FK), text, author, date, is_current, is_suggested, is_hidden
 - **summaries** — id, requirement_id (unique FK), synthesis, core_objective, architecture, constraints, unverified_risks, model, generated_at
 
 RLS policies enforce user isolation: `projects` checks `user_id = auth.uid()`, child tables join back to `projects` to verify ownership.

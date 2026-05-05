@@ -25,6 +25,7 @@ describe('api', () => {
       expect(result[0]).toEqual({
         id: 'r1',
         title: 'Test Req',
+        shortId: undefined,
         source: 'User',
         owner: 'Alice',
         ownerTeam: 'Engineering',
@@ -35,6 +36,11 @@ describe('api', () => {
         clarity: 'High',
         risk: 'Low',
         projectId: undefined,
+        linearIssueId: undefined,
+        linearIssueIdentifier: undefined,
+        linearIssueUrl: undefined,
+        linearStatus: 'Pre-backlog',
+        linearStatusType: undefined,
       });
     });
 
@@ -96,11 +102,14 @@ describe('api', () => {
       expect(mockFetch).toHaveBeenCalledWith('/api/answers', expect.anything());
       expect(result[0]).toEqual({
         id: 'a1',
+        shortId: undefined,
         questionId: 'q1',
         text: 'Because...',
         author: 'Alice',
         date: '2026-01-01',
         isCurrent: true,
+        isSuggested: undefined,
+        isHidden: undefined,
       });
     });
 

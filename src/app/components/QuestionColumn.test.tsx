@@ -6,9 +6,9 @@ import { useStore } from '../store';
 import { Question } from '../types';
 
 const questions: Question[] = [
-  { id: 'q1', requirementId: 'r1', text: 'What is the scope?', status: 'Unanswered', importance: 'Critical', type: 'Manual', category: 'Scope', author: 'Alice' },
-  { id: 'q2', requirementId: 'r1', text: 'When is the deadline?', status: 'Answered', importance: 'Important', type: 'Auto-generated', category: 'Time', isSuggested: true, author: 'Arvid' },
-  { id: 'q3', requirementId: 'r1', text: 'How much data?', status: 'Conflicting', importance: 'Optional', type: 'Manual', category: 'Data', author: 'Bob' },
+  { id: 'q1', shortId: 'Q01', requirementId: 'r1', text: 'What is the scope?', status: 'Unanswered', importance: 'Critical', type: 'Manual', category: 'Scope', author: 'Alice' },
+  { id: 'q2', shortId: 'Q02', requirementId: 'r1', text: 'When is the deadline?', status: 'Answered', importance: 'Important', type: 'Auto-generated', category: 'Time', isSuggested: true, author: 'Arvid' },
+  { id: 'q3', shortId: 'Q03', requirementId: 'r1', text: 'How much data?', status: 'Conflicting', importance: 'Optional', type: 'Manual', category: 'Data', author: 'Bob' },
 ];
 
 describe('QuestionColumn', () => {
@@ -22,11 +22,14 @@ describe('QuestionColumn', () => {
     expect(screen.getByText('2. Questions')).toBeInTheDocument();
   });
 
-  it('renders all question cards', () => {
+  it('renders all question cards with short IDs', () => {
     render(<QuestionColumn />);
     expect(screen.getByText('What is the scope?')).toBeInTheDocument();
     expect(screen.getByText('When is the deadline?')).toBeInTheDocument();
     expect(screen.getByText('How much data?')).toBeInTheDocument();
+    expect(screen.getByText('Q01')).toBeInTheDocument();
+    expect(screen.getByText('Q02')).toBeInTheDocument();
+    expect(screen.getByText('Q03')).toBeInTheDocument();
   });
 
   it('selects question when clicked', () => {
@@ -62,10 +65,10 @@ describe('QuestionColumn', () => {
     expect(screen.queryByText('Hidden question')).not.toBeInTheDocument();
   });
 
-  it('shows empty state when no questions', () => {
+  it('shows analyzing state when no questions exist for selected requirement', () => {
     setStoreState({ questions: [], selectedReqId: 'r1' });
     render(<QuestionColumn />);
-    expect(screen.getByText(/No questions yet/)).toBeInTheDocument();
+    expect(screen.getByText(/Arvid is analyzing the requirement/)).toBeInTheDocument();
   });
 
   it('shows category labels on question cards', () => {

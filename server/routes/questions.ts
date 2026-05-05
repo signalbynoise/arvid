@@ -4,6 +4,7 @@ import { validateBody } from '../middleware/validateBody';
 import { CreateQuestionBodySchema, UpdateQuestionBodySchema } from '../../shared/schemas';
 import { suggestQuestions, classifyQuestion } from '../openrouter';
 import { fetchRequirementContext } from '../context';
+import { nextShortId, formatShortId } from '../lib/shortId';
 
 export const questionsRouter = Router();
 
@@ -37,9 +38,10 @@ questionsRouter.get('/:id', async (req, res) => {
 
 questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const shortId = await nextShortId(db, 'questions', 'Q', 'requirement_id', req.body.requirement_id);
   const { data, error } = await db
     .from('questions')
-    .insert(req.body)
+    .insert({ ...req.body, short_id: shortId })
     .select()
     .single();
 
@@ -58,18 +60,24 @@ questionsRouter.post('/classify', async (req, res) => {
     return res.status(400).json({ error: 'requirement_id is required' });
   }
 
-  const { data: requirement } = await db
-    .from('requirements')
-    .select('title, description')
-    .eq('id', requirement_id)
-    .single();
+  const fullContext = await fetchRequirementContext(db, requirement_id);
+
+  const classifyContext = fullContext ? {
+    requirement: fullContext.requirement,
+    projectName: fullContext.projectName,
+    siblingRequirements: fullContext.siblingRequirements,
+    existingQuestions: fullContext.questions.map(q => ({
+      text: q.text,
+      status: q.status,
+      importance: q.importance,
+      category: q.category,
+      answers: q.answers.map(a => ({ text: a.text, author: a.author })),
+    })),
+    repoContext: fullContext.repoContext,
+  } : null;
 
   try {
-    const result = await classifyQuestion(
-      text.trim(),
-      requirement?.title,
-      requirement?.description ?? undefined,
-    );
+    const result = await classifyQuestion(text.trim(), classifyContext);
     res.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -106,11 +114,20 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
         category: q.category,
         answers: q.answers.map(a => ({ text: a.text, author: a.author })),
       })),
+      repoContext: context.repoContext,
     });
+
+    const { count: existingCount } = await db
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('requirement_id', requirementId);
+
+    const baseCount = existingCount ?? 0;
 
     const rows = suggestions.map((s, i) => ({
       id: `qs-${requirementId}-${Date.now()}-${i}`,
       requirement_id: requirementId,
+      short_id: formatShortId('Q', baseCount + i),
       text: s.text,
       importance: s.importance,
       category: s.category,

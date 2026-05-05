@@ -68,7 +68,8 @@ describe('QuestionSchema (transform)', () => {
   };
 
   it('transforms snake_case fields to camelCase', () => {
-    const result = QuestionSchema.parse(validRow);
+    const result = QuestionSchema.parse({ ...validRow, short_id: 'Q01' });
+    expect(result.shortId).toBe('Q01');
     expect(result.requirementId).toBe('r1');
     expect(result.isSuggested).toBe(true);
     expect(result.isHidden).toBe(false);
