@@ -72,12 +72,18 @@ webhooksRouter.post('/linear', async (req: Request, res: Response) => {
   }
 
   if (stateType === 'completed') {
-    checkImplementationAsync(linearIssueId).catch(err => {
-      console.error(
-        '[ERROR] [webhooks:implCheck] Async implementation check failed',
-        JSON.stringify({ linearIssueId, error: err instanceof Error ? err.message : 'Unknown error' }),
-      );
-    });
+    supabase
+      .from('requirements')
+      .update({ impl_status: 'Checking', impl_checked_at: new Date().toISOString() })
+      .eq('linear_issue_id', linearIssueId)
+      .then(() => {
+        checkImplementationAsync(linearIssueId).catch(err => {
+          console.error(
+            '[ERROR] [webhooks:implCheck] Async implementation check failed',
+            JSON.stringify({ linearIssueId, error: err instanceof Error ? err.message : 'Unknown error' }),
+          );
+        });
+      });
   }
 
   res.sendStatus(200);

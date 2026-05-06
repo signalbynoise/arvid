@@ -17,6 +17,7 @@ const STATUS_ACCENT: Record<string, ChipAccent> = {
 
 const STATUS_LABEL: Record<string, string> = {
   'Not Checked': 'Not Checked',
+  'Checking': 'Analyzing...',
   'Implemented': 'Implemented',
   'Partially Implemented': 'Partial',
   'Not Implemented': 'Not Implemented',
@@ -25,6 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt?: string): string {
+  if (implStatus === 'Checking') return 'Analyzing repository code...';
   const parts: string[] = [`Code: ${implStatus}`];
   if (implConfidence !== undefined) {
     parts.push(`Confidence: ${Math.round(implConfidence * 100)}%`);
@@ -39,7 +41,8 @@ export function GitHubStatusChip({ implStatus, implConfidence, implCheckedAt, on
   const accent = STATUS_ACCENT[implStatus] ?? 'default';
   const label = STATUS_LABEL[implStatus] ?? implStatus;
   const isRetryable = implStatus === 'Not Checked' || implStatus === 'Unknown';
-  const isChecked = implStatus !== 'Not Checked';
+  const isChecking = implStatus === 'Checking';
+  const isChecked = implStatus !== 'Not Checked' && implStatus !== 'Checking';
   const tooltip = buildTooltip(implStatus, implConfidence, implCheckedAt);
 
   return (
@@ -51,10 +54,10 @@ export function GitHubStatusChip({ implStatus, implConfidence, implCheckedAt, on
       <img
         src="/github.svg"
         alt=""
-        className={`w-3 h-3 ${isChecked ? 'opacity-100' : 'opacity-60'}`}
+        className={`w-3 h-3 ${isChecking ? 'animate-pulse opacity-80' : isChecked ? 'opacity-100' : 'opacity-60'}`}
       />
       <span
-        className={`whitespace-nowrap ${accent === 'success' ? 'text-status-success' : accent === 'warning' ? 'text-status-warning' : accent === 'error' ? 'text-status-error' : 'text-text-tertiary'}`}
+        className={`whitespace-nowrap ${isChecking ? 'text-accent animate-pulse' : accent === 'success' ? 'text-status-success' : accent === 'warning' ? 'text-status-warning' : accent === 'error' ? 'text-status-error' : 'text-text-tertiary'}`}
         title={tooltip}
       >
         {label}
