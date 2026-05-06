@@ -98,6 +98,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
   }
 
   if (!requirement.project_id) {
+    console.info('[INFO] [webhooks:implCheck] No project_id on requirement, setting No Repo', JSON.stringify({ requirementId: requirement.id }));
     await supabase
       .from('requirements')
       .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
@@ -105,13 +106,18 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
     return;
   }
 
-  const { data: project } = await supabase
+  const { data: project, error: projError } = await supabase
     .from('projects')
     .select('github_repo_full_name')
     .eq('id', requirement.project_id)
     .single();
 
+  if (projError) {
+    console.error('[ERROR] [webhooks:implCheck] Failed to load project', JSON.stringify({ projectId: requirement.project_id, error: projError.message }));
+  }
+
   if (!project?.github_repo_full_name) {
+    console.info('[INFO] [webhooks:implCheck] No GitHub repo linked to project, setting No Repo', JSON.stringify({ requirementId: requirement.id, projectId: requirement.project_id, project }));
     await supabase
       .from('requirements')
       .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
@@ -119,13 +125,18 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
     return;
   }
 
-  const { data: repoCtx } = await supabase
+  const { data: repoCtx, error: repoError } = await supabase
     .from('repo_contexts')
     .select('*')
     .eq('project_id', requirement.project_id)
     .single();
 
+  if (repoError) {
+    console.error('[ERROR] [webhooks:implCheck] Failed to load repo context', JSON.stringify({ projectId: requirement.project_id, error: repoError.message }));
+  }
+
   if (!repoCtx || repoCtx.status !== 'ready') {
+    console.info('[INFO] [webhooks:implCheck] Repo context not ready, setting Unknown', JSON.stringify({ requirementId: requirement.id, status: repoCtx?.status }));
     await supabase
       .from('requirements')
       .update({ impl_status: 'Unknown', impl_confidence: 0.1, impl_checked_at: new Date().toISOString() })
