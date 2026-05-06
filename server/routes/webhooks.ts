@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { supabase } from '../supabase';
+import { classifyImplementation } from '../openrouter';
+import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 
 export const webhooksRouter = Router();
 
@@ -66,5 +68,132 @@ webhooksRouter.post('/linear', async (req: Request, res: Response) => {
     return res.sendStatus(500);
   }
 
+  if (stateType === 'completed') {
+    checkImplementationAsync(linearIssueId).catch(err => {
+      console.error(
+        '[ERROR] [webhooks:implCheck] Async implementation check failed',
+        JSON.stringify({ linearIssueId, error: err instanceof Error ? err.message : 'Unknown error' }),
+      );
+    });
+  }
+
   res.sendStatus(200);
 });
+
+async function checkImplementationAsync(linearIssueId: string): Promise<void> {
+  console.info(
+    '[INFO] [webhooks:implCheck] Starting async implementation check',
+    JSON.stringify({ linearIssueId }),
+  );
+
+  const { data: requirement } = await supabase
+    .from('requirements')
+    .select('*')
+    .eq('linear_issue_id', linearIssueId)
+    .single();
+
+  if (!requirement) {
+    console.warn('[WARN] [webhooks:implCheck] Requirement not found for linear issue', JSON.stringify({ linearIssueId }));
+    return;
+  }
+
+  if (!requirement.project_id) {
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
+      .eq('id', requirement.id);
+    return;
+  }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('github_repo_full_name')
+    .eq('id', requirement.project_id)
+    .single();
+
+  if (!project?.github_repo_full_name) {
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
+      .eq('id', requirement.id);
+    return;
+  }
+
+  const { data: repoCtx } = await supabase
+    .from('repo_contexts')
+    .select('*')
+    .eq('project_id', requirement.project_id)
+    .single();
+
+  if (!repoCtx || repoCtx.status !== 'ready') {
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'Unknown', impl_confidence: 0.1, impl_checked_at: new Date().toISOString() })
+      .eq('id', requirement.id);
+    return;
+  }
+
+  const { data: dbQuestions } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('requirement_id', requirement.id);
+
+  const questionIds = (dbQuestions || []).map((q: { id: string }) => q.id);
+  let dbAnswers: Array<{ question_id: string; text: string; author: string }> = [];
+  if (questionIds.length > 0) {
+    const { data: ansData } = await supabase
+      .from('answers')
+      .select('question_id, text, author')
+      .in('question_id', questionIds);
+    dbAnswers = ansData || [];
+  }
+
+  const questions = (dbQuestions || [])
+    .filter((q: { is_hidden: boolean | null }) => !q.is_hidden)
+    .map((q: { id: string; text: string; status: string }) => ({
+      text: q.text,
+      status: q.status,
+      answers: dbAnswers
+        .filter(a => a.question_id === q.id)
+        .map(a => ({ text: a.text, author: a.author })),
+    }));
+
+  try {
+    const result = await classifyImplementation({
+      requirementTitle: requirement.title,
+      requirementDescription: requirement.description ?? undefined,
+      questions,
+      repoContext: {
+        fileTree: repoCtx.file_tree || [],
+        keyFiles: repoCtx.key_files || {},
+        recentCommits: repoCtx.recent_commits || [],
+        analysis: repoCtx.analysis as RepoAnalysis | null,
+      },
+    });
+
+    await supabase
+      .from('requirements')
+      .update({
+        impl_status: result.status,
+        impl_confidence: result.confidence,
+        impl_checked_at: new Date().toISOString(),
+      })
+      .eq('id', requirement.id);
+
+    console.info(
+      '[INFO] [webhooks:implCheck] Check complete',
+      JSON.stringify({ requirementId: requirement.id, status: result.status, confidence: result.confidence }),
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(
+      '[ERROR] [webhooks:implCheck] Classification failed, setting Unknown',
+      JSON.stringify({ requirementId: requirement.id, error: message }),
+    );
+
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'Unknown', impl_confidence: 0.0, impl_checked_at: new Date().toISOString() })
+      .eq('id', requirement.id);
+  }
+}

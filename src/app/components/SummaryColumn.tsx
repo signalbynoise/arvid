@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
-import { FileText, LoaderPinwheel, Loader2, ArrowUpRight, Sparkles } from 'lucide-react';
+import { FileText, LoaderPinwheel, MoreHorizontal, BarChart3 } from 'lucide-react';
 import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
 import { buildCursorPrompt, openInCursor } from '../lib/cursorDeeplink';
 import { api } from '../api';
+import { ColumnShell, ColumnBody, ColumnEmptyState } from './ColumnShell';
+import { IconButton } from './IconButton';
+import { CardShell } from './CardShell';
+import { Button } from './Button';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
 import { ImplementationDetails } from './summary/ImplementationDetails';
@@ -24,7 +28,6 @@ export function SummaryColumn() {
   const selectedProjectId = useStore(selectSelectedProjectId);
   const sendToLinear = useStore(s => s.sendToLinear);
   const sendToLinearStatus = useStore(s => s.sendToLinearStatus);
-  const resetSendToLinearStatus = useStore(s => s.resetSendToLinearStatus);
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId) ?? null,
     [projects, selectedProjectId],
@@ -101,15 +104,12 @@ export function SummaryColumn() {
 
   if (!requirement) {
     return (
-      <div className="w-1/4 min-w-[320px] shrink-0 h-full flex flex-col">
-        <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10">
-          <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-quaternary">
-          <FileText size={32} className="mb-3 opacity-20" />
-          <p className="text-[13px]">Select a requirement to view its live summary.</p>
-        </div>
-      </div>
+      <ColumnShell title="4. Summary" borderRight={false}>
+        <ColumnEmptyState
+          icon={<FileText size={32} className="mb-3 opacity-20" />}
+          message="Select a requirement to view its live summary."
+        />
+      </ColumnShell>
     );
   }
 
@@ -126,75 +126,44 @@ export function SummaryColumn() {
   const isGenerating = summaryDataState.status === 'generating';
   const isLoading = summaryDataState.status === 'loading';
 
+  const canSend = completeness >= 80;
+
   return (
-    <div className="w-1/4 min-w-[320px] shrink-0 h-full flex flex-col bg-surface-panel">
-      <div className="p-4 border-b border-border-subtle bg-surface-panel sticky top-0 z-10 flex items-center justify-between">
-        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">4. Summary</h2>
-        <div className="flex items-center">
+    <ColumnShell
+      title="4. Summary"
+      borderRight={false}
+      headerControls={
+        <>
           {(isGenerating || isLoading) && (
-            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-1" />
           )}
-        </div>
-      </div>
-      
-      <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-5">
-        <div className="bg-surface-frost-02 border border-border-default rounded-panel shadow-ring overflow-hidden mb-6">
-          <div className="bg-surface-frost-02 p-4 border-b border-border-subtle flex items-start justify-between">
-            <div>
-              <div className="flex items-baseline gap-2">
-                {summary?.shortId && (
-                  <span className="text-[12px] font-mono text-text-quaternary shrink-0">{summary.shortId}</span>
-                )}
-                <h3 className="font-[var(--fw-medium)] text-text-primary text-[16px] leading-tight tracking-[-0.165px]">{requirement.title}</h3>
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <LoaderPinwheel size={12} className="text-text-tertiary" />
-                <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Arvid Specification</span>
-              </div>
+          <IconButton title="Analytics" onClick={() => {}}>
+            <BarChart3 size={14} />
+          </IconButton>
+        </>
+      }
+    >
+      <ColumnBody>
+        <CardShell variant="default">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-tiny font-mono text-text-quaternary">
+                {summary?.shortId || requirement.shortId?.replace('R', 'S') || 'S01'}
+              </span>
+              <MoreHorizontal size={14} className="text-text-quaternary" />
             </div>
+            <h3 className="text-text-primary">{requirement.title}</h3>
           </div>
-          
-          <div className="p-2 space-y-1">
+
+          <div className="flex flex-col">
             <KnowledgeCompleteness completeness={completeness} reasoning={completenessReasoning} />
 
-            {summary ? (
+            {summary && (
               <>
                 <TaskOverview synthesis={summary.synthesis} coreObjective={summary.coreObjective} />
                 <ImplementationDetails architecture={summary.architecture} />
                 <RulesAndConstraints constraints={summary.constraints} />
               </>
-            ) : (
-              <div className="p-4 text-center">
-                <div className="flex flex-col items-center space-y-3 py-4">
-                  {isGenerating ? (
-                    <>
-                      <Loader2 size={20} className="text-text-tertiary animate-spin" />
-                      <p className="text-[13px] text-text-tertiary">Arvid is analyzing this requirement...</p>
-                    </>
-                  ) : summaryDataState.status === 'error' ? (
-                    <>
-                      <Sparkles size={20} className="text-status-error" />
-                      <p className="text-[13px] text-status-error">{summaryDataState.error || 'Summary generation failed'}</p>
-                      <button
-                        onClick={() => selectedReqId && generateSummary(selectedReqId)}
-                        className="px-3 py-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 border border-border-default rounded-comfortable text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors"
-                      >
-                        Retry
-                      </button>
-                    </>
-                  ) : hasAcceptedQuestions ? (
-                    <>
-                      <Loader2 size={20} className="text-text-tertiary animate-spin" />
-                      <p className="text-[13px] text-text-tertiary">Summary will generate automatically...</p>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={20} className="text-text-quaternary" />
-                      <p className="text-[13px] text-text-quaternary">Accept questions to generate a summary.</p>
-                    </>
-                  )}
-                </div>
-              </div>
             )}
 
             <KnowledgeGraph
@@ -203,76 +172,49 @@ export function SummaryColumn() {
               answers={answers}
             />
 
-            {summary ? (
+            {(summary || missingCritical.length > 0 || conflicts.length > 0) && (
               <OpenQuestionsAndBlockers
-                unverifiedRisks={summary.unverifiedRisks}
+                unverifiedRisks={summary?.unverifiedRisks || 'Generate a summary to see AI-analyzed risks.'}
                 missingCritical={missingCritical}
                 conflicts={conflicts}
               />
-            ) : (
-              missingCritical.length > 0 || conflicts.length > 0 ? (
-                <OpenQuestionsAndBlockers
-                  unverifiedRisks="Generate a summary to see AI-analyzed risks."
-                  missingCritical={missingCritical}
-                  conflicts={conflicts}
-                />
-              ) : null
             )}
-
-            <div className="pt-4 pb-2 px-2 mt-2 flex space-x-3">
-              {requirement.linearIssueUrl ? (
-                <a
-                  href={requirement.linearIssueUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 px-4 border border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-primary transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle"
-                >
-                  <span>{requirement.linearIssueIdentifier || 'View in Linear'}</span>
-                  <ArrowUpRight size={14} className="opacity-50" />
-                </a>
-              ) : (
-                <button 
-                  disabled={completeness < 80 || !hasLinearProject || sendToLinearStatus === 'sending'}
-                  onClick={() => {
-                    if (!selectedReqId) return;
-                    sendToLinear(selectedReqId);
-                  }}
-                  className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
-                    completeness >= 80 && hasLinearProject
-                      ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
-                      : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
-                  }`}
-                >
-                  {sendToLinearStatus === 'sending' ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <>
-                      <span>Send to Linear</span>
-                      <ArrowUpRight size={14} className="opacity-50" />
-                    </>
-                  )}
-                </button>
-              )}
-              <button 
-                disabled={completeness < 80 || !summary}
-                onClick={() => {
-                  if (!summary) return;
-                  openInCursor(buildCursorPrompt(summary, requirement.title));
-                  api.notifyCursorSent(requirement.id);
-                }}
-                className={`flex-1 py-2 px-4 border rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-all duration-200 flex items-center justify-center space-x-2 shadow-subtle ${
-                  completeness >= 80 && summary
-                    ? 'border-border-default bg-surface-panel hover:bg-surface-elevated hover:border-border-hover text-text-primary' 
-                    : 'border-border-subtle bg-surface-frost-02 opacity-50 cursor-not-allowed text-text-tertiary'
-                }`}
-              >
-                <span>Send to Cursor</span>
-                <ArrowUpRight size={14} className="opacity-50" />
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <div className="flex items-center gap-2">
+            {requirement.linearIssueUrl ? (
+              <Button
+                className="flex-1 flex items-center justify-center gap-2"
+                onClick={() => window.open(requirement.linearIssueUrl, '_blank')}
+              >
+                <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
+                <span>{requirement.linearIssueIdentifier || 'View in Linear'}</span>
+              </Button>
+            ) : (
+              <Button
+                className="flex-1 flex items-center justify-center gap-2"
+                disabled={!canSend || !hasLinearProject || sendToLinearStatus === 'sending'}
+                onClick={() => selectedReqId && sendToLinear(selectedReqId)}
+              >
+                <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
+                <span>Send to Linear</span>
+              </Button>
+            )}
+            <Button
+              className="flex-1 flex items-center justify-center gap-2"
+              disabled={!canSend || !summary}
+              onClick={() => {
+                if (!summary) return;
+                openInCursor(buildCursorPrompt(summary, requirement.title));
+                api.notifyCursorSent(requirement.id);
+              }}
+            >
+              <img src="/cursor.svg" alt="" className="w-4 h-4 opacity-60" />
+              <span>Send to Cursor</span>
+            </Button>
+          </div>
+        </CardShell>
+      </ColumnBody>
+    </ColumnShell>
   );
 }

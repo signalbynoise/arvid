@@ -25,6 +25,7 @@ export interface EntitiesSlice {
   suggestingForRequirements: Set<string>;
   suggestingAnswerForQuestions: Set<string>;
   skippedAnswerSuggestions: Set<string>;
+  checkingImplementation: Set<string>;
 
   loadEntities: (projectId?: string) => Promise<void>;
   refreshRequirements: (projectId?: string) => Promise<void>;
@@ -46,6 +47,7 @@ export interface EntitiesSlice {
   useSuggestion: (id: string) => Promise<void>;
   hideSuggestion: (id: string) => Promise<void>;
   toggleCurrentAnswer: (answerId: string) => Promise<void>;
+  checkImplementation: (requirementId: string) => Promise<void>;
 }
 
 export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSlice> = (set, get) => ({
@@ -58,6 +60,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   suggestingForRequirements: new Set(),
   suggestingAnswerForQuestions: new Set(),
   skippedAnswerSuggestions: new Set(),
+  checkingImplementation: new Set(),
 
   loadEntities: async (projectId?: string) => {
     const current = get();
@@ -563,6 +566,51 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
         error: err instanceof Error ? err.message : 'Unknown error',
       });
       set({ answers: previousAnswers, questions: previousQuestions });
+    }
+  },
+
+  checkImplementation: async (requirementId: string) => {
+    const { checkingImplementation } = get();
+    if (checkingImplementation.has(requirementId)) {
+      log.debug('checkImplementation', 'Already checking for this requirement', { requirementId });
+      return;
+    }
+
+    log.info('checkImplementation', 'Starting implementation check', { requirementId });
+    const nextSet = new Set(checkingImplementation);
+    nextSet.add(requirementId);
+    set({ checkingImplementation: nextSet });
+
+    try {
+      const result = await api.checkImplementation(requirementId);
+
+      set(state => {
+        const updatedSet = new Set(state.checkingImplementation);
+        updatedSet.delete(requirementId);
+        return {
+          requirements: state.requirements.map(r =>
+            r.id === requirementId
+              ? {
+                  ...r,
+                  implStatus: result.impl_status as Requirement['implStatus'],
+                  implConfidence: result.impl_confidence ?? undefined,
+                  implCheckedAt: result.impl_checked_at,
+                }
+              : r,
+          ),
+          checkingImplementation: updatedSet,
+        };
+      });
+
+      log.info('checkImplementation', 'Check complete', { requirementId, status: result.impl_status });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      set(state => {
+        const updatedSet = new Set(state.checkingImplementation);
+        updatedSet.delete(requirementId);
+        return { checkingImplementation: updatedSet };
+      });
+      log.error('checkImplementation', 'Implementation check failed', { requirementId, error: message });
     }
   },
 });

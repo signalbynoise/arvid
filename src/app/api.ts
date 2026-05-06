@@ -201,6 +201,10 @@ export const api = {
     await request<void>('DELETE', `/requirements/${id}`);
   },
 
+  async checkImplementation(requirementId: string): Promise<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string }> {
+    return request<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string }>('POST', `/requirements/${requirementId}/check-implementation`);
+  },
+
   async createQuestion(q: { text: string; requirementId: string; importance: string; category: string }): Promise<Question> {
     const body = {
       id: `q${Date.now()}`,

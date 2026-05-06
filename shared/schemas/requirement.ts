@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ClarityEnum, RiskEnum } from './enums';
+import { ClarityEnum, RiskEnum, ImplStatusEnum } from './enums';
 
 export const RequirementRowSchema = z.object({
   id: z.string(),
@@ -20,6 +20,9 @@ export const RequirementRowSchema = z.object({
   linear_issue_url: z.string().nullable().optional(),
   linear_status: z.string().nullable().optional(),
   linear_status_type: z.string().nullable().optional(),
+  impl_status: ImplStatusEnum.nullable().optional(),
+  impl_confidence: z.number().nullable().optional(),
+  impl_checked_at: z.string().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -41,6 +44,9 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   linearIssueUrl: row.linear_issue_url ?? undefined,
   linearStatus: row.linear_status ?? 'Pre-backlog',
   linearStatusType: row.linear_status_type ?? undefined,
+  implStatus: row.impl_status ?? undefined,
+  implConfidence: row.impl_confidence ?? undefined,
+  implCheckedAt: row.impl_checked_at ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({

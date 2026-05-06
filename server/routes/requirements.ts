@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { createUserClient } from '../supabase';
+import { createUserClient, supabase } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
-import { enhanceRequirement } from '../openrouter';
+import { enhanceRequirement, classifyImplementation } from '../openrouter';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 import { nextShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
@@ -66,7 +66,7 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
     : `R${String(Date.now()).slice(-2)}`;
   const { data, error } = await db
     .from('requirements')
-    .insert({ ...req.body, short_id: shortId })
+    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString().split('T')[0] })
     .select()
     .single();
 
@@ -148,6 +148,138 @@ requirementsRouter.post('/enhance', async (req, res) => {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[ERROR] [requirements:enhance] Enhancement failed', JSON.stringify({ error: message }));
     res.status(500).json({ error: `Enhancement failed: ${message}` });
+  }
+});
+
+requirementsRouter.post('/:id/check-implementation', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const requirementId = req.params.id;
+
+  console.info(
+    '[INFO] [requirements:checkImplementation] Starting check',
+    JSON.stringify({ requirementId }),
+  );
+
+  const { data: requirement, error: reqError } = await db
+    .from('requirements')
+    .select('*')
+    .eq('id', requirementId)
+    .single();
+
+  if (reqError || !requirement) {
+    return res.status(404).json({ error: 'Requirement not found' });
+  }
+
+  if (!requirement.project_id) {
+    const now = new Date().toISOString();
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: now })
+      .eq('id', requirementId);
+
+    return res.json({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: now });
+  }
+
+  const { data: project } = await db
+    .from('projects')
+    .select('github_repo_full_name')
+    .eq('id', requirement.project_id)
+    .single();
+
+  if (!project?.github_repo_full_name) {
+    const now = new Date().toISOString();
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: now })
+      .eq('id', requirementId);
+
+    return res.json({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: now });
+  }
+
+  const { data: repoCtx } = await db
+    .from('repo_contexts')
+    .select('*')
+    .eq('project_id', requirement.project_id)
+    .single();
+
+  if (!repoCtx || repoCtx.status !== 'ready') {
+    const now = new Date().toISOString();
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'Unknown', impl_confidence: 0.1, impl_checked_at: now })
+      .eq('id', requirementId);
+
+    return res.json({ impl_status: 'Unknown', impl_confidence: 0.1, impl_checked_at: now });
+  }
+
+  const { data: dbQuestions } = await db
+    .from('questions')
+    .select('*')
+    .eq('requirement_id', requirementId);
+
+  const questionIds = (dbQuestions || []).map((q: { id: string }) => q.id);
+  let dbAnswers: Array<{ question_id: string; text: string; author: string }> = [];
+  if (questionIds.length > 0) {
+    const { data: ansData } = await db
+      .from('answers')
+      .select('question_id, text, author')
+      .in('question_id', questionIds);
+    dbAnswers = ansData || [];
+  }
+
+  const questions = (dbQuestions || [])
+    .filter((q: { is_hidden: boolean | null }) => !q.is_hidden)
+    .map((q: { id: string; text: string; status: string }) => ({
+      text: q.text,
+      status: q.status,
+      answers: dbAnswers
+        .filter(a => a.question_id === q.id)
+        .map(a => ({ text: a.text, author: a.author })),
+    }));
+
+  try {
+    const result = await classifyImplementation({
+      requirementTitle: requirement.title,
+      requirementDescription: requirement.description ?? undefined,
+      questions,
+      repoContext: {
+        fileTree: repoCtx.file_tree || [],
+        keyFiles: repoCtx.key_files || {},
+        recentCommits: repoCtx.recent_commits || [],
+        analysis: repoCtx.analysis as RepoAnalysis | null,
+      },
+    });
+
+    const now = new Date().toISOString();
+    await supabase
+      .from('requirements')
+      .update({
+        impl_status: result.status,
+        impl_confidence: result.confidence,
+        impl_checked_at: now,
+      })
+      .eq('id', requirementId);
+
+    console.info(
+      '[INFO] [requirements:checkImplementation] Check complete',
+      JSON.stringify({ requirementId, status: result.status, confidence: result.confidence }),
+    );
+
+    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(
+      '[ERROR] [requirements:checkImplementation] Check failed',
+      JSON.stringify({ requirementId, error: message }),
+    );
+
+    const now = new Date().toISOString();
+    await supabase
+      .from('requirements')
+      .update({ impl_status: 'Unknown', impl_confidence: 0.0, impl_checked_at: now })
+      .eq('id', requirementId);
+
+    res.status(500).json({ error: `Implementation check failed: ${message}` });
   }
 });
 

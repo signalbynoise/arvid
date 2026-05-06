@@ -72,6 +72,16 @@ Each status color has a solid token plus alpha variants for surfaces and borders
 | `text-status-warning` / `bg-status-warning` | `bg-status-warning-surface` | `border-status-warning-border` | Conflicting, medium risk |
 | `text-status-error` / `bg-status-error` | `bg-status-error-surface` | `border-status-error-border` | Unanswered, high risk, errors |
 
+### Indicator (Green Intensity Scale)
+
+Used for clarity, risk, and severity dots on cards. Stronger green = higher/better value.
+
+| Token | Tailwind class | Value | Use |
+|-------|---------------|-------|-----|
+| `--indicator-high` | `bg-indicator-high` | `#10b981` | High clarity, low risk, critical severity |
+| `--indicator-medium` | `bg-indicator-medium` | `rgba(16,185,129,0.5)` | Medium clarity/risk/severity |
+| `--indicator-low` | `bg-indicator-low` | `rgba(16,185,129,0.2)` | Low clarity, high risk, optional severity |
+
 ### Accent
 
 | Token | Tailwind class | Value | Use |
@@ -181,6 +191,27 @@ Use these classes instead of combining `text-[Npx] font-[N] tracking-[...] leadi
 | `--shadow-inset` | `shadow-inset` | Recessed panels |
 | `--shadow-card-selected` | `shadow-card-selected` | Selected card inset ring |
 | `--shadow-accent-selected` | `shadow-accent-selected` | Accent-tinted selected ring |
+
+---
+
+## Spacing
+
+Spacing tokens are registered in Tailwind as `--spacing-{N}` and used via standard utility classes (`p-4`, `gap-2`, `m-6`, etc.).
+
+| Token | Tailwind | Value | Use |
+|-------|----------|-------|-----|
+| `--space-1` | `p-1`, `gap-1`, `m-1` | 4px | Card internal gap, tight spacing |
+| `--space-2` | `p-2`, `gap-2`, `m-2` | 8px | Chip padding, icon gaps |
+| `--space-3` | `p-3`, `gap-3`, `m-3` | 12px | Compact section spacing |
+| `--space-4` | `p-4`, `gap-4`, `m-4` | 16px | Card padding, column padding, standard gap |
+| `--space-5` | `p-5`, `gap-5`, `m-5` | 20px | Summary panel padding |
+| `--space-6` | `p-6`, `gap-6`, `m-6` | 24px | Section margins |
+| `--space-8` | `p-8`, `gap-8`, `m-8` | 32px | Large section spacing |
+| `--space-10` | `p-10`, `gap-10`, `m-10` | 40px | Hero section spacing |
+| `--space-12` | `p-12`, `gap-12`, `m-12` | 48px | Feature section spacing |
+| `--space-16` | `p-16`, `gap-16`, `m-16` | 64px | Page-level vertical spacing |
+| `--space-20` | `p-20`, `gap-20`, `m-20` | 80px | Large page-level spacing |
+| `--space-24` | `p-24`, `gap-24`, `m-24` | 96px | Maximum page-level spacing |
 
 ---
 

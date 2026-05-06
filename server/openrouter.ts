@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { GenerateSummaryResponseSchema, GenerateSummaryResponse } from '../shared/schemas';
+import { GenerateSummaryResponseSchema, GenerateSummaryResponse, ImplementationCheckResponseSchema } from '../shared/schemas';
+import type { ImplementationCheckResponse } from '../shared/schemas';
 import type { RepoAnalysis } from '../shared/schemas/repoContext';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -1001,6 +1002,172 @@ ${qaTreeBlock}${input.repoContext ? `\n${buildCodebaseContextBlock(input.repoCon
       confidence: result.data.confidence,
       reasoning: result.data.reasoning,
     }),
+  );
+
+  return result.data;
+}
+
+// --- Implementation Check ---
+
+export interface ImplementationCheckInput {
+  requirementTitle: string;
+  requirementDescription?: string;
+  questions: { text: string; status: string; answers: { text: string; author: string }[] }[];
+  repoContext: {
+    fileTree: { path: string; type: string }[];
+    keyFiles: Record<string, string>;
+    recentCommits: { message: string; author: string; date: string }[];
+    analysis: RepoAnalysis | null;
+  };
+}
+
+export async function classifyImplementation(input: ImplementationCheckInput): Promise<ImplementationCheckResponse> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  console.info(
+    `[INFO] [openrouter:classifyImplementation] Calling ${OPENROUTER_MODEL}`,
+    JSON.stringify({ requirementTitle: input.requirementTitle }),
+  );
+
+  let userPrompt = `## Requirement\nTitle: ${input.requirementTitle}\n`;
+  if (input.requirementDescription) {
+    userPrompt += `Description: ${input.requirementDescription}\n`;
+  }
+
+  if (input.questions.length > 0) {
+    const answered = input.questions.filter(q => q.status === 'Answered' && q.answers.length > 0);
+    if (answered.length > 0) {
+      userPrompt += `\n## Specification Details (from Q&A)\n`;
+      for (const q of answered) {
+        userPrompt += `\nQ: ${q.text}\n`;
+        for (const a of q.answers) {
+          userPrompt += `  A (${a.author}): ${a.text}\n`;
+        }
+      }
+    }
+  }
+
+  if (input.repoContext.analysis) {
+    userPrompt += `\n${buildCodebaseContextBlock(input.repoContext.analysis)}`;
+  }
+
+  const filePaths = input.repoContext.fileTree
+    .filter(f => f.type === 'blob')
+    .map(f => f.path);
+  if (filePaths.length > 0) {
+    userPrompt += `\n## Repository File Tree (${filePaths.length} files)\n`;
+    userPrompt += filePaths.slice(0, 200).join('\n') + '\n';
+    if (filePaths.length > 200) {
+      userPrompt += `... and ${filePaths.length - 200} more files\n`;
+    }
+  }
+
+  const keyFileEntries = Object.entries(input.repoContext.keyFiles);
+  if (keyFileEntries.length > 0) {
+    userPrompt += `\n## Key File Contents\n`;
+    for (const [path, content] of keyFileEntries.slice(0, 15)) {
+      const truncated = content.length > 3000 ? content.substring(0, 3000) + '\n... (truncated)' : content;
+      userPrompt += `\n### ${path}\n\`\`\`\n${truncated}\n\`\`\`\n`;
+    }
+  }
+
+  const commits = input.repoContext.recentCommits.slice(0, 10);
+  if (commits.length > 0) {
+    userPrompt += `\n## Recent Commits\n`;
+    for (const c of commits) {
+      userPrompt += `- ${c.message} (${c.author}, ${c.date})\n`;
+    }
+  }
+
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://arvid.work',
+      'X-Title': 'Arvid',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a code implementation auditor. Given a software requirement specification and a codebase snapshot, determine whether the requirement has been implemented in the code.
+
+Your output MUST be valid JSON with exactly these keys:
+- "status": One of "Implemented", "Partially Implemented", "Not Implemented", or "Unknown".
+- "confidence": A number from 0.0 to 1.0 indicating your confidence in the assessment.
+- "evidence": A brief (1-3 sentence) explanation citing specific files, patterns, or commits that support your determination.
+
+## Classification Rules
+
+"Implemented": The codebase contains code that fulfills the requirement's core functionality. Key acceptance criteria are met based on file structure, code patterns, dependencies, and recent commits.
+
+"Partially Implemented": Some aspects of the requirement are present in the code (e.g., data models exist but UI is missing, or the endpoint exists but validation is incomplete). Cite what is present and what is missing.
+
+"Not Implemented": No meaningful code related to the requirement was found. The file tree, key files, and commits show no evidence of this feature.
+
+"Unknown": Insufficient information to determine — e.g., the requirement is too vague to match against code, or the file tree/key files are too limited to draw conclusions.
+
+## Confidence Guidelines
+- 0.9-1.0: Strong direct evidence (matching file names, relevant code, recent commits mentioning the feature).
+- 0.6-0.8: Indirect evidence (related files exist, patterns suggest implementation, but cannot confirm details).
+- 0.3-0.5: Weak or ambiguous signals.
+- 0.0-0.2: Guessing based on minimal information.
+
+Base your analysis entirely on the provided code context. Do not assume implementation without evidence.
+
+Respond ONLY with the JSON object, no markdown fences, no explanation.`,
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      '[ERROR] [openrouter:classifyImplementation] API call failed',
+      JSON.stringify({ status: response.status, body: errorBody }),
+    );
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    console.error('[ERROR] [openrouter:classifyImplementation] No content in response', JSON.stringify(data));
+    throw new Error('OpenRouter returned empty content');
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error('[ERROR] [openrouter:classifyImplementation] Failed to parse JSON', JSON.stringify({ content }));
+    throw new Error('OpenRouter returned invalid JSON');
+  }
+
+  const result = ImplementationCheckResponseSchema.safeParse(parsed);
+  if (!result.success) {
+    console.error(
+      '[ERROR] [openrouter:classifyImplementation] Response validation failed',
+      JSON.stringify({ issues: result.error.issues }),
+    );
+    throw new Error('OpenRouter response did not match expected schema');
+  }
+
+  console.info(
+    '[INFO] [openrouter:classifyImplementation] Classification complete',
+    JSON.stringify({ status: result.data.status, confidence: result.data.confidence }),
   );
 
   return result.data;

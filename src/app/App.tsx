@@ -12,6 +12,7 @@ import { UserMenu } from './components/UserMenu';
 import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
 import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId, selectPendingModal } from './store';
+import { COLUMN_CLASSES } from './components/ColumnShell';
 import { SlackChannelPicker } from './components/SlackChannelPicker';
 import { supabase } from './lib/supabase';
 
@@ -168,7 +169,7 @@ export default function App() {
             {selectedQuestionId ? (
               <AnswerColumn />
             ) : (
-              <div className="w-1/4 min-w-[280px] shrink-0 h-full border-r border-border-subtle bg-surface-panel" />
+              <div className={`${COLUMN_CLASSES} border-r border-border-subtle`} />
             )}
             <SummaryColumn />
           </>

@@ -1,9 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Question } from '../types';
-import { Plus, MessageCircleQuestion, AlertCircle, CheckCircle2, CircleDashed, ChevronDown, ChevronRight, Check, X, Eye, User, LoaderPinwheel, Pencil } from 'lucide-react';
+import { Plus, MessageCircleQuestion, MoreHorizontal, LoaderPinwheel } from 'lucide-react';
+import { Chevron } from './Chevron';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { NewQuestionModal } from './NewQuestionModal';
+import { ColumnShell, ColumnBody, ColumnEmptyState } from './ColumnShell';
+import { CardShell } from './CardShell';
+import { Chip } from './Chip';
+import { Button } from './Button';
+import { formatCardDate } from '../lib/formatDate';
 import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions, selectPendingModal } from '../store';
 
 interface Props {
@@ -35,188 +41,79 @@ interface QuestionCardProps {
   onOpenDetails?: (id: string) => void;
   onUseSuggestion: (id: string) => void;
   onHideSuggestion: (id: string) => void;
-  getStatusIcon: (status: string) => React.ReactNode;
-  getStatusClass: (status: string) => string;
-  getImportanceClass: (importance: string) => string;
 }
 
-function QuestionCard({ q, isSelected, isDimmed, onSelect, onOpenDetails, onUseSuggestion, onHideSuggestion, getStatusIcon, getStatusClass, getImportanceClass }: QuestionCardProps) {
-  const updateQuestionText = useStore(s => s.updateQuestionText);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState('');
+function QuestionCard({ q, isSelected, isDimmed, onSelect, onOpenDetails, onUseSuggestion, onHideSuggestion }: QuestionCardProps) {
   const isSuggested = q.isSuggested;
 
-  const handleStartEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditText(q.text);
-    setIsEditing(true);
-  };
-
-  const handleSaveEdit = async () => {
-    const trimmed = editText.trim();
-    if (!trimmed || trimmed === q.text) {
-      setIsEditing(false);
-      return;
-    }
-    await updateQuestionText(q.id, trimmed);
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      handleSaveEdit();
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-    }
-  };
-
   return (
-    <div
+    <CardShell
       id={`question-${q.id}`}
-      onClick={() => !isSuggested && !isEditing && onSelect(q.id)}
-      className={`group relative z-[1] p-4 rounded-card transition-all duration-200 ease-in-out ${
-        isSuggested 
-          ? 'border border-dashed border-border-strong bg-surface-frost-01 opacity-70 hover:opacity-100'
-          : isSelected 
-            ? 'border border-border-focus bg-surface-frost-05 shadow-card-selected cursor-pointer' 
-            : 'border border-border-default bg-surface-frost-02 hover:bg-surface-frost-04 hover:border-border-hover cursor-pointer'
-      } ${isDimmed && !isSuggested ? 'opacity-30 saturate-50 hover:opacity-100 hover:saturate-100' : ''}`}
+      variant={isSuggested ? 'suggested' : isSelected ? 'selected' : 'default'}
+      dimmed={isDimmed && !isSuggested}
+      interactive={!isSuggested}
+      connectorLeft={!isSuggested}
+      connectorRight={isSelected && !isSuggested}
+      onClick={!isSuggested ? () => onSelect(q.id) : undefined}
     >
-      {isSelected && !isSuggested && (
-        <div className="absolute top-1/2 -right-4 w-4 h-[1px] bg-border-focus" />
-      )}
-      {!isSuggested && (
-        <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-border-focus" />
-      )}
-      
-      <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
-        {!isSuggested && !isEditing && (
-          <button
-            onClick={handleStartEdit}
-            className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-            title="Edit question"
-          >
-            <Pencil size={13} />
-          </button>
-        )}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails?.(q.id);
-          }}
-          className="p-1.5 rounded-standard text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-        >
-          <Eye size={14} />
-        </button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {q.shortId && (
+              <span className="text-tiny font-mono text-text-quaternary">{q.shortId}</span>
+            )}
+            {!isSuggested && q.category && (
+              <span className="text-tiny font-mono text-text-quaternary uppercase">{q.category}</span>
+            )}
+          </div>
+          {!isSuggested && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDetails?.(q.id);
+              }}
+              className="p-1 rounded-standard text-text-quaternary opacity-0 group-hover:opacity-100 hover:text-text-primary hover:bg-surface-frost-08 transition-all"
+            >
+              <MoreHorizontal size={14} />
+            </button>
+          )}
+        </div>
+        <h3 className={isSuggested ? 'text-text-quaternary' : 'text-text-primary'}>{q.text}</h3>
       </div>
 
-      {isSuggested && (
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-[var(--fw-medium)] text-text-tertiary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard uppercase tracking-wider border border-border-subtle">AI Suggestion</span>
-          </div>
-        </div>
-      )}
-      
-      {isEditing ? (
-        <div className="mb-4 pr-4">
-          <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus
-            className="w-full h-20 bg-surface-frost-02 border border-border-focus rounded-card p-3 text-[14px] text-text-primary leading-snug focus:outline-none resize-none"
-          />
-          <div className="flex items-center justify-end gap-2 mt-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsEditing(false); }}
-              className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary rounded-comfortable transition-colors"
-            >
-              <X size={12} />
-              Cancel
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }}
-              disabled={!editText.trim()}
-              className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-[var(--fw-medium)] text-black bg-white rounded-comfortable hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
-            >
-              <Check size={12} />
-              Save
-            </button>
-          </div>
+      {isSuggested ? (
+        <div className="flex items-center gap-2">
+          <Button onClick={(e) => { e.stopPropagation(); onUseSuggestion(q.id); }}>
+            Use
+          </Button>
+          <Button onClick={(e) => { e.stopPropagation(); onHideSuggestion(q.id); }}>
+            Hide
+          </Button>
         </div>
       ) : (
-        <div className="flex items-baseline gap-2 mb-4 pr-8">
-          {q.shortId && (
-            <span className="text-[11px] font-mono text-text-quaternary shrink-0">{q.shortId}</span>
-          )}
-          <h3 className={`font-[var(--fw-regular)] text-[14px] leading-snug ${isSuggested ? 'text-text-tertiary' : 'text-text-primary'}`}>{q.text}</h3>
-        </div>
-      )}
-      
-      <div className="flex items-center text-[12px] text-text-tertiary mb-3 space-x-2">
-        <div className="flex items-center space-x-1.5">
-          {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? (
-            <LoaderPinwheel size={13} className="opacity-70" />
-          ) : (
-            <User size={13} className="opacity-70" />
-          )}
-          <span className="truncate max-w-[120px]" title={(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : q.author}>
-            {(isSuggested || q.author === 'System AI' || q.author === 'Arvid' || q.authorTeam === 'Arvid') ? 'Arvid' : (q.author || 'Unknown')}
-          </span>
-        </div>
-      </div>
+        <>
+          <Chip
+            border="dashed"
+            accent={q.status === 'Answered' ? 'success' : q.status === 'Conflicting' ? 'warning' : 'default'}
+          >
+            <LoaderPinwheel size={12} className={q.status === 'Answered' ? 'text-status-success' : 'text-text-quaternary'} />
+            <span className={q.status === 'Answered' ? 'text-status-success' : 'text-text-tertiary'}>{q.status}</span>
+          </Chip>
 
-      <div className="flex items-center justify-between mt-auto pt-2">
-        {isSuggested ? (
-          <div className="flex flex-col space-y-3 w-full">
-            <div className="flex items-center justify-end space-x-2">
-              <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-                {q.category}
-              </span>
-              <div 
-                className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
-                title={q.importance}
-              />
-            </div>
-            <div className="flex items-center space-x-2 w-full">
-              <button 
-                onClick={(e) => { e.stopPropagation(); onUseSuggestion(q.id); }}
-                className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-08 hover:bg-surface-frost-12 text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
-              >
-                <Check size={12} />
-                <span>Use Question</span>
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); onHideSuggestion(q.id); }}
-                className="flex-1 py-1.5 flex items-center justify-center space-x-1.5 bg-surface-frost-05 hover:bg-surface-frost-10 text-text-tertiary hover:text-text-primary rounded-standard text-[11px] font-[var(--fw-medium)] transition-colors"
-              >
-                <X size={12} />
-                <span>Hide</span>
-              </button>
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-label text-text-quaternary">
+              {q.author || 'Unknown'} - {formatCardDate(q.createdAt)}
+            </p>
+            <div 
+              className={`w-2 h-2 rounded-full ${
+                q.importance === 'Critical' ? 'bg-indicator-high' : q.importance === 'Important' ? 'bg-indicator-medium' : 'bg-indicator-low'
+              }`}
+              title={q.importance}
+            />
           </div>
-        ) : (
-          <>
-            <div className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-standard border text-[11px] font-[var(--fw-medium)] ${getStatusClass(q.status)}`}>
-              {getStatusIcon(q.status)}
-              <span>{q.status}</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-                {q.category}
-              </span>
-              <div 
-                className={`w-2 h-2 rounded-full ${getImportanceClass(q.importance)}`}
-                title={q.importance}
-              />
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </CardShell>
   );
 }
 
@@ -259,33 +156,6 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Answered': return <CheckCircle2 size={12} className="text-status-success" />;
-      case 'Conflicting': return <AlertCircle size={12} className="text-status-warning" />;
-      case 'Unanswered': return <CircleDashed size={12} className="text-status-error" />;
-      default: return null;
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Answered': return 'text-status-success bg-status-success-surface border-status-success-border';
-      case 'Conflicting': return 'text-status-warning bg-status-warning-surface border-status-warning-border';
-      case 'Unanswered': return 'text-status-error bg-status-error-surface border-status-error-border';
-      default: return 'text-text-tertiary bg-surface-frost-05 border-border-subtle';
-    }
-  };
-
-  const getImportanceClass = (importance: string) => {
-    switch (importance) {
-      case 'Critical': return 'bg-status-error';
-      case 'Important': return 'bg-status-warning';
-      case 'Optional': return 'bg-text-tertiary';
-      default: return 'bg-text-tertiary';
-    }
-  };
-
   const processedQuestions = useMemo(() => {
     let sorted = questions.filter(q => !q.isHidden);
     if (sortBy === 'importance_desc') {
@@ -320,9 +190,6 @@ export function QuestionColumn({ onOpenDetails }: Props) {
       onOpenDetails={onOpenDetails}
       onUseSuggestion={useSuggestion}
       onHideSuggestion={hideSuggestion}
-      getStatusIcon={getStatusIcon}
-      getStatusClass={getStatusClass}
-      getImportanceClass={getImportanceClass}
     />
   );
 
@@ -345,52 +212,24 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     </div>
   );
 
-  const bottomBar = (
-    <div className="relative z-[1] p-4 border-t border-border-subtle bg-surface-panel">
-      <button
-        onClick={() => setIsNewQuestionOpen(true)}
-        className="w-full py-1.5 px-4 border border-border-default bg-surface-frost-02 rounded-comfortable text-[13px] font-[var(--fw-medium)] text-text-secondary hover:text-text-primary hover:bg-surface-frost-04 transition-colors flex items-center justify-center space-x-2"
-      >
-        <Plus size={14} />
-        <span>Add Question</span>
-      </button>
-    </div>
-  );
-
   if (questions.length === 0) {
     return (
-      <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
-        <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
-          <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
-          {headerControls}
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-text-quaternary">
-          {isSuggestingQuestions ? (
-            <>
-              <LoaderPinwheel size={32} className="mb-3 opacity-30 animate-spin" />
-              <p className="text-[13px]">Arvid is analyzing the requirement...</p>
-            </>
-          ) : (
-            <>
-              <MessageCircleQuestion size={32} className="mb-3 opacity-20" />
-              <p className="text-[13px]">No questions yet. Add one to start the flow.</p>
-            </>
-          )}
-        </div>
-        {bottomBar}
+      <ColumnShell title="2. Questions" headerControls={headerControls}>
+        <ColumnEmptyState
+          icon={isSuggestingQuestions
+            ? <LoaderPinwheel size={32} className="mb-3 opacity-20" />
+            : <MessageCircleQuestion size={32} className="mb-3 opacity-20" />
+          }
+          message={isSuggestingQuestions ? "Arvid is analyzing the requirement..." : "No questions yet. Add one to start the flow."}
+        />
         <NewQuestionModal isOpen={isNewQuestionOpen} onClose={() => setIsNewQuestionOpen(false)} />
-      </div>
+      </ColumnShell>
     );
   }
 
   return (
-    <div className="w-1/4 min-w-[280px] shrink-0 h-full flex flex-col border-r border-border-subtle bg-surface-panel">
-      <div className="sticky top-0 z-10 bg-surface-panel p-4 border-b border-border-subtle flex items-center justify-between">
-        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">2. Questions</h2>
-        {headerControls}
-      </div>
-      
-      <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-4 space-y-4">
+    <ColumnShell title="2. Questions" headerControls={headerControls}>
+      <ColumnBody>
         {Object.entries(processedQuestions).map(([group, qs]) => {
           if (groupBy === 'none') {
             return <div key="all" className="space-y-3">{qs.map(renderQuestion)}</div>;
@@ -403,7 +242,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
                 onClick={() => toggleGroup(group)}
                 className="flex items-center text-[11px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors"
               >
-                {isExpanded ? <ChevronDown size={14} className="mr-1" /> : <ChevronRight size={14} className="mr-1" />}
+                <Chevron open={isExpanded} />
                 <span className="uppercase tracking-wider">{group}</span>
                 <span className="ml-2 text-text-quaternary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard">{qs.length}</span>
               </button>
@@ -416,10 +255,8 @@ export function QuestionColumn({ onOpenDetails }: Props) {
             </div>
           );
         })}
-      </div>
-      
-      {bottomBar}
+      </ColumnBody>
       <NewQuestionModal isOpen={isNewQuestionOpen} onClose={() => setIsNewQuestionOpen(false)} />
-    </div>
+    </ColumnShell>
   );
 }

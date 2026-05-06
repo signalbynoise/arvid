@@ -5,6 +5,7 @@ export {
   ImportanceEnum,
   QuestionTypeEnum,
   CategoryEnum,
+  ImplStatusEnum,
 } from './enums';
 
 export type {
@@ -14,6 +15,7 @@ export type {
   Importance,
   QuestionType,
   Category,
+  ImplStatus,
 } from './enums';
 
 export {
@@ -118,3 +120,9 @@ export type {
   RepoContextRow,
   RepoContext,
 } from './repoContext';
+
+export {
+  ImplementationCheckResponseSchema,
+} from './implCheck';
+
+export type { ImplementationCheckResponse } from './implCheck';

@@ -65,6 +65,11 @@
   --status-error-fill-muted: rgba(239, 68, 68, 0.15);
   --status-error-fill-faint: rgba(239, 68, 68, 0.2);
 
+  /* --- Indicator (green intensity scale for clarity/risk/severity) --- */
+  --indicator-high: #10b981;
+  --indicator-medium: rgba(16, 185, 129, 0.5);
+  --indicator-low: rgba(16, 185, 129, 0.2);
+
   /* --- Accent --- */
   --accent: #7170ff;
   --accent-hover: #828fff;
@@ -211,6 +216,11 @@
   --color-status-error-fill-muted: var(--status-error-fill-muted);
   --color-status-error-fill-faint: var(--status-error-fill-faint);
 
+  /* Indicator */
+  --color-indicator-high: var(--indicator-high);
+  --color-indicator-medium: var(--indicator-medium);
+  --color-indicator-low: var(--indicator-low);
+
   /* Accent */
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
@@ -325,10 +335,14 @@
   .text-section    { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* --- Button Variants --- */
+  .btn-primary, .btn-ghost, .btn-subtle, .btn-destructive {
+    cursor: pointer;
+  }
+
   .btn-primary {
     height: 2.5rem;
     border-radius: var(--radius-comfortable);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: var(--fw-medium);
     color: var(--text-on-primary);
     background: var(--btn-primary-bg);
@@ -341,7 +355,7 @@
     border-radius: var(--radius-comfortable);
     border: 1px solid var(--border-default);
     background: var(--surface-frost-02);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
     transition: all 150ms;
@@ -351,7 +365,7 @@
   .btn-subtle {
     border-radius: var(--radius-comfortable);
     background: var(--surface-frost-04);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
     transition: background-color 150ms;
@@ -362,7 +376,7 @@
     border-radius: var(--radius-comfortable);
     border: 1px solid var(--status-error-border-strong);
     background: var(--status-error-fill-muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: var(--fw-medium);
     color: var(--status-error);
     transition: background-color 150ms;
