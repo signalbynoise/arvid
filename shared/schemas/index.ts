@@ -123,6 +123,8 @@ export type {
 
 export {
   ImplementationCheckResponseSchema,
+  ACCORDANCE_WEIGHTS,
+  computeAccordanceScore,
 } from './implCheck';
 
-export type { ImplementationCheckResponse } from './implCheck';
+export type { ImplementationCheckResponse, ImplAnalysis } from './implCheck';

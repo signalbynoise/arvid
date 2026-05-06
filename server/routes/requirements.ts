@@ -3,6 +3,7 @@ import { createUserClient, supabase } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
 import { enhanceRequirement, classifyImplementation } from '../openrouter';
+import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 import { nextShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
@@ -237,6 +238,19 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
         .map(a => ({ text: a.text, author: a.author })),
     }));
 
+  const { data: summaryRow } = await db
+    .from('summaries')
+    .select('core_objective, architecture, constraints, unverified_risks')
+    .eq('requirement_id', requirementId)
+    .single();
+
+  const summary = summaryRow ? {
+    coreObjective: summaryRow.core_objective,
+    architecture: summaryRow.architecture,
+    constraints: summaryRow.constraints,
+    unverifiedRisks: summaryRow.unverified_risks,
+  } : undefined;
+
   try {
     const result = await classifyImplementation({
       requirementTitle: requirement.title,
@@ -248,8 +262,10 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
         recentCommits: repoCtx.recent_commits || [],
         analysis: repoCtx.analysis as RepoAnalysis | null,
       },
+      summary,
     });
 
+    const implAnalysis = computeAccordanceScore(result);
     const now = new Date().toISOString();
     await supabase
       .from('requirements')
@@ -258,15 +274,16 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
         impl_confidence: result.confidence,
         impl_checked_at: now,
         impl_evidence: result.evidence,
+        impl_analysis: implAnalysis,
       })
       .eq('id', requirementId);
 
     console.info(
       '[INFO] [requirements:checkImplementation] Check complete',
-      JSON.stringify({ requirementId, status: result.status, confidence: result.confidence }),
+      JSON.stringify({ requirementId, status: result.status, confidence: result.confidence, accordanceScore: implAnalysis?.accordance_score }),
     );
 
-    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now, impl_evidence: result.evidence });
+    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now, impl_evidence: result.evidence, impl_analysis: implAnalysis });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(

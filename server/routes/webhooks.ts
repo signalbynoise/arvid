@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { supabase } from '../supabase';
 import { classifyImplementation } from '../openrouter';
+import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import { GitHubClient } from '../lib/githubClient';
 import { analyzeRepo } from '../analysis/repoAnalyzer';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
@@ -246,6 +247,19 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
         .map(a => ({ text: a.text, author: a.author })),
     }));
 
+  const { data: summaryRow } = await supabase
+    .from('summaries')
+    .select('core_objective, architecture, constraints, unverified_risks')
+    .eq('requirement_id', requirement.id)
+    .single();
+
+  const summary = summaryRow ? {
+    coreObjective: summaryRow.core_objective,
+    architecture: summaryRow.architecture,
+    constraints: summaryRow.constraints,
+    unverifiedRisks: summaryRow.unverified_risks,
+  } : undefined;
+
   try {
     const result = await classifyImplementation({
       requirementTitle: requirement.title,
@@ -257,7 +271,10 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
         recentCommits: repoCtx.recent_commits || [],
         analysis: repoCtx.analysis as RepoAnalysis | null,
       },
+      summary,
     });
+
+    const implAnalysis = computeAccordanceScore(result);
 
     await supabase
       .from('requirements')
@@ -266,12 +283,18 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
         impl_confidence: result.confidence,
         impl_checked_at: new Date().toISOString(),
         impl_evidence: result.evidence,
+        impl_analysis: implAnalysis,
       })
       .eq('id', requirement.id);
 
     console.info(
       '[INFO] [webhooks:implCheck] Check complete',
-      JSON.stringify({ requirementId: requirement.id, status: result.status, confidence: result.confidence }),
+      JSON.stringify({
+        requirementId: requirement.id,
+        status: result.status,
+        confidence: result.confidence,
+        accordanceScore: implAnalysis?.accordance_score ?? null,
+      }),
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

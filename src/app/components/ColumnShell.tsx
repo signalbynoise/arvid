@@ -7,7 +7,7 @@ interface ColumnShellProps {
   children: React.ReactNode;
 }
 
-const COLUMN_CLASSES = 'w-1/4 min-w-[300px] shrink-0 h-full flex flex-col bg-surface-panel';
+const COLUMN_CLASSES = 'w-1/4 min-w-[400px] shrink-0 h-full flex flex-col bg-surface-panel';
 
 export function ColumnShell({ title, headerControls, borderRight = true, children }: ColumnShellProps) {
   return (

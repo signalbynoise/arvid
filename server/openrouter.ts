@@ -1019,6 +1019,12 @@ export interface ImplementationCheckInput {
     recentCommits: { message: string; author: string; date: string }[];
     analysis: RepoAnalysis | null;
   };
+  summary?: {
+    coreObjective: string;
+    architecture: string;
+    constraints: string;
+    unverifiedRisks: string;
+  };
 }
 
 export async function classifyImplementation(input: ImplementationCheckInput): Promise<ImplementationCheckResponse> {
@@ -1081,6 +1087,14 @@ export async function classifyImplementation(input: ImplementationCheckInput): P
     }
   }
 
+  if (input.summary) {
+    userPrompt += `\n## Specification Summary (from knowledge graph)\n`;
+    userPrompt += `Core Objective: ${input.summary.coreObjective}\n`;
+    userPrompt += `Architecture: ${input.summary.architecture}\n`;
+    userPrompt += `Constraints: ${input.summary.constraints}\n`;
+    userPrompt += `Unverified Risks: ${input.summary.unverifiedRisks}\n`;
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -1100,6 +1114,14 @@ Your output MUST be valid JSON with exactly these keys:
 - "status": One of "Implemented", "Partially Implemented", "Not Implemented", or "Unknown".
 - "confidence": A number from 0.0 to 1.0 indicating your confidence in the assessment.
 - "evidence": A brief (1-3 sentence) explanation citing specific files, patterns, or commits that support your determination.
+${input.summary ? `
+Additionally, if a "Specification Summary" section is provided, you MUST also include these 4 boolean keys:
+- "objective_met": true if the code fulfills the stated core objective, false otherwise.
+- "architecture_met": true if the code follows the specified architecture and design patterns, false otherwise.
+- "constraints_met": true if the code respects the stated constraints and boundaries, false otherwise.
+- "risks_addressed": true if the flagged unverified risks are addressed or mitigated in the code, false otherwise.
+
+Answer each boolean strictly based on the specification summary provided. If the specification section is empty or trivial, default to true.` : ''}
 
 ## Classification Rules
 

@@ -24,6 +24,7 @@ export const RequirementRowSchema = z.object({
   impl_confidence: z.number().nullable().optional(),
   impl_checked_at: z.string().nullable().optional(),
   impl_evidence: z.string().nullable().optional(),
+  impl_analysis: z.unknown().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -49,6 +50,7 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   implConfidence: row.impl_confidence ?? undefined,
   implCheckedAt: row.impl_checked_at ?? undefined,
   implEvidence: row.impl_evidence ?? undefined,
+  implAnalysis: (row.impl_analysis as import('./implCheck').ImplAnalysis | null) ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({
