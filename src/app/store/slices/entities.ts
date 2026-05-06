@@ -595,6 +595,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
                   implStatus: result.impl_status as Requirement['implStatus'],
                   implConfidence: result.impl_confidence ?? undefined,
                   implCheckedAt: result.impl_checked_at,
+                  implEvidence: result.impl_evidence,
                 }
               : r,
           ),

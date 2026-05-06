@@ -265,6 +265,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
         impl_status: result.status,
         impl_confidence: result.confidence,
         impl_checked_at: new Date().toISOString(),
+        impl_evidence: result.evidence,
       })
       .eq('id', requirement.id);
 

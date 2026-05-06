@@ -257,6 +257,7 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
         impl_status: result.status,
         impl_confidence: result.confidence,
         impl_checked_at: now,
+        impl_evidence: result.evidence,
       })
       .eq('id', requirementId);
 
@@ -265,7 +266,7 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
       JSON.stringify({ requirementId, status: result.status, confidence: result.confidence }),
     );
 
-    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now });
+    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now, impl_evidence: result.evidence });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(

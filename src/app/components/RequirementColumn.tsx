@@ -6,6 +6,7 @@ import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
+import { ImplDetailsModal } from './ImplDetailsModal';
 import { ColumnShell, ColumnBody } from './ColumnShell';
 import { CardShell } from './CardShell';
 import { CompletenessChip } from './CompletenessChip';
@@ -57,6 +58,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [implDetailReqId, setImplDetailReqId] = useState<string | null>(null);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
@@ -126,6 +128,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
             implConfidence={req.implConfidence}
             implCheckedAt={req.implCheckedAt}
             onRetry={() => checkImplementation(req.id)}
+            onViewDetails={() => setImplDetailReqId(req.id)}
           />
         </div>
 
@@ -198,6 +201,12 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
           );
         })}
       </ColumnBody>
+
+      <ImplDetailsModal
+        isOpen={implDetailReqId !== null}
+        onClose={() => setImplDetailReqId(null)}
+        requirement={requirements.find(r => r.id === implDetailReqId) ?? null}
+      />
     </ColumnShell>
   );
 }
