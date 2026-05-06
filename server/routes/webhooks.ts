@@ -2,7 +2,10 @@ import { Router, Request, Response } from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { supabase } from '../supabase';
 import { classifyImplementation } from '../openrouter';
+import { GitHubClient } from '../lib/githubClient';
+import { analyzeRepo } from '../analysis/repoAnalyzer';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
+import type { FileTreeEntry, CommitEntry } from '../../shared/schemas/repoContext';
 
 export const webhooksRouter = Router();
 
@@ -123,6 +126,74 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
       .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
       .eq('id', requirement.id);
     return;
+  }
+
+  const { data: projectFull } = await supabase
+    .from('projects')
+    .select('github_repo_default_branch, user_id')
+    .eq('id', requirement.project_id)
+    .single();
+
+  const branch = projectFull?.github_repo_default_branch || 'main';
+
+  const { data: ghConnection } = await supabase
+    .from('github_connections')
+    .select('access_token')
+    .eq('user_id', projectFull?.user_id ?? '')
+    .single();
+
+  if (ghConnection?.access_token) {
+    console.info('[INFO] [webhooks:implCheck] Refreshing repo context from GitHub before classification', JSON.stringify({ projectId: requirement.project_id }));
+    try {
+      const ghClient = new GitHubClient({ token: ghConnection.access_token });
+      const [owner, repo] = project.github_repo_full_name.split('/');
+
+      const treeData = await ghClient.request<{
+        tree: Array<{ path: string; type: string; size?: number }>;
+      }>(`/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`);
+
+      const fileTree: FileTreeEntry[] = treeData.tree.map(item => ({
+        path: item.path,
+        type: item.type === 'tree' ? 'tree' : 'blob',
+        size: item.size,
+      }));
+
+      const commitsData = await ghClient.request<Array<{
+        sha: string;
+        commit: { message: string; author: { name: string; date: string } };
+      }>>(`/repos/${owner}/${repo}/commits?per_page=50&sha=${branch}`);
+
+      const recentCommits: CommitEntry[] = commitsData.map(c => ({
+        sha: c.sha,
+        message: c.commit.message.split('\n')[0],
+        author: c.commit.author.name,
+        date: c.commit.author.date,
+      }));
+
+      const contextId = `rc-${requirement.project_id}`;
+      const existingKeyFiles = (await supabase
+        .from('repo_contexts')
+        .select('key_files')
+        .eq('project_id', requirement.project_id)
+        .single()).data?.key_files || {};
+
+      const analysis = analyzeRepo(fileTree, existingKeyFiles, recentCommits);
+
+      await supabase
+        .from('repo_contexts')
+        .update({
+          file_tree: fileTree,
+          recent_commits: recentCommits,
+          analysis,
+          status: 'ready',
+          fetched_at: new Date().toISOString(),
+        })
+        .eq('id', contextId);
+
+      console.info('[INFO] [webhooks:implCheck] Repo context refreshed', JSON.stringify({ projectId: requirement.project_id, files: fileTree.length, commits: recentCommits.length }));
+    } catch (refreshErr) {
+      console.warn('[WARN] [webhooks:implCheck] Failed to refresh repo context, using cached version', JSON.stringify({ error: refreshErr instanceof Error ? refreshErr.message : 'Unknown' }));
+    }
   }
 
   const { data: repoCtx, error: repoError } = await supabase
