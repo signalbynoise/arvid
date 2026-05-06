@@ -185,7 +185,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       is_hidden: false,
       author: 'Arvid',
       author_team: 'Arvid',
-      created_at: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString(),
     }));
 
     const { data: inserted, error: insertError } = await db

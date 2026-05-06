@@ -153,7 +153,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       completeness: 0,
       clarity: 'Low',
       risk: 'Medium',
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
       projectId: selectedProjectId ?? undefined,
     };
 

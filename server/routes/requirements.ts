@@ -67,7 +67,7 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
     : `R${String(Date.now()).slice(-2)}`;
   const { data, error } = await db
     .from('requirements')
-    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString().split('T')[0] })
+    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString() })
     .select()
     .single();
 

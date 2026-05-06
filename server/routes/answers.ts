@@ -143,7 +143,7 @@ answersRouter.post('/suggest/:questionId', async (req, res) => {
         short_id: shortId,
         text: result.answer_text,
         author: 'Arvid',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString(),
         is_current: false,
         is_suggested: true,
         is_hidden: false,

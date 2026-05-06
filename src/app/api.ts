@@ -215,7 +215,7 @@ export const api = {
       status: 'Unanswered',
       type: 'Manual',
       author: 'User',
-      created_at: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString(),
     };
     const row = await request<unknown>('POST', '/questions', body);
     return parseSingle(QuestionRowSchema, QuestionSchema, row, '/questions');
@@ -252,7 +252,7 @@ export const api = {
       question_id: a.questionId,
       text: a.text,
       author: a.author,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString(),
       is_current: false,
     };
     const row = await request<unknown>('POST', '/answers', body);
