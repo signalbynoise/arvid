@@ -144,7 +144,7 @@ export const api = {
     return parseSingle(WorkspaceRowSchema, WorkspaceSchema, row, '/workspaces');
   },
 
-  async updateWorkspace(id: string, updates: { name?: string }): Promise<Workspace> {
+  async updateWorkspace(id: string, updates: { name?: string; logo_url?: string | null }): Promise<Workspace> {
     const row = await request<unknown>('PATCH', `/workspaces/${id}`, updates);
     return parseSingle(WorkspaceRowSchema, WorkspaceSchema, row, `/workspaces/${id}`);
   },

@@ -8,8 +8,8 @@ import { NewRequirementModal } from './components/NewRequirementModal';
 import { DetailsModal } from './components/DetailsModal';
 import { CommandPalette } from './components/command-palette/CommandPalette';
 import { Sidebar } from './components/Sidebar';
-import { UserMenu } from './components/UserMenu';
-import { LoaderPinwheel, Layers, PanelLeft, AlertTriangle, RotateCw, Folder } from 'lucide-react';
+import { Topbar } from './components/Topbar';
+import { LoaderPinwheel, Layers, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question } from './types';
 import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectSelectedProjectId, selectPendingModal } from './store';
 import { COLUMN_CLASSES } from './components/ColumnShell';
@@ -196,20 +196,10 @@ export default function App() {
       <Sidebar isOpen={isSidebarOpen} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-14 border-b border-border-subtle flex items-center px-4 bg-surface-panel shrink-0 relative z-30">
-          <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-frost-08 rounded-comfortable transition-colors"
-              title="Toggle Sidebar"
-            >
-              <PanelLeft size={16} />
-            </button>
-          </div>
-          <div className="ml-auto flex items-center">
-            <UserMenu />
-          </div>
-        </header>
+        <Topbar
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        />
 
         <main className="flex-1 flex w-full min-h-0 overflow-x-auto overflow-y-hidden bg-surface-panel">
           {renderMainContent()}

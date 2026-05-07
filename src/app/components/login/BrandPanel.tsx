@@ -36,16 +36,11 @@ export function BrandPanel() {
       </div>
 
       <div className="relative z-10 p-8 pb-12">
-        <h2
-          className="text-[32px] font-[var(--fw-medium)] leading-[1.13] tracking-[-0.704px] text-text-primary mb-3"
-        >
-          Build something
+        <h2 className="text-h1 text-text-primary">
+          Control the
           <br />
-          amazing today.
+          knowledge graph.
         </h2>
-        <p className="text-[15px] font-[var(--fw-regular)] leading-[1.6] tracking-[-0.165px] text-text-tertiary max-w-[320px]">
-          Structured requirements, intelligent questions, clear answers — all in one place.
-        </p>
       </div>
     </div>
   );

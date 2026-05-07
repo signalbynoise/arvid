@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Pencil, Users, Layers, Settings as SettingsIcon } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Trash2, Pencil, Users, Layers, Settings as SettingsIcon, Upload, LoaderPinwheel, Loader2, X } from 'lucide-react';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectTeams, selectMembers, selectInvitations } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { getRoleLabel, canManageTeams, canManageMembers, canChangeRoles, canDeleteWorkspace } from '../domain/workspaces';
 import { BaseModal } from './BaseModal';
 import { PendingInvitationList } from './PendingInvitationList';
+import { supabase } from '../lib/supabase';
+import { logger } from '../logger';
 import type { WorkspaceRole } from '../types';
+
+const settingsLog = logger.create('WorkspaceSettings');
 
 type SettingsTab = 'general' | 'teams' | 'members';
 
@@ -49,6 +53,8 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
   const [teamNameValue, setTeamNameValue] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const workspace = useMemo(
     () => workspaces.find(w => w.id === activeWorkspaceId),
@@ -86,10 +92,48 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
 
   if (!workspace) return null;
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !workspace) return;
+
+    setLogoUploading(true);
+    settingsLog.info('handleLogoUpload', 'Uploading workspace logo', { workspaceId: workspace.id, size: file.size });
+
+    try {
+      const ext = file.name.split('.').pop() ?? 'png';
+      const path = `${workspace.id}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('workspace-logos')
+        .upload(path, file, { contentType: file.type, upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('workspace-logos')
+        .getPublicUrl(path);
+
+      await updateWorkspace(workspace.id, { logoUrl: publicUrl });
+      settingsLog.info('handleLogoUpload', 'Logo uploaded', { publicUrl });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      settingsLog.error('handleLogoUpload', 'Failed to upload logo', { error: message });
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!workspace) return;
+    settingsLog.info('handleRemoveLogo', 'Removing workspace logo', { workspaceId: workspace.id });
+    await updateWorkspace(workspace.id, { logoUrl: null });
+  };
+
   const handleSaveName = async () => {
     const trimmed = nameValue.trim();
     if (trimmed && trimmed !== workspace.name) {
-      await updateWorkspace(workspace.id, trimmed);
+      await updateWorkspace(workspace.id, { name: trimmed });
     }
     setEditingName(false);
   };
@@ -110,6 +154,50 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
 
   const renderGeneralTab = () => (
     <div className="p-5 space-y-8">
+      <div className="space-y-3">
+        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
+          Logo
+        </label>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-card bg-surface-frost-04 border border-border-default flex items-center justify-center overflow-hidden shrink-0">
+            {workspace.logoUrl ? (
+              <img src={workspace.logoUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <LoaderPinwheel size={24} className="text-text-quaternary" />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+            {canManageTeams(userRole) && (
+              <button
+                onClick={() => logoInputRef.current?.click()}
+                disabled={logoUploading}
+                className="btn-ghost px-3 py-1.5 text-[13px] rounded-comfortable flex items-center gap-1.5"
+              >
+                {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                <span>{logoUploading ? 'Uploading...' : 'Upload'}</span>
+              </button>
+            )}
+            {workspace.logoUrl && canManageTeams(userRole) && (
+              <button
+                onClick={handleRemoveLogo}
+                className="p-1.5 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
+                title="Remove logo"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="text-[11px] text-text-empty">PNG, JPG, WebP or SVG. Max 2 MB.</p>
+      </div>
+
       <div className="space-y-3">
         <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
           Workspace Name

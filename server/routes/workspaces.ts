@@ -92,6 +92,9 @@ workspacesRouter.patch('/:id', validateBody(UpdateWorkspaceBodySchema), async (r
     updates.name = req.body.name;
     updates.slug = generateSlug(req.body.name);
   }
+  if (req.body.logo_url !== undefined) {
+    updates.logo_url = req.body.logo_url;
+  }
 
   const { data, error } = await db
     .from('workspaces')

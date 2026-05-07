@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
+import { IconButton } from './IconButton';
 import { useAuth } from '../auth/AuthProvider';
 import { useStore } from '../store';
 import { api } from '../api';
@@ -113,19 +114,12 @@ export function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
+      <IconButton
         onClick={() => setIsOpen(prev => !prev)}
-        className="h-7 w-7 rounded-full border border-border-subtle text-[12px] font-[var(--fw-medium)] flex items-center justify-center transition-colors overflow-hidden hover:border-border-hover"
         title={fullName || email}
       >
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-        ) : (
-          <span className="bg-surface-frost-10 h-full w-full flex items-center justify-center text-text-primary">
-            {initials}
-          </span>
-        )}
-      </button>
+        <Settings size={14} />
+      </IconButton>
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-56 bg-surface-elevated border border-border-default rounded-panel shadow-modal z-50 overflow-hidden p-4 flex flex-col gap-6">

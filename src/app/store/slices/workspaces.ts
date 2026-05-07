@@ -28,7 +28,7 @@ export interface WorkspacesSlice {
   loadWorkspaces: () => Promise<void>;
   setActiveWorkspace: (id: string) => void;
   createWorkspace: (name: string) => Promise<Workspace | undefined>;
-  updateWorkspace: (id: string, name: string) => Promise<void>;
+  updateWorkspace: (id: string, updates: { name?: string; logoUrl?: string | null }) => Promise<void>;
   deleteWorkspace: (id: string) => Promise<void>;
 
   loadTeams: (workspaceId: string) => Promise<void>;
@@ -129,16 +129,19 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
     }
   },
 
-  updateWorkspace: async (id: string, name: string) => {
-    log.info('updateWorkspace', 'Updating workspace', { id, name });
+  updateWorkspace: async (id: string, updates: { name?: string; logoUrl?: string | null }) => {
+    log.info('updateWorkspace', 'Updating workspace', { id, ...updates });
 
     const previous = get().workspaces;
     set(state => ({
-      workspaces: state.workspaces.map(w => w.id === id ? { ...w, name } : w),
+      workspaces: state.workspaces.map(w => w.id === id ? { ...w, ...updates } : w),
     }));
 
     try {
-      await api.updateWorkspace(id, { name });
+      const apiUpdates: { name?: string; logo_url?: string | null } = {};
+      if (updates.name !== undefined) apiUpdates.name = updates.name;
+      if (updates.logoUrl !== undefined) apiUpdates.logo_url = updates.logoUrl;
+      await api.updateWorkspace(id, apiUpdates);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('updateWorkspace', 'Failed to update workspace, rolling back', { error: message });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Hash, Lock, Loader2, ChevronDown, Bell, BellOff } from 'lucide-react';
+import { Hash, Lock, Loader2, ChevronDown } from 'lucide-react';
 import { useStore } from '../store';
 import { logger } from '../logger';
 
@@ -62,11 +62,6 @@ export function SlackNotifySelector({ projectId }: Props) {
         disabled={isSaving}
         className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-secondary bg-surface-frost-02 hover:bg-surface-frost-06 border border-border-default rounded-comfortable transition-colors disabled:opacity-50"
       >
-        {currentChannel ? (
-          <Bell size={13} className="shrink-0 text-status-success" />
-        ) : (
-          <BellOff size={13} className="shrink-0" />
-        )}
         <span className="truncate">
           {isSaving ? 'Saving...' : currentChannel ? `#${currentChannel.name}` : 'Select channel'}
         </span>
@@ -95,7 +90,6 @@ export function SlackNotifySelector({ projectId }: Props) {
                   !currentChannel ? 'bg-surface-frost-06 text-text-primary' : 'text-text-secondary hover:bg-surface-frost-04'
                 }`}
               >
-                <BellOff size={12} className="shrink-0 text-text-quaternary" />
                 <span>None (disabled)</span>
               </button>
               {nonImChannels.map(ch => (

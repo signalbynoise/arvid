@@ -9,9 +9,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultParentId?: string;
+  defaultTeamId?: string;
 }
 
-export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
+export function NewProjectModal({ isOpen, onClose, defaultParentId, defaultTeamId }: Props) {
   const createProject = useStore(s => s.createProject);
   const projects = useStore(selectProjects);
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
@@ -28,12 +29,14 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
   useEffect(() => {
     if (isOpen) {
       setParentId(defaultParentId);
-      if (teams.length > 0 && !selectedTeamId) {
+      if (defaultTeamId) {
+        setSelectedTeamId(defaultTeamId);
+      } else if (teams.length > 0 && !selectedTeamId) {
         setSelectedTeamId(teams[0].id);
       }
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [isOpen, defaultParentId, teams, selectedTeamId]);
+  }, [isOpen, defaultParentId, defaultTeamId, teams, selectedTeamId]);
 
   const handleCreate = async () => {
     const result = ProjectNameSchema.safeParse({ name: name.trim() });

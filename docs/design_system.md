@@ -228,6 +228,35 @@ Spacing tokens are registered in Tailwind as `--spacing-{N}` and used via standa
 
 ---
 
+## Icon Button
+
+All interactive icons (toolbar actions, toggles, triggers) **must** use the `<IconButton>` component from `src/app/components/IconButton.tsx`.
+
+### Component API
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `onClick` | `(e: MouseEvent) => void` | — | Click handler |
+| `title` | `string` | — | Tooltip text |
+| `children` | `ReactNode` | — | Icon element (lucide) |
+| `className` | `string` | `''` | Additional classes |
+
+### Behavior
+
+- `flex items-center justify-center` — prevents line-height inflation from inline SVGs
+- `p-1` — provides adequate click target (icon + 4px padding each side)
+- Ghost style — no background on hover, only color transitions (`text-text-quaternary` → `text-text-primary`)
+- Icon size: always `--icon-sm` (14px) via lucide `size={14}` for consistency
+
+### Anti-patterns
+
+- **Custom `<button>` wrapping an icon** — use `<IconButton>` instead
+- **Adding `hover:bg-*`** to icon buttons — the ghost style is the standard
+- **Mixing icon sizes** across toolbars — all icon buttons use `--icon-sm` (14px)
+- **Omitting `flex`** on buttons containing SVGs — causes line-height inflation
+
+---
+
 ## Runtime CSS Variables
 
 Two exceptions exist for runtime-computed values (documented per Rule 21):
@@ -238,6 +267,40 @@ Two exceptions exist for runtime-computed values (documented per Rule 21):
 | `--progress` | `style={{ '--progress': 'N%' }}` | CSS rule in `@layer base` | Progress bar width |
 
 These are the **only** permitted uses of React `style={{}}`. All other styling must use token classes.
+
+---
+
+## Disclosure Chevron
+
+All expand/collapse indicators across the platform **must** use the canonical `<Chevron>` component from `src/app/components/Chevron.tsx`.
+
+### Component API
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `open` | `boolean` | `false` | Whether the section is expanded |
+| `size` | `number` | `14` | Icon size in px — must match an icon size token |
+| `className` | `string` | — | Additional classes (e.g. `group-open:rotate-90` for `<details>`) |
+
+### Behavior
+
+- Renders a single `ChevronRight` icon that **rotates 90°** when `open` is true.
+- Uses `text-text-quaternary` color, `shrink-0`, and a 200ms transition.
+- Never swap between `ChevronRight` and `ChevronDown` — the rotation handles the visual state.
+
+### Size Guidelines
+
+| Context | Size | Token |
+|---------|------|-------|
+| Standard content areas (columns, summaries) | `14` (default) | `--icon-sm` |
+| Compact tree items (sidebar projects, teams) | `12` | `--icon-xs` |
+
+### Anti-patterns
+
+- **Importing `ChevronDown`/`ChevronRight` directly from lucide** for disclosure — use `<Chevron>` instead.
+- **Swapping between two icons** to indicate open/closed — the component handles this via rotation.
+- **Using arbitrary sizes** (e.g. 10, 8) that don't match icon size tokens.
+- **Duplicating the transition/color logic** instead of consuming the component.
 
 ---
 

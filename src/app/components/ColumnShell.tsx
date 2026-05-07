@@ -12,8 +12,8 @@ const COLUMN_CLASSES = 'w-1/4 min-w-[400px] shrink-0 h-full flex flex-col bg-sur
 export function ColumnShell({ title, headerControls, borderRight = true, children }: ColumnShellProps) {
   return (
     <div className={`${COLUMN_CLASSES}${borderRight ? ' border-r border-border-subtle' : ''}`}>
-      <div className="sticky top-0 z-10 bg-surface-panel h-12 px-4 border-b border-border-subtle flex items-center justify-between shrink-0">
-        <h2 className="font-[var(--fw-medium)] text-text-tertiary text-[11px] tracking-widest uppercase">{title}</h2>
+      <div className="sticky top-0 z-10 bg-surface-panel px-4 h-[46px] border-b border-border-subtle flex items-center justify-between shrink-0">
+        <h2 className="text-section text-text-tertiary uppercase">{title}</h2>
         {headerControls && (
           <div className="flex items-center">
             {headerControls}
