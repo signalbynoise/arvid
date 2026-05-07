@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import { createUserClient, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateProjectBodySchema, UpdateProjectBodySchema } from '../../shared/schemas';
@@ -45,6 +46,7 @@ projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res)
   const shortId = await nextShortId(db, 'projects', 'P', 'user_id', userId);
   const body: Record<string, unknown> = {
     ...req.body,
+    id: randomUUID(),
     user_id: userId,
     short_id: shortId,
   };
