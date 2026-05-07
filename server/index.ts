@@ -14,6 +14,8 @@ import { workspacesRouter } from './routes/workspaces';
 import { teamsRouter } from './routes/teams';
 import { membershipsRouter } from './routes/memberships';
 import { invitationsRouter } from './routes/invitations';
+import { teamMembershipsRouter } from './routes/teamMemberships';
+import { projectMembershipsRouter } from './routes/projectMemberships';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +51,8 @@ app.use('/api/workspaces', workspacesRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/memberships', membershipsRouter);
 app.use('/api/invitations', invitationsRouter);
+app.use('/api/team-memberships', teamMembershipsRouter);
+app.use('/api/project-memberships', projectMembershipsRouter);
 app.use('/api/requirements', requirementsRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/answers', answersRouter);

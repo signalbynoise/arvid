@@ -149,6 +149,19 @@ export const api = {
     return parseSingle(WorkspaceRowSchema, WorkspaceSchema, row, `/workspaces/${id}`);
   },
 
+  async getDeactivationMap(workspaceId: string): Promise<{
+    isOwner: boolean;
+    workspace: boolean;
+    teams: Record<string, boolean>;
+    projects: Record<string, boolean>;
+  }> {
+    return request<{ isOwner: boolean; workspace: boolean; teams: Record<string, boolean>; projects: Record<string, boolean> }>('GET', `/workspaces/${workspaceId}/deactivation-map`);
+  },
+
+  async canDeactivateWorkspace(id: string): Promise<{ canDeactivate: boolean; reason?: string }> {
+    return request<{ canDeactivate: boolean; reason?: string }>('GET', `/workspaces/${id}/can-deactivate`);
+  },
+
   async deleteWorkspace(id: string): Promise<void> {
     await request<void>('DELETE', `/workspaces/${id}`);
   },
@@ -168,6 +181,10 @@ export const api = {
   async updateTeam(id: string, updates: { name?: string }): Promise<Team> {
     const row = await request<unknown>('PATCH', `/teams/${id}`, updates);
     return parseSingle(TeamRowSchema, TeamSchema, row, `/teams/${id}`);
+  },
+
+  async canDeactivateTeam(id: string): Promise<{ canDeactivate: boolean; reason?: string }> {
+    return request<{ canDeactivate: boolean; reason?: string }>('GET', `/teams/${id}/can-deactivate`);
   },
 
   async deleteTeam(id: string): Promise<void> {
@@ -210,9 +227,10 @@ export const api = {
     return parseArray(InvitationRowSchema, InvitationSchema, rows, '/invitations');
   },
 
-  async sendInvitation(workspaceId: string, teamId: string | undefined, email: string, role: string): Promise<Invitation> {
-    const body: Record<string, unknown> = { workspace_id: workspaceId, email, role };
-    if (teamId) body.team_id = teamId;
+  async sendInvitation(workspaceId: string, opts: { teamId?: string; projectId?: string; scope?: string; email: string; role: string }): Promise<Invitation> {
+    const body: Record<string, unknown> = { workspace_id: workspaceId, email: opts.email, role: opts.role, scope: opts.scope ?? 'workspace' };
+    if (opts.teamId) body.team_id = opts.teamId;
+    if (opts.projectId) body.project_id = opts.projectId;
     const row = await request<unknown>('POST', '/invitations', body);
     return parseSingle(InvitationRowSchema, InvitationSchema, row, '/invitations');
   },
@@ -246,6 +264,10 @@ export const api = {
   async updateProject(id: string, updates: { name?: string; github_repo_full_name?: string | null; github_repo_default_branch?: string | null }): Promise<Project> {
     const row = await request<unknown>('PATCH', `/projects/${id}`, updates);
     return parseSingle(ProjectRowSchema, ProjectSchema, row, `/projects/${id}`);
+  },
+
+  async canDeactivateProject(id: string): Promise<{ canDeactivate: boolean; reason?: string }> {
+    return request<{ canDeactivate: boolean; reason?: string }>('GET', `/projects/${id}/can-deactivate`);
   },
 
   async deleteProject(id: string): Promise<void> {

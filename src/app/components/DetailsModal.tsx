@@ -123,17 +123,10 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
                 : 'Delete this question and all its answers?'}
             </p>
             <div className="flex items-center gap-2 ml-4 shrink-0">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="px-3 py-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary rounded-comfortable transition-colors"
-              >
+              <button onClick={() => setConfirmDelete(false)} className="btn-ghost px-3 py-1.5">
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="px-3 py-1.5 text-[12px] font-[var(--fw-medium)] text-white bg-status-error rounded-comfortable hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
+              <button onClick={handleDelete} disabled={isDeleting} className="btn-primary px-3 py-1.5">
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
@@ -163,18 +156,11 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
 
         {isEditing && (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={handleCancelEdit}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary rounded-comfortable transition-colors"
-            >
+            <button onClick={handleCancelEdit} className="btn-ghost px-3 py-1.5 flex items-center gap-1.5">
               <X size={14} />
               Cancel
             </button>
-            <button
-              onClick={handleSaveEdit}
-              disabled={!editTitle.trim()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[var(--fw-medium)] text-black bg-white rounded-comfortable hover:bg-btn-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button onClick={handleSaveEdit} disabled={!editTitle.trim()} className="btn-primary px-3 py-1.5 flex items-center gap-1.5">
               <Check size={14} />
               Save
             </button>

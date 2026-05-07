@@ -79,21 +79,10 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
         </div>
 
         <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable"
-          >
+          <button onClick={onClose} className="btn-ghost px-4 py-1.5">
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={!name.trim() || isSaving}
-            className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
-              !name.trim() || isSaving
-                ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed'
-                : 'bg-white text-black hover:bg-btn-primary-hover'
-            }`}
-          >
+          <button onClick={handleSave} disabled={!name.trim() || isSaving} className="btn-primary px-4 py-1.5">
             {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>

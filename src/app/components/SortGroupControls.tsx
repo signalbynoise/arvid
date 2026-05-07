@@ -1,12 +1,9 @@
-import React from 'react';
-import { ArrowUpDown, ListFilter, Check } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { ArrowUpDown, ListFilter, ToggleRight, ToggleLeft } from 'lucide-react';
 import { IconButton } from './IconButton';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from './ui/dropdown-menu';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
 
 interface Props {
   groupByOptions: { label: string; value: string }[];
@@ -25,51 +22,86 @@ export function SortGroupControls({
   onGroupChange,
   onSortChange
 }: Props) {
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  const handleGroupOutside = useCallback((e: MouseEvent) => {
+    if (groupRef.current && !groupRef.current.contains(e.target as Node)) setGroupOpen(false);
+  }, []);
+
+  const handleSortOutside = useCallback((e: MouseEvent) => {
+    if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (groupOpen) {
+      document.addEventListener('mousedown', handleGroupOutside);
+      return () => document.removeEventListener('mousedown', handleGroupOutside);
+    }
+  }, [groupOpen, handleGroupOutside]);
+
+  useEffect(() => {
+    if (sortOpen) {
+      document.addEventListener('mousedown', handleSortOutside);
+      return () => document.removeEventListener('mousedown', handleSortOutside);
+    }
+  }, [sortOpen, handleSortOutside]);
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <span>
-            <IconButton title="Group by">
-              <ListFilter size={14} />
-            </IconButton>
-          </span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-surface-menu border-border-strong min-w-[160px]">
-          {groupByOptions.map(opt => (
-            <DropdownMenuItem
-              key={opt.value}
-              onClick={() => onGroupChange(opt.value)}
-              className="flex items-center justify-between text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
-            >
-              <span>{opt.label}</span>
-              {currentGroup === opt.value && <Check size={12} className="text-status-success" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="relative" ref={groupRef}>
+        <IconButton title="Group by" onClick={() => setGroupOpen(prev => !prev)}>
+          <ListFilter size={14} />
+        </IconButton>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <span>
-            <IconButton title="Sort by">
-              <ArrowUpDown size={14} />
-            </IconButton>
-          </span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-surface-menu border-border-strong min-w-[180px]">
-          {sortByOptions.map(opt => (
-            <DropdownMenuItem
-              key={opt.value}
-              onClick={() => onSortChange(opt.value)}
-              className="flex items-center justify-between text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
-            >
-              <span>{opt.label}</span>
-              {currentSort === opt.value && <Check size={12} className="text-status-success" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        {groupOpen && (
+          <DropdownPanel position="below" align="end">
+            <DropdownSection label="GROUP">
+              {groupByOptions.map(opt => (
+                <DropdownItem
+                  key={opt.value}
+                  icon={<ListFilter size={16} />}
+                  label={opt.label}
+                  right={
+                    currentGroup === opt.value
+                      ? <ToggleRight size={16} className="text-status-success" />
+                      : <ToggleLeft size={16} className="text-text-quaternary" />
+                  }
+                  onClick={() => { onGroupChange(opt.value); setGroupOpen(false); }}
+                />
+              ))}
+            </DropdownSection>
+          </DropdownPanel>
+        )}
+      </div>
+
+      <div className="relative" ref={sortRef}>
+        <IconButton title="Sort by" onClick={() => setSortOpen(prev => !prev)}>
+          <ArrowUpDown size={14} />
+        </IconButton>
+
+        {sortOpen && (
+          <DropdownPanel position="below" align="end">
+            <DropdownSection label="SORT">
+              {sortByOptions.map(opt => (
+                <DropdownItem
+                  key={opt.value}
+                  icon={<ArrowUpDown size={16} />}
+                  label={opt.label}
+                  right={
+                    currentSort === opt.value
+                      ? <ToggleRight size={16} className="text-status-success" />
+                      : <ToggleLeft size={16} className="text-text-quaternary" />
+                  }
+                  onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
+                />
+              ))}
+            </DropdownSection>
+          </DropdownPanel>
+        )}
+      </div>
     </>
   );
 }

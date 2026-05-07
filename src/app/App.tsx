@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { RequirementColumn } from './components/RequirementColumn';
 import { QuestionColumn } from './components/QuestionColumn';
@@ -29,16 +30,8 @@ export default function App() {
   const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
   const loadLinearStatus = useStore(s => s.loadLinearStatus);
   const loadSlackStatus = useStore(s => s.loadSlackStatus);
-  const loadWorkspaces = useStore(s => s.loadWorkspaces);
-  const acceptPendingInvitations = useStore(s => s.acceptPendingInvitations);
   const pendingModal = useStore(selectPendingModal);
   const clearPendingModal = useStore(s => s.clearPendingModal);
-
-  useEffect(() => {
-    acceptPendingInvitations();
-    loadWorkspaces();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -152,10 +145,7 @@ export default function App() {
         <div className="flex-1 flex flex-col items-center justify-center bg-surface-panel space-y-4">
           <AlertTriangle size={32} className="text-status-error" />
           <p className="text-[14px] text-text-tertiary">{dataState.error}</p>
-          <button
-            onClick={() => loadEntities(selectedProjectId)}
-            className="flex items-center space-x-2 px-4 py-2 bg-surface-frost-08 hover:bg-surface-frost-12 rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-colors"
-          >
+          <button onClick={() => loadEntities(selectedProjectId)} className="btn-ghost px-4 py-1.5 flex items-center space-x-2">
             <RotateCw size={14} />
             <span>Retry</span>
           </button>
@@ -193,9 +183,10 @@ export default function App() {
 
   return (
     <div className="flex flex-row h-screen w-full bg-surface-base text-text-primary antialiased">
+      <Outlet />
       <Sidebar isOpen={isSidebarOpen} />
       
-      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-screen relative">
         <Topbar
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}

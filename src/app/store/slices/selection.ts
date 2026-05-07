@@ -1,6 +1,5 @@
 import { StateCreator } from 'zustand';
 import { logger } from '../../logger';
-import { saveNavigation } from '../../lib/navigation';
 
 const log = logger.create('store:selection');
 
@@ -38,7 +37,6 @@ export const createSelectionSlice: StateCreator<SelectionSlice, [], [], Selectio
   },
 
   setSelectedProjectId: (id: string) => {
-    saveNavigation({ projectId: id });
     set({ selectedProjectId: id, selectedReqId: null, selectedQuestionId: null });
     log.debug('setSelectedProjectId', 'Project changed', { id });
   },

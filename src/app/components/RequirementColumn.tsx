@@ -11,7 +11,9 @@ import { ColumnShell, ColumnBody } from './ColumnShell';
 import { CardShell } from './CardShell';
 import { CompletenessChip } from './CompletenessChip';
 import { formatCardDate } from '../lib/formatDate';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useStore, selectRequirements, selectQuestions, selectSelectedReqId } from '../store';
+import { buildRequirementPath } from '../domain/paths';
 
 interface Props {
   onNewReqClick?: () => void;
@@ -49,10 +51,11 @@ function effectiveCompleteness(req: { id: string; completeness: number }, allQue
 }
 
 export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
+  const navigate = useNavigate();
+  const { wsShortId, teamShortId, projectShortId } = useParams();
   const requirements = useStore(selectRequirements);
   const allQuestions = useStore(selectQuestions);
   const selectedId = useStore(selectSelectedReqId);
-  const selectRequirement = useStore(s => s.selectRequirement);
   const checkImplementation = useStore(s => s.checkImplementation);
 
   const [groupBy, setGroupBy] = useState('none');
@@ -100,7 +103,11 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
         dimmed={isDimmed}
         interactive
         connectorRight={isSelected}
-        onClick={() => selectRequirement(req.id)}
+        onClick={() => {
+          if (wsShortId && teamShortId && projectShortId && req.shortId) {
+            navigate(buildRequirementPath(wsShortId, teamShortId, projectShortId, req.shortId));
+          }
+        }}
       >
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">

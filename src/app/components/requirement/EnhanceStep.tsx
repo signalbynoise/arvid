@@ -68,17 +68,11 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
       </div>
 
       <div className="flex justify-between items-center pt-3">
-        <button onClick={onBack} className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04 -ml-2">
+        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button
-          onClick={onCreate}
-          disabled={!description.trim()}
-          className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
-            !description.trim() ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed' : 'bg-white text-black hover:bg-btn-primary-hover'
-          }`}
-        >
+        <button onClick={onCreate} disabled={!description.trim()} className="btn-primary px-4 py-1.5">
           Create
         </button>
       </div>

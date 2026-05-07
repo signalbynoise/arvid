@@ -24,11 +24,7 @@ export function ConnectGitHubButton({ compact }: ConnectGitHubButtonProps) {
 
   if (compact) {
     return (
-      <button
-        type="button"
-        onClick={handleConnect}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary bg-surface-frost-04 hover:bg-surface-frost-08 border border-border-default rounded-comfortable transition-colors"
-      >
+      <button type="button" onClick={handleConnect} className="btn-ghost px-2.5 py-1.5 flex items-center gap-1.5">
         <img src="/github.svg" alt="" className="w-4 h-4 opacity-60" />
         <span>Connect GitHub</span>
       </button>
@@ -36,11 +32,7 @@ export function ConnectGitHubButton({ compact }: ConnectGitHubButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleConnect}
-      className="flex items-center justify-center gap-2 w-full h-10 px-4 text-[13px] font-[var(--fw-medium)] text-text-secondary hover:text-text-primary bg-surface-frost-04 hover:bg-surface-frost-08 border border-border-default rounded-comfortable transition-colors"
-    >
+    <button type="button" onClick={handleConnect} className="btn-ghost px-4 py-1.5 w-full flex items-center justify-center gap-2">
       <img src="/github.svg" alt="" className="w-4 h-4 opacity-60" />
       <span>Connect GitHub Account</span>
     </button>

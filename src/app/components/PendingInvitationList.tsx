@@ -2,7 +2,9 @@ import React from 'react';
 import { X, Clock } from 'lucide-react';
 import type { Invitation, Team } from '../types';
 import { getRoleLabel } from '../domain/workspaces';
+import { getScopeLabel } from '../domain/access';
 import type { WorkspaceRole } from '../types';
+import type { AccessScope } from '../domain/access';
 
 interface PendingInvitationListProps {
   invitations: Invitation[];
@@ -51,6 +53,11 @@ export function PendingInvitationList({ invitations, teams, canManage, onCancel 
               <div className="min-w-0">
                 <p className="text-[13px] text-text-secondary truncate">{invite.email}</p>
                 <div className="flex items-center gap-2 mt-0.5">
+                  {invite.scope && invite.scope !== 'workspace' && (
+                    <span className="text-[11px] text-text-quaternary">
+                      {getScopeLabel(invite.scope as AccessScope)}
+                    </span>
+                  )}
                   {invite.teamId && (
                     <span className="text-[11px] text-text-quaternary">
                       {teamNameMap.get(invite.teamId) ?? 'Unknown team'}

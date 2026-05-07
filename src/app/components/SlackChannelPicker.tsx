@@ -154,11 +154,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
           </div>
 
           <div className="flex justify-end pt-2">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors bg-white text-black hover:bg-btn-primary-hover flex items-center space-x-2 disabled:opacity-50"
-            >
+            <button onClick={handleSave} disabled={isSaving} className="btn-primary px-4 py-1.5 flex items-center space-x-2">
               {isSaving ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />

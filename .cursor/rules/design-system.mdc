@@ -12,7 +12,7 @@ Read `docs/design_system.md` for the complete token reference before writing any
 5. **No arbitrary shadows.** Use `shadow-subtle`, `shadow-ring`, `shadow-elevated`, `shadow-modal`, `shadow-focus`, `shadow-inset`, `shadow-card-selected`, `shadow-accent-selected`.
 6. **No inline `style={{}}` for visual properties.** Only `--depth` (tree indentation) and `--progress` (bar width) are permitted as CSS custom property assignments.
 7. **Typography presets exist.** Use `.text-h1`, `.text-caption`, `.text-label`, `.text-section`, etc. instead of combining `text-[Npx] font-[N] tracking-[...] leading-[...]` manually.
-8. **Button variant classes exist.** Use `.btn-primary`, `.btn-ghost`, `.btn-subtle`, `.btn-destructive` instead of rebuilding button styles inline.
+8. **Button variant classes exist.** Use `.btn-primary`, `.btn-ghost`, `.btn-subtle` instead of rebuilding button styles inline. The only exception is OAuth provider buttons which may use custom styling.
 9. **`font-feature-settings` is global.** Set on `body` in `theme.css`. Never set inline.
 10. **New tokens must be added to `theme.css` `:root`, registered in `@theme inline`, and documented in `docs/design_system.md`.**
 

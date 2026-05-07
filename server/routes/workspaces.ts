@@ -3,6 +3,7 @@ import { createUserClient } from '../supabase';
 import { supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateWorkspaceBodySchema, UpdateWorkspaceBodySchema } from '../../shared/schemas';
+import { nextShortId } from '../lib/shortId';
 
 export const workspacesRouter = Router();
 
@@ -46,11 +47,13 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
   const { name } = req.body;
   const slug = generateSlug(name);
 
-  console.info('[INFO] [workspaces:create] Creating workspace', JSON.stringify({ name, slug, userId }));
+  const shortId = await nextShortId(supabaseAdmin, 'workspaces', 'W', 'created_by', userId);
+
+  console.info('[INFO] [workspaces:create] Creating workspace', JSON.stringify({ name, slug, shortId, userId }));
 
   const { data: workspace, error: wsError } = await supabaseAdmin
     .from('workspaces')
-    .insert({ name, slug, created_by: userId })
+    .insert({ name, slug, short_id: shortId, created_by: userId })
     .select()
     .single();
 
@@ -73,9 +76,10 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
   }
 
   const teamSlug = 'general';
+  const teamShortId = await nextShortId(supabaseAdmin, 'teams', 'T', 'workspace_id', workspace.id);
   const { error: teamError } = await supabaseAdmin
     .from('teams')
-    .insert({ workspace_id: workspace.id, name: 'General', slug: teamSlug, created_by: userId });
+    .insert({ workspace_id: workspace.id, name: 'General', slug: teamSlug, short_id: teamShortId, created_by: userId });
 
   if (teamError) {
     console.error('[ERROR] [workspaces:create] Failed to create default team', JSON.stringify({ workspaceId: workspace.id, error: teamError.message }));
@@ -113,9 +117,120 @@ workspacesRouter.patch('/:id', validateBody(UpdateWorkspaceBodySchema), async (r
   res.json(data);
 });
 
+workspacesRouter.get('/:id/deactivation-map', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
+  const workspaceId = req.params.id;
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .single();
+
+  const isOwner = membership?.role === 'owner';
+
+  if (!isOwner) {
+    return res.json({ isOwner: false, workspace: false, teams: {}, projects: {} });
+  }
+
+  const { count: wsCount } = await db
+    .from('workspaces')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+
+  const { data: teamsData } = await db
+    .from('teams')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('is_deleted', false);
+
+  const { data: projectsData } = await db
+    .from('projects')
+    .select('id, team_id')
+    .eq('workspace_id', workspaceId)
+    .eq('is_deleted', false);
+
+  const teamCount = teamsData?.length ?? 0;
+  const teamMap: Record<string, boolean> = {};
+  for (const t of teamsData ?? []) {
+    teamMap[t.id] = teamCount > 1;
+  }
+
+  const projectsByTeam = new Map<string | null, number>();
+  for (const p of projectsData ?? []) {
+    const key = p.team_id ?? '__ungrouped__';
+    projectsByTeam.set(key, (projectsByTeam.get(key) ?? 0) + 1);
+  }
+
+  const projectMap: Record<string, boolean> = {};
+  for (const p of projectsData ?? []) {
+    const key = p.team_id ?? '__ungrouped__';
+    projectMap[p.id] = (projectsByTeam.get(key) ?? 0) > 1;
+  }
+
+  res.json({
+    isOwner: true,
+    workspace: (wsCount ?? 0) > 1,
+    teams: teamMap,
+    projects: projectMap,
+  });
+});
+
+workspacesRouter.get('/:id/can-deactivate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
+  const workspaceId = req.params.id;
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .single();
+
+  if (!membership || membership.role !== 'owner') {
+    return res.json({ canDeactivate: false, reason: 'Only owners can deactivate' });
+  }
+
+  const { count } = await db
+    .from('workspaces')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+
+  if ((count ?? 0) <= 1) {
+    return res.json({ canDeactivate: false, reason: 'Cannot deactivate the last workspace' });
+  }
+
+  res.json({ canDeactivate: true });
+});
+
 workspacesRouter.delete('/:id', async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
   const workspaceId = req.params.id;
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .single();
+
+  if (!membership || membership.role !== 'owner') {
+    return res.status(403).json({ error: 'Only workspace owners can deactivate workspaces' });
+  }
+
+  const { count } = await db
+    .from('workspaces')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+
+  if ((count ?? 0) <= 1) {
+    return res.status(400).json({ error: 'Cannot deactivate the last workspace' });
+  }
+
   const now = new Date().toISOString();
 
   const { error: teamError } = await db

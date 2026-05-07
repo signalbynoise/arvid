@@ -1,5 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { GitBranch, Loader2, Lock, Globe, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Loader2, Lock, Globe } from 'lucide-react';
+import { FooterDropdownTrigger } from './FooterDropdownTrigger';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
+import { DropdownDivider } from './ui/DropdownDivider';
 import { useStore } from '../store';
 import { logger } from '../logger';
 
@@ -19,6 +24,9 @@ export function RepoSelector({ projectId, onLinked }: RepoSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const publicRepos = useMemo(() => githubRepos.filter(r => !r.isPrivate), [githubRepos]);
+  const privateRepos = useMemo(() => githubRepos.filter(r => r.isPrivate), [githubRepos]);
 
   useEffect(() => {
     if (isOpen && githubRepos.length === 0) {
@@ -47,61 +55,52 @@ export function RepoSelector({ projectId, onLinked }: RepoSelectorProps) {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLinking}
-        className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-secondary bg-surface-frost-02 hover:bg-surface-frost-06 border border-border-default rounded-comfortable transition-colors disabled:opacity-50"
-      >
-        <GitBranch size={13} className="shrink-0" />
-        <span className="truncate">
-          {isLinking ? 'Linking...' : 'Select a repository'}
-        </span>
-        <ChevronDown size={12} className="shrink-0 ml-auto" />
-      </button>
+      <FooterDropdownTrigger onClick={() => setIsOpen(!isOpen)} disabled={isLinking} isOpen={isOpen}>
+        <span className="text-text-tertiary">{isLinking ? 'Linking...' : 'Select repository'}</span>
+      </FooterDropdownTrigger>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-1 z-50 max-h-[280px] min-w-[300px] w-max overflow-y-auto bg-surface-panel border border-border-default rounded-comfortable shadow-lg">
+        <DropdownPanel variant="attached" position="above">
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 size={16} className="animate-spin text-text-quaternary" />
             </div>
           ) : githubRepos.length === 0 ? (
-            <div className="px-3 py-4 text-center text-[12px] text-text-quaternary">
+            <div className="px-3 py-4 text-center text-text-quaternary">
               No repositories found.
             </div>
           ) : (
-            <div className="py-1">
-              {githubRepos.map(repo => (
-                <button
-                  key={repo.id}
-                  type="button"
-                  onClick={() => handleSelect(repo.fullName, repo.defaultBranch)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-surface-frost-06 transition-colors"
-                >
-                  {repo.isPrivate ? (
-                    <Lock size={12} className="shrink-0 text-text-quaternary" />
-                  ) : (
-                    <Globe size={12} className="shrink-0 text-text-quaternary" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-[var(--fw-medium)]">{repo.fullName}</div>
-                    {repo.description && (
-                      <div className="truncate text-[11px] text-text-quaternary mt-0.5">
-                        {repo.description}
-                      </div>
-                    )}
-                  </div>
-                  {repo.language && (
-                    <span className="shrink-0 text-[10px] text-text-quaternary px-1.5 py-0.5 bg-surface-frost-04 rounded-standard">
-                      {repo.language}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <>
+              {publicRepos.length > 0 && (
+                <DropdownSection label="PUBLIC">
+                  {publicRepos.map(repo => (
+                    <DropdownItem
+                      key={repo.id}
+                      icon={<Globe size={16} />}
+                      label={repo.fullName}
+                      onClick={() => handleSelect(repo.fullName, repo.defaultBranch)}
+                    />
+                  ))}
+                </DropdownSection>
+              )}
+              {publicRepos.length > 0 && privateRepos.length > 0 && (
+                <DropdownDivider />
+              )}
+              {privateRepos.length > 0 && (
+                <DropdownSection label="PRIVATE">
+                  {privateRepos.map(repo => (
+                    <DropdownItem
+                      key={repo.id}
+                      icon={<Lock size={16} />}
+                      label={repo.fullName}
+                      onClick={() => handleSelect(repo.fullName, repo.defaultBranch)}
+                    />
+                  ))}
+                </DropdownSection>
+              )}
+            </>
           )}
-        </div>
+        </DropdownPanel>
       )}
     </div>
   );

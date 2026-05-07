@@ -1,58 +1,77 @@
-import React from 'react';
-import { Pencil, Trash2, Plus, MoreHorizontal } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Plus, Pencil, Network, Settings2, Trash2, MoreHorizontal, ToggleRight } from 'lucide-react';
 import { IconButton } from './IconButton';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from './ui/dropdown-menu';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
+import { DropdownDivider } from './ui/DropdownDivider';
+import { useStore } from '../store';
 
 interface Props {
-  onAddSubProject: () => void;
+  projectId: string;
+  onAddUser: () => void;
   onRename: () => void;
-  onDelete: () => void;
+  onMove: () => void;
+  onCreateSubProject: () => void;
+  onSettings: () => void;
+  onDeactivate: () => void;
 }
 
-export function ProjectItemMenu({ onAddSubProject, onRename, onDelete }: Props) {
+export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCreateSubProject, onSettings, onDeactivate }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const canDeactivate = useStore(s => s.deactivationMap.projects[projectId] ?? false);
+
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      setIsOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen, handleClickOutside]);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <span>
-          <IconButton onClick={(e) => e.stopPropagation()}>
-            <MoreHorizontal size={14} />
-          </IconButton>
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        side="bottom"
-        className="bg-surface-menu border-border-strong min-w-[160px]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <DropdownMenuItem
-          onClick={onAddSubProject}
-          className="flex items-center gap-2 text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
-        >
-          <Plus size={14} />
-          <span>Add Sub-project</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={onRename}
-          className="flex items-center gap-2 text-[12px] text-text-secondary hover:text-text-primary cursor-pointer"
-        >
-          <Pencil size={14} />
-          <span>Rename</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={onDelete}
-          variant="destructive"
-          className="flex items-center gap-2 text-[12px] cursor-pointer"
-        >
-          <Trash2 size={14} />
-          <span>Delete</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="relative" ref={menuRef}>
+      <IconButton onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }}>
+        <MoreHorizontal size={14} />
+      </IconButton>
+
+      {isOpen && (
+        <DropdownPanel position="below" align="end">
+          <DropdownSection label="ACTIONS">
+            <DropdownItem icon={<Plus size={16} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
+            <DropdownItem icon={<Pencil size={16} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
+            <DropdownItem icon={<Network size={16} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
+            <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
+          </DropdownSection>
+
+          <DropdownDivider />
+
+          <DropdownSection label="GENERAL">
+            <DropdownItem icon={<Settings2 size={16} />} label="All project settings" onClick={() => { setIsOpen(false); onSettings(); }} />
+          </DropdownSection>
+
+          {canDeactivate && (
+            <>
+              <DropdownDivider />
+              <DropdownSection label="AVOID">
+                <DropdownItem
+                  icon={<Trash2 size={16} />}
+                  label="Deactivate project"
+                  variant="muted"
+                  right={<ToggleRight size={16} className="text-status-success" />}
+                  onClick={() => { setIsOpen(false); onDeactivate(); }}
+                />
+              </DropdownSection>
+            </>
+          )}
+        </DropdownPanel>
+      )}
+    </div>
   );
 }

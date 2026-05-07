@@ -179,21 +179,10 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId, defaultTeamI
         )}
 
         <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button 
-            onClick={handleClose} 
-            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable"
-          >
+          <button onClick={handleClose} className="btn-ghost px-4 py-1.5">
             Cancel
           </button>
-          <button 
-            onClick={handleCreate}
-            disabled={!name.trim() || isCreating}
-            className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors flex items-center space-x-2 ${
-              !name.trim() || isCreating
-                ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed' 
-                : 'bg-white text-black hover:bg-btn-primary-hover'
-            }`}
-          >
+          <button onClick={handleCreate} disabled={!name.trim() || isCreating} className="btn-primary px-4 py-1.5">
             {isCreating ? (
               <span className="flex items-center space-x-2">
                 <span className="w-3.5 h-3.5 border-2 border-surface-frost-08 border-t-black rounded-full animate-spin" />

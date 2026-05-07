@@ -1,6 +1,6 @@
 import React from 'react';
 
-type ButtonVariant = 'primary' | 'ghost' | 'subtle' | 'destructive';
+type ButtonVariant = 'primary' | 'ghost' | 'subtle';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -11,7 +11,6 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'btn-primary',
   ghost: 'btn-ghost',
   subtle: 'btn-subtle',
-  destructive: 'btn-destructive',
 };
 
 export function Button({ variant = 'ghost', className, children, ...props }: ButtonProps) {

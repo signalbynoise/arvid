@@ -16,4 +16,7 @@ export type {
   WorkspaceRole,
   Invitation,
   InvitationStatus,
+  InvitationScope,
+  TeamMembership,
+  ProjectMembership,
 } from '../../shared/schemas';

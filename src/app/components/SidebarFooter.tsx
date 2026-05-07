@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { SidebarFooterItem } from './SidebarFooterItem';
+import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { ChangeIntegrationModal } from './ChangeIntegrationModal';
 import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
@@ -9,24 +10,6 @@ import { useStore, selectProjects, selectSelectedProjectId } from '../store';
 import type { Project } from '../types';
 
 type IntegrationKey = 'repository' | 'project' | 'alerts';
-
-interface ValueTriggerProps {
-  value: string;
-  onClick: () => void;
-}
-
-function ValueTrigger({ value, onClick }: ValueTriggerProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center justify-between w-full p-3 bg-surface-panel border border-border-default rounded-comfortable text-label text-text-primary hover:border-border-hover transition-colors"
-    >
-      <span className="truncate">{value}</span>
-      <ChevronDown size={16} className="text-text-quaternary shrink-0 ml-2" />
-    </button>
-  );
-}
 
 interface SidebarFooterProps {
   project: Project;
@@ -116,10 +99,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             isConnected={!!project.githubRepo}
           >
             {project.githubRepo && !isUnlocked('repository') ? (
-              <ValueTrigger
-                value={project.githubRepo}
-                onClick={() => handleRequestChange('repository')}
-              />
+              <FooterDropdownTrigger onClick={() => handleRequestChange('repository')}>
+                <span className="text-text-primary">{project.githubRepo}</span>
+              </FooterDropdownTrigger>
             ) : (
               <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
             )}
@@ -135,10 +117,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               isConnected={!!project.linearProjectName}
             >
               {project.linearProjectName && !isUnlocked('project') ? (
-                <ValueTrigger
-                  value={project.linearProjectName}
-                  onClick={() => handleRequestChange('project')}
-                />
+                <FooterDropdownTrigger onClick={() => handleRequestChange('project')}>
+                  <span className="text-text-primary">{project.linearProjectName}</span>
+                </FooterDropdownTrigger>
               ) : (
                 <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
               )}
@@ -155,10 +136,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               isConnected={!!project.slackNotificationChannelId}
             >
               {project.slackNotificationChannelId && !isUnlocked('alerts') ? (
-                <ValueTrigger
-                  value={slackChannel ? `#${slackChannel.name}` : 'Channel set'}
-                  onClick={() => handleRequestChange('alerts')}
-                />
+                <FooterDropdownTrigger onClick={() => handleRequestChange('alerts')}>
+                  <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : 'Channel set'}</span>
+                </FooterDropdownTrigger>
               ) : (
                 <SlackNotifySelector projectId={project.id} />
               )}

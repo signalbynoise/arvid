@@ -70,14 +70,8 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
             Answering as <span className="text-text-secondary font-[var(--fw-medium)]">{authorName}</span>
           </span>
           <div className="flex space-x-3">
-            <button onClick={handleClose} className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable">Cancel</button>
-            <button
-              onClick={handleCreate}
-              disabled={!text.trim() || isCreating}
-              className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
-                !text.trim() || isCreating ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed' : 'bg-white text-black hover:bg-btn-primary-hover'
-              }`}
-            >
+            <button onClick={handleClose} className="btn-ghost px-4 py-1.5">Cancel</button>
+            <button onClick={handleCreate} disabled={!text.trim() || isCreating} className="btn-primary px-4 py-1.5">
               {isCreating ? 'Submitting...' : 'Submit'}
             </button>
           </div>

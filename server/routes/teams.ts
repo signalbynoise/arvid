@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { createUserClient } from '../supabase';
+import { supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateTeamBodySchema, UpdateTeamBodySchema } from '../../shared/schemas';
+import { nextShortId } from '../lib/shortId';
 
 export const teamsRouter = Router();
 
@@ -53,10 +55,11 @@ teamsRouter.post('/', validateBody(CreateTeamBodySchema), async (req, res) => {
   const userId = req.user!.id;
   const { name, workspace_id } = req.body;
   const slug = generateSlug(name);
+  const shortId = await nextShortId(supabaseAdmin, 'teams', 'T', 'workspace_id', workspace_id);
 
   const { data: team, error } = await db
     .from('teams')
-    .insert({ name, slug, workspace_id, created_by: userId })
+    .insert({ name, slug, short_id: shortId, workspace_id, created_by: userId })
     .select()
     .single();
 
@@ -96,10 +99,10 @@ teamsRouter.patch('/:id', validateBody(UpdateTeamBodySchema), async (req, res) =
   res.json(data);
 });
 
-teamsRouter.delete('/:id', async (req, res) => {
+teamsRouter.get('/:id/can-deactivate', async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
   const teamId = req.params.id;
-  const now = new Date().toISOString();
 
   const { data: team } = await db
     .from('teams')
@@ -109,6 +112,67 @@ teamsRouter.delete('/:id', async (req, res) => {
     .single();
 
   if (!team) return res.status(404).json({ error: 'Team not found' });
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', team.workspace_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (!membership || membership.role !== 'owner') {
+    return res.json({ canDeactivate: false, reason: 'Only owners can deactivate' });
+  }
+
+  const { count } = await db
+    .from('teams')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', team.workspace_id)
+    .eq('is_deleted', false);
+
+  if ((count ?? 0) <= 1) {
+    return res.json({ canDeactivate: false, reason: 'Cannot deactivate the last team' });
+  }
+
+  res.json({ canDeactivate: true });
+});
+
+teamsRouter.delete('/:id', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
+  const teamId = req.params.id;
+
+  const { data: team } = await db
+    .from('teams')
+    .select('workspace_id')
+    .eq('id', teamId)
+    .eq('is_deleted', false)
+    .single();
+
+  if (!team) return res.status(404).json({ error: 'Team not found' });
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', team.workspace_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (!membership || membership.role !== 'owner') {
+    return res.status(403).json({ error: 'Only workspace owners can deactivate teams' });
+  }
+
+  const { count } = await db
+    .from('teams')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', team.workspace_id)
+    .eq('is_deleted', false);
+
+  if ((count ?? 0) <= 1) {
+    return res.status(400).json({ error: 'Cannot deactivate the last team in a workspace' });
+  }
+
+  const now = new Date().toISOString();
 
   const { error: projectError } = await db
     .from('projects')

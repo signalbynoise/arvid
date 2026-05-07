@@ -32,9 +32,44 @@ The dashboard app calls Supabase Auth directly for sign-in/sign-up/OAuth. All da
 |-------|---------------|----------|
 | UI | Rendering and interaction | `src/app/components/` |
 | State | Global state and transitions | `src/app/store/` |
-| Domain | Business rules and invariants | `src/app/domain/` |
+| Domain | Business rules, path building | `src/app/domain/` |
 | Infrastructure | HTTP, auth adapters | `src/app/api.ts`, `src/app/lib/supabase.ts` |
+| Routing | URL-to-store sync, navigation | `WorkspaceLayout`, `WorkspaceRedirect` |
 | Auth | Session, user context, route guards | `src/app/auth/` |
+
+## URL-Based Routing
+
+The browser URL encodes the full navigation context using short IDs:
+
+```
+/:wsShortId/:teamShortId/:projectShortId
+```
+
+| Segment | Example | Source |
+|---------|---------|--------|
+| Workspace | `W01` | `workspaces.short_id` |
+| Team | `T01` | `teams.short_id` |
+| Project | `P01` | `projects.short_id` |
+
+Examples: `/W01/T01/P01`, `/W02/T01/P03`
+
+The URL is the **single source of truth** for navigation. The store reflects it but does not own it. Flow: URL change -> `WorkspaceLayout` reads params -> store actions -> components render. Path construction is centralized in `src/app/domain/paths.ts`.
+
+## Short ID System
+
+Every entity in the hierarchy gets a human-readable short ID with a single-letter prefix:
+
+| Entity | Prefix | Scope |
+|--------|--------|-------|
+| Workspace | W | Per user |
+| Team | T | Per workspace |
+| Project | P | Per user |
+| Requirement | R | Per project |
+| Question | Q | Per requirement |
+| Answer | A | Per question |
+| Summary | S | Per requirement |
+
+Full address of a requirement: `W01/T01/P01/R03`
 
 ## Authentication
 

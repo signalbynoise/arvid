@@ -124,6 +124,10 @@
   --icon-xl: 24px;
   --icon-2xl: 32px;
 
+  /* --- Component Sizing --- */
+  --dropdown-min-w: 200px;
+  --dropdown-max-h: 600px;
+
   /* --- Spacing --- */
   --space-1: 4px;
   --space-2: 8px;
@@ -251,6 +255,10 @@
   --radius-large: var(--radius-large);
   --radius-pill: var(--radius-pill);
 
+  /* Component Sizing */
+  --min-width-dropdown: var(--dropdown-min-w);
+  --max-height-dropdown: var(--dropdown-max-h);
+
   /* Shadows */
   --shadow-subtle: var(--shadow-subtle);
   --shadow-ring: var(--shadow-ring);
@@ -335,7 +343,7 @@
   .text-section    { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* --- Button Variants --- */
-  .btn-primary, .btn-ghost, .btn-subtle, .btn-destructive {
+  .btn-primary, .btn-ghost, .btn-subtle {
     cursor: pointer;
   }
 
@@ -370,18 +378,6 @@
     color: var(--text-secondary);
     transition: background-color 150ms;
     &:hover { background: var(--surface-frost-05); }
-  }
-
-  .btn-destructive {
-    border-radius: var(--radius-comfortable);
-    border: 1px solid var(--status-error-border-strong);
-    background: var(--status-error-fill-muted);
-    font-size: 12px;
-    font-weight: var(--fw-medium);
-    color: var(--status-error);
-    transition: background-color 150ms;
-    &:hover { background: var(--status-error-fill-hover); }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 
   /* --- Page Grid --- */

@@ -1,36 +1,16 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { LogOut, Settings } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { LogOut, Settings, UserRound, ToggleRight, ToggleLeft } from 'lucide-react';
 import { IconButton } from './IconButton';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
+import { DropdownDivider } from './ui/DropdownDivider';
 import { useAuth } from '../auth/AuthProvider';
 import { useStore } from '../store';
 import { api } from '../api';
 import { logger } from '../logger';
 
 const log = logger.create('UserMenu');
-
-function IntegrationRow({ icon, label, connected, onConnect, onDisconnect }: {
-  icon: React.ReactNode;
-  label: string;
-  connected: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={connected ? onDisconnect : onConnect}
-      className="w-full flex items-center justify-between p-2 bg-surface-frost-02 border border-border-default rounded-comfortable transition-colors hover:bg-surface-frost-06"
-    >
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-[12px] font-[var(--fw-regular)] text-text-tertiary">
-          {connected ? label : `Connect ${label}`}
-        </span>
-      </div>
-      <span className={`h-2 w-2 rounded-full shrink-0 ${connected ? 'bg-status-success' : 'bg-border-subtle'}`} />
-    </button>
-  );
-}
 
 export function UserMenu() {
   const { user, signOut } = useAuth();
@@ -56,13 +36,6 @@ export function UserMenu() {
     || user?.user_metadata?.name
     || null;
   const email = user?.email || '';
-  const avatarUrl = user?.user_metadata?.avatar_url
-    || user?.user_metadata?.picture
-    || null;
-
-  const initials = fullName
-    ? fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : email.slice(0, 1).toUpperCase();
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -112,6 +85,11 @@ export function UserMenu() {
     }
   };
 
+  const toggleIndicator = (connected: boolean) =>
+    connected
+      ? <ToggleRight size={16} className="text-status-success" />
+      : <ToggleLeft size={16} className="text-text-quaternary" />;
+
   return (
     <div className="relative" ref={menuRef}>
       <IconButton
@@ -122,57 +100,48 @@ export function UserMenu() {
       </IconButton>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-surface-elevated border border-border-default rounded-panel shadow-modal z-50 overflow-hidden p-4 flex flex-col gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full border border-border-subtle flex items-center justify-center shrink-0 overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-              ) : (
-                <span className="bg-surface-frost-10 h-full w-full flex items-center justify-center text-[11px] font-[var(--fw-medium)] text-text-primary">
-                  {initials}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              {fullName && (
-                <p className="text-[14px] font-[var(--fw-regular)] text-text-primary truncate">{fullName}</p>
-              )}
-              <p className="text-[12px] text-text-tertiary truncate">{email}</p>
-            </div>
-          </div>
+        <DropdownPanel position="below" align="end">
+          <DropdownSection label="Profile">
+            <DropdownItem
+              icon={<UserRound size={16} />}
+              label={fullName || email}
+            />
+          </DropdownSection>
 
-          <div className="flex flex-col gap-2">
-            <IntegrationRow
+          <DropdownDivider />
+
+          <DropdownSection label="Integrations">
+            <DropdownItem
               icon={<img src="/github.svg" alt="" className="w-4 h-4 opacity-60" />}
               label="Github"
-              connected={githubConnection.status === 'connected'}
-              onConnect={handleConnectGitHub}
-              onDisconnect={disconnectGitHub}
+              right={toggleIndicator(githubConnection.status === 'connected')}
+              onClick={githubConnection.status === 'connected' ? disconnectGitHub : handleConnectGitHub}
             />
-            <IntegrationRow
+            <DropdownItem
               icon={<img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />}
               label="Linear"
-              connected={linearConnection.status === 'connected'}
-              onConnect={handleConnectLinear}
-              onDisconnect={disconnectLinear}
+              right={toggleIndicator(linearConnection.status === 'connected')}
+              onClick={linearConnection.status === 'connected' ? disconnectLinear : handleConnectLinear}
             />
-            <IntegrationRow
+            <DropdownItem
               icon={<img src="/slack.svg" alt="" className="w-4 h-4 opacity-60" />}
               label="Slack"
-              connected={slackConnection.status === 'connected'}
-              onConnect={handleConnectSlack}
-              onDisconnect={disconnectSlack}
+              right={toggleIndicator(slackConnection.status === 'connected')}
+              onClick={slackConnection.status === 'connected' ? disconnectSlack : handleConnectSlack}
             />
-          </div>
+          </DropdownSection>
 
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 text-[12px] font-[var(--fw-regular)] text-text-tertiary hover:text-text-primary transition-colors"
-          >
-            <LogOut size={16} className="text-text-tertiary" />
-            <span>Leave Arvid</span>
-          </button>
-        </div>
+          <DropdownDivider />
+
+          <DropdownSection label="Avoid">
+            <DropdownItem
+              icon={<LogOut size={16} />}
+              label="Leave Arvid"
+              variant="muted"
+              onClick={handleSignOut}
+            />
+          </DropdownSection>
+        </DropdownPanel>
       )}
     </div>
   );

@@ -54,16 +54,10 @@ export function WriteStep({ text, validationError, onTextChange, onNext, onClose
       </div>
 
       <div className="flex justify-end space-x-3 pt-3">
-        <button onClick={onClose} className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors">
+        <button onClick={onClose} className="btn-ghost px-4 py-1.5">
           Cancel
         </button>
-        <button
-          onClick={onNext}
-          disabled={!text.trim()}
-          className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
-            !text.trim() ? 'bg-surface-frost-05 text-text-quaternary cursor-not-allowed' : 'bg-white text-black hover:bg-btn-primary-hover'
-          }`}
-        >
+        <button onClick={onNext} disabled={!text.trim()} className="btn-primary px-4 py-1.5">
           Next
         </button>
       </div>

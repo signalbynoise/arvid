@@ -128,11 +128,7 @@ export function LoginForm({ mode, onSuccess }: LoginFormProps) {
         <p className="text-[13px] font-[var(--fw-regular)] text-status-error">{errorMessage}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="h-10 rounded-comfortable bg-white text-[14px] font-[var(--fw-medium)] text-black transition-colors hover:bg-btn-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary px-4">
         {isSubmitting
           ? (isSignUp ? 'Creating account...' : 'Signing in...')
           : (isSignUp ? 'Create account' : 'Sign in')}

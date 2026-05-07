@@ -2,7 +2,6 @@ import { StateCreator } from 'zustand';
 import { Workspace, Team, Membership, Invitation } from '../../types';
 import { api } from '../../api';
 import { logger } from '../../logger';
-import { saveNavigation, loadNavigation } from '../../lib/navigation';
 
 const log = logger.create('store:workspaces');
 
@@ -42,12 +41,20 @@ export interface WorkspacesSlice {
   removeMember: (id: string) => Promise<void>;
   leaveWorkspace: (workspaceId: string, membershipId: string) => Promise<boolean>;
 
+  deactivationMap: {
+    isOwner: boolean;
+    workspace: boolean;
+    teams: Record<string, boolean>;
+    projects: Record<string, boolean>;
+  };
+  loadDeactivationMap: (workspaceId: string) => Promise<void>;
+
   invitations: Invitation[];
   invitationsDataState: WorkspacesDataState;
   acceptInvitationsState: { status: AcceptInvitationsStatus };
 
   loadInvitations: (workspaceId: string) => Promise<void>;
-  sendInvitation: (workspaceId: string, teamId: string | undefined, email: string, role: string) => Promise<Invitation | undefined>;
+  sendInvitation: (workspaceId: string, opts: { teamId?: string; projectId?: string; scope?: string; email: string; role: string }) => Promise<Invitation | undefined>;
   cancelInvitation: (id: string) => Promise<void>;
   acceptPendingInvitations: () => Promise<void>;
 }
@@ -63,6 +70,19 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
   members: [],
   membersDataState: { status: 'idle' },
 
+  deactivationMap: { isOwner: false, workspace: false, teams: {}, projects: {} },
+
+  loadDeactivationMap: async (workspaceId: string) => {
+    log.debug('loadDeactivationMap', 'Fetching deactivation eligibility', { workspaceId });
+    try {
+      const map = await api.getDeactivationMap(workspaceId);
+      set({ deactivationMap: map });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('loadDeactivationMap', 'Failed to load deactivation map', { error: message });
+    }
+  },
+
   loadWorkspaces: async () => {
     set({ workspacesDataState: { status: 'loading' } });
     log.info('loadWorkspaces', 'Fetching workspaces');
@@ -76,19 +96,7 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
         workspaces = [personal];
       }
 
-      const updates: Partial<WorkspacesSlice> = {
-        workspaces,
-        workspacesDataState: { status: 'ready' },
-      };
-
-      if (!get().activeWorkspaceId && workspaces.length > 0) {
-        const saved = loadNavigation();
-        const restoredWs = saved.workspaceId && workspaces.find(w => w.id === saved.workspaceId);
-        updates.activeWorkspaceId = restoredWs ? restoredWs.id : workspaces[0].id;
-        log.debug('loadWorkspaces', 'Initial workspace selected', { id: updates.activeWorkspaceId, restored: !!restoredWs });
-      }
-
-      set(updates);
+      set({ workspaces, workspacesDataState: { status: 'ready' } });
       log.info('loadWorkspaces', 'Workspaces loaded', { count: workspaces.length });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -99,7 +107,6 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
 
   setActiveWorkspace: (id: string) => {
     log.info('setActiveWorkspace', 'Switching workspace', { id });
-    saveNavigation({ workspaceId: id, projectId: null });
     set({
       activeWorkspaceId: id,
       teams: [],
@@ -346,11 +353,11 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
     }
   },
 
-  sendInvitation: async (workspaceId: string, teamId: string | undefined, email: string, role: string) => {
-    log.info('sendInvitation', 'Sending invitation', { workspaceId, role });
+  sendInvitation: async (workspaceId: string, opts: { teamId?: string; projectId?: string; scope?: string; email: string; role: string }) => {
+    log.info('sendInvitation', 'Sending invitation', { workspaceId, scope: opts.scope, role: opts.role });
 
     try {
-      const created = await api.sendInvitation(workspaceId, teamId, email, role);
+      const created = await api.sendInvitation(workspaceId, opts);
       set(state => ({ invitations: [created, ...state.invitations] }));
       log.info('sendInvitation', 'Invitation sent', { id: created.id });
       return created;

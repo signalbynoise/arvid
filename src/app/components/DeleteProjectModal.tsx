@@ -45,20 +45,13 @@ export function DeleteProjectModal({ isOpen, onClose, projectId, projectName, ha
         </div>
 
         <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable"
-          >
+          <button onClick={onClose} className="btn-ghost px-4 py-1.5">
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className={`px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors ${
-              isDeleting
-                ? 'bg-status-error-fill-faint text-status-error/50 cursor-not-allowed'
-                : 'bg-status-error-fill-muted text-status-error hover:bg-status-error-fill-hover border border-status-error-border-strong'
-            }`}
+            className="btn-primary px-4 py-1.5"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </button>

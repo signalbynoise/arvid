@@ -180,15 +180,12 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
           <MessageSquare size={24} className="mx-auto text-text-tertiary mb-3" />
           <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">Connect Slack Workspace</h3>
           <p className="text-[13px] text-text-tertiary mb-4">Connect your workspace to extract knowledge from channels.</p>
-          <button
-            onClick={handleConnect}
-            className="px-4 py-2 bg-brand-slack text-white text-[13px] font-[var(--fw-medium)] rounded-comfortable hover:bg-brand-slack-hover transition-colors w-full"
-          >
+          <button onClick={handleConnect} className="btn-primary px-4 py-1.5 w-full">
             Connect Slack
           </button>
         </div>
         <div className="flex pt-3">
-          <button onClick={onBack} className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04 -ml-2">
+          <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
             <ArrowLeft size={14} />
             <span>Back</span>
           </button>
@@ -286,16 +283,12 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
         <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
           <button
             onClick={() => { setStep('select-channel'); onWideChange?.(false); }}
-            className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04"
+            className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5"
           >
             <ArrowLeft size={14} />
             <span>Back</span>
           </button>
-          <button
-            onClick={handleAnalyzeSelected}
-            disabled={selectedMessageTs.size === 0}
-            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors bg-white text-black hover:bg-btn-primary-hover disabled:opacity-50 flex items-center space-x-2"
-          >
+          <button onClick={handleAnalyzeSelected} disabled={selectedMessageTs.size === 0} className="btn-primary px-4 py-1.5 flex items-center space-x-2">
             <Sparkles size={13} />
             <span>Analyze {selectedMessageTs.size || ''} Selected</span>
           </button>
@@ -394,18 +387,11 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
 
         {/* Footer */}
         <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
-          <button
-            onClick={() => setStep('browse')}
-            className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04"
-          >
+          <button onClick={() => setStep('browse')} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5">
             <ArrowLeft size={14} />
             <span>Back to messages</span>
           </button>
-          <button
-            onClick={handleCreate}
-            disabled={suggestions.filter(s => s.selected).length === 0}
-            className="px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors bg-white text-black hover:bg-btn-primary-hover disabled:opacity-50"
-          >
+          <button onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} className="btn-primary px-4 py-1.5">
             Create {suggestions.filter(s => s.selected).length} Requirement{suggestions.filter(s => s.selected).length !== 1 ? 's' : ''}
           </button>
         </div>
@@ -458,16 +444,12 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
       </div>
 
       <div className="flex justify-between items-center pt-2">
-        <button onClick={onBack} className="flex items-center space-x-1.5 px-3 py-2 text-[13px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors rounded-comfortable hover:bg-surface-frost-04 -ml-2">
+        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button
-          onClick={handleExtract}
-          disabled={!selectedChannelId}
-          className="px-4 py-2 text-[13px] font-[var(--fw-medium)] rounded-comfortable transition-colors bg-white text-black hover:bg-btn-primary-hover flex items-center space-x-2 disabled:opacity-50"
-        >
-          <span>Load Messages</span>
+        <button onClick={handleExtract} disabled={!selectedChannelId} className="btn-primary px-4 py-1.5">
+          Load Messages
         </button>
       </div>
     </div>

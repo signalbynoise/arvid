@@ -159,9 +159,26 @@ export type { WorkspaceRole, MembershipRow, Membership } from './membership';
 
 export {
   InvitationStatusEnum,
+  InvitationScopeEnum,
   InvitationRowSchema,
   InvitationSchema,
   CreateInvitationBodySchema,
 } from './invitation';
 
-export type { InvitationStatus, InvitationRow, Invitation } from './invitation';
+export type { InvitationStatus, InvitationScope, InvitationRow, Invitation } from './invitation';
+
+export {
+  TeamMembershipRowSchema,
+  TeamMembershipSchema,
+  CreateTeamMembershipBodySchema,
+} from './teamMembership';
+
+export type { TeamMembershipRow, TeamMembership } from './teamMembership';
+
+export {
+  ProjectMembershipRowSchema,
+  ProjectMembershipSchema,
+  CreateProjectMembershipBodySchema,
+} from './projectMembership';
+
+export type { ProjectMembershipRow, ProjectMembership } from './projectMembership';

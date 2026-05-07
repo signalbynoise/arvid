@@ -10,7 +10,9 @@ import { CardShell } from './CardShell';
 import { Chip } from './Chip';
 import { Button } from './Button';
 import { formatCardDate } from '../lib/formatDate';
-import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions, selectPendingModal } from '../store';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions, selectPendingModal, selectRequirements } from '../store';
+import { buildQuestionPath } from '../domain/paths';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
@@ -118,7 +120,10 @@ function QuestionCard({ q, isSelected, isDimmed, onSelect, onOpenDetails, onUseS
 }
 
 export function QuestionColumn({ onOpenDetails }: Props) {
+  const navigate = useNavigate();
+  const { wsShortId, teamShortId, projectShortId, reqShortId } = useParams();
   const allQuestions = useStore(selectQuestions);
+  const requirements = useStore(selectRequirements);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedId = useStore(selectSelectedQuestionId);
   const isSuggestingQuestions = useStore(selectIsSuggestingQuestions);
@@ -127,7 +132,14 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     () => allQuestions.filter(q => q.requirementId === selectedReqId),
     [allQuestions, selectedReqId],
   );
-  const selectQuestion = useStore(s => s.selectQuestion);
+
+  const navigateToQuestion = (questionId: string) => {
+    const question = allQuestions.find(q => q.id === questionId);
+    const currentReqShortId = reqShortId ?? requirements.find(r => r.id === selectedReqId)?.shortId;
+    if (wsShortId && teamShortId && projectShortId && currentReqShortId && question?.shortId) {
+      navigate(buildQuestionPath(wsShortId, teamShortId, projectShortId, currentReqShortId, question.shortId));
+    }
+  };
   const useSuggestion = useStore(s => s.useSuggestion);
   const hideSuggestion = useStore(s => s.hideSuggestion);
   const suggestQuestions = useStore(s => s.suggestQuestions);
@@ -186,7 +198,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
       q={q}
       isSelected={q.id === selectedId}
       isDimmed={selectedId !== null && q.id !== selectedId}
-      onSelect={selectQuestion}
+      onSelect={navigateToQuestion}
       onOpenDetails={onOpenDetails}
       onUseSuggestion={useSuggestion}
       onHideSuggestion={hideSuggestion}

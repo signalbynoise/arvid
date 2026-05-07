@@ -4,6 +4,8 @@ import { AuthProvider } from './app/auth/AuthProvider';
 import { AuthGuard } from './app/auth/AuthGuard';
 import App from './app/App';
 import { LoginPage } from './app/pages/LoginPage';
+import { WorkspaceRedirect } from './app/components/WorkspaceRedirect';
+import { WorkspaceLayout } from './app/components/WorkspaceLayout';
 import './styles/index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -11,14 +13,16 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/*"
-          element={
-            <AuthGuard>
-              <App />
-            </AuthGuard>
-          }
-        />
+        <Route path="/" element={<AuthGuard><App /></AuthGuard>}>
+          <Route index element={<WorkspaceRedirect />} />
+        <Route path=":wsShortId" element={<WorkspaceLayout />}>
+          <Route index element={null} />
+          <Route path=":teamShortId" element={null} />
+          <Route path=":teamShortId/:projectShortId" element={null} />
+          <Route path=":teamShortId/:projectShortId/:reqShortId" element={null} />
+          <Route path=":teamShortId/:projectShortId/:reqShortId/:questionShortId" element={null} />
+        </Route>
+        </Route>
       </Routes>
     </AuthProvider>
   </BrowserRouter>,

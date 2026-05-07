@@ -39,11 +39,12 @@ invitationsRouter.get('/', async (req, res) => {
 invitationsRouter.post('/', validateBody(CreateInvitationBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const userId = req.user!.id;
-  const { workspace_id, team_id, email, role } = req.body;
+  const { workspace_id, team_id, project_id, scope, email, role } = req.body;
+  const inviteScope = scope || 'workspace';
 
   console.info(
     '[INFO] [invitations:create] Creating invitation',
-    JSON.stringify({ workspaceId: workspace_id, role }),
+    JSON.stringify({ workspaceId: workspace_id, scope: inviteScope, role }),
   );
 
   const { data: existingInvite } = await db
@@ -63,9 +64,11 @@ invitationsRouter.post('/', validateBody(CreateInvitationBodySchema), async (req
     workspace_id,
     email,
     role,
+    scope: inviteScope,
     invited_by: userId,
   };
   if (team_id) body.team_id = team_id;
+  if (project_id) body.project_id = project_id;
 
   const { data: invitation, error: insertError } = await db
     .from('workspace_invitations')
@@ -160,19 +163,58 @@ invitationsRouter.post('/accept', async (req, res) => {
   const accepted = [];
 
   for (const invite of pending) {
-    const { error: memberError } = await supabaseAdmin
-      .from('workspace_memberships')
-      .upsert(
-        { workspace_id: invite.workspace_id, user_id: userId, role: invite.role },
-        { onConflict: 'workspace_id,user_id' },
-      );
+    const scope = invite.scope || 'workspace';
 
-    if (memberError) {
-      console.warn(
-        '[WARN] [invitations:accept] Membership upsert failed',
-        JSON.stringify({ inviteId: invite.id, error: memberError.message }),
-      );
-      continue;
+    if (scope === 'workspace') {
+      const { error: memberError } = await supabaseAdmin
+        .from('workspace_memberships')
+        .upsert(
+          { workspace_id: invite.workspace_id, user_id: userId, role: invite.role },
+          { onConflict: 'workspace_id,user_id' },
+        );
+
+      if (memberError) {
+        console.warn('[WARN] [invitations:accept] Workspace membership upsert failed', JSON.stringify({ inviteId: invite.id, error: memberError.message }));
+        continue;
+      }
+    } else if (scope === 'team' && invite.team_id) {
+      await supabaseAdmin
+        .from('workspace_memberships')
+        .upsert(
+          { workspace_id: invite.workspace_id, user_id: userId, role: 'member' },
+          { onConflict: 'workspace_id,user_id' },
+        );
+
+      const { error: teamError } = await supabaseAdmin
+        .from('team_memberships')
+        .upsert(
+          { team_id: invite.team_id, user_id: userId, role: invite.role },
+          { onConflict: 'team_id,user_id' },
+        );
+
+      if (teamError) {
+        console.warn('[WARN] [invitations:accept] Team membership upsert failed', JSON.stringify({ inviteId: invite.id, error: teamError.message }));
+        continue;
+      }
+    } else if (scope === 'project' && invite.project_id) {
+      await supabaseAdmin
+        .from('workspace_memberships')
+        .upsert(
+          { workspace_id: invite.workspace_id, user_id: userId, role: 'member' },
+          { onConflict: 'workspace_id,user_id' },
+        );
+
+      const { error: projError } = await supabaseAdmin
+        .from('project_memberships')
+        .upsert(
+          { project_id: invite.project_id, user_id: userId, role: invite.role },
+          { onConflict: 'project_id,user_id' },
+        );
+
+      if (projError) {
+        console.warn('[WARN] [invitations:accept] Project membership upsert failed', JSON.stringify({ inviteId: invite.id, error: projError.message }));
+        continue;
+      }
     }
 
     await supabaseAdmin

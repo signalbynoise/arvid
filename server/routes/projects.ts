@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUserClient } from '../supabase';
+import { createUserClient, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateProjectBodySchema, UpdateProjectBodySchema } from '../../shared/schemas';
 import { nextShortId } from '../lib/shortId';
@@ -45,7 +45,6 @@ projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res)
   const shortId = await nextShortId(db, 'projects', 'P', 'user_id', userId);
   const body: Record<string, unknown> = {
     ...req.body,
-    id: req.body.id || `p${Date.now()}`,
     user_id: userId,
     short_id: shortId,
   };
@@ -89,13 +88,54 @@ projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, 
   res.json(data);
 });
 
-projectsRouter.delete('/:id', async (req, res) => {
+projectsRouter.get('/:id/can-deactivate', async (req, res) => {
   const db = createUserClient(req.accessToken!);
-  const now = new Date().toISOString();
+  const userId = req.user!.id;
 
   const { data: project } = await db
     .from('projects')
-    .select('workspace_id')
+    .select('workspace_id, team_id')
+    .eq('id', req.params.id)
+    .eq('is_deleted', false)
+    .single();
+
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  if (!project.workspace_id) {
+    return res.json({ canDeactivate: false, reason: 'Project has no workspace context' });
+  }
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', project.workspace_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (!membership || membership.role !== 'owner') {
+    return res.json({ canDeactivate: false, reason: 'Only owners can deactivate' });
+  }
+
+  const countFilter = project.team_id
+    ? db.from('projects').select('id', { count: 'exact', head: true }).eq('team_id', project.team_id).eq('is_deleted', false)
+    : db.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', project.workspace_id).is('team_id', null).eq('is_deleted', false);
+
+  const { count } = await countFilter;
+
+  if ((count ?? 0) <= 1) {
+    return res.json({ canDeactivate: false, reason: 'Cannot deactivate the last project' });
+  }
+
+  res.json({ canDeactivate: true });
+});
+
+projectsRouter.delete('/:id', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
+
+  const { data: project } = await db
+    .from('projects')
+    .select('workspace_id, team_id')
     .eq('id', req.params.id)
     .eq('is_deleted', false)
     .single();
@@ -103,6 +143,28 @@ projectsRouter.delete('/:id', async (req, res) => {
   if (!project) return res.status(404).json({ error: 'Project not found' });
 
   if (project.workspace_id) {
+    const { data: membership } = await supabaseAdmin
+      .from('workspace_memberships')
+      .select('role')
+      .eq('workspace_id', project.workspace_id)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || membership.role !== 'owner') {
+      return res.status(403).json({ error: 'Only workspace owners can deactivate projects' });
+    }
+
+    const countFilter = project.team_id
+      ? db.from('projects').select('id', { count: 'exact', head: true }).eq('team_id', project.team_id).eq('is_deleted', false)
+      : db.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', project.workspace_id).is('team_id', null).eq('is_deleted', false);
+
+    const { count } = await countFilter;
+
+    if ((count ?? 0) <= 1) {
+      return res.status(400).json({ error: 'Cannot deactivate the last project in a team' });
+    }
+
+    const now = new Date().toISOString();
     const { error } = await db
       .from('projects')
       .update({ is_deleted: true, deleted_at: now })
@@ -112,11 +174,5 @@ projectsRouter.delete('/:id', async (req, res) => {
     return res.status(204).end();
   }
 
-  const { error } = await db
-    .from('projects')
-    .delete()
-    .eq('id', req.params.id);
-
-  if (error) return res.status(400).json({ error: error.message });
-  res.status(204).end();
+  return res.status(400).json({ error: 'Project has no workspace context' });
 });

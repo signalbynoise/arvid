@@ -1,19 +1,30 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronDown, Plus, Settings, Check, LoaderPinwheel } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Plus, Pencil, Settings, Trash2, GitCompare, LoaderPinwheel, ToggleRight, ToggleLeft } from 'lucide-react';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
+import { buildWorkspacePath } from '../domain/paths';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
+import { DropdownDivider } from './ui/DropdownDivider';
 
 interface WorkspacePickerProps {
   onSettingsClick: () => void;
   onCreateClick: () => void;
+  onCreateTeamClick: () => void;
+  onInviteClick: () => void;
+  onRenameClick: () => void;
+  onDeactivateClick: () => void;
 }
 
-export function WorkspacePicker({ onSettingsClick, onCreateClick }: WorkspacePickerProps) {
+export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamClick, onInviteClick, onRenameClick, onDeactivateClick }: WorkspacePickerProps) {
+  const navigate = useNavigate();
   const workspaces = useStore(selectWorkspaces);
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
-  const setActiveWorkspace = useStore(s => s.setActiveWorkspace);
 
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const canDeactivate = useStore(s => s.deactivationMap.workspace);
 
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId);
 
@@ -30,8 +41,8 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick }: WorkspacePic
     }
   }, [isOpen, handleClickOutside]);
 
-  const handleSelect = (id: string) => {
-    setActiveWorkspace(id);
+  const handleSelect = (ws: typeof workspaces[number]) => {
+    navigate(buildWorkspacePath(ws.shortId ?? ws.slug));
     setIsOpen(false);
   };
 
@@ -57,41 +68,74 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick }: WorkspacePic
       </button>
 
       {isOpen && (
-        <div className="absolute left-2 right-2 top-full mt-1 bg-surface-elevated border border-border-default rounded-panel shadow-modal z-50 overflow-hidden">
-          <div className="p-1.5 max-h-[200px] overflow-y-auto hide-scrollbar">
+        <DropdownPanel position="below">
+          <DropdownSection label="WORKSPACES">
             {workspaces.map(ws => (
-              <button
+              <DropdownItem
                 key={ws.id}
-                onClick={() => handleSelect(ws.id)}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-standard text-caption-lg transition-colors text-left ${
+                icon={<GitCompare size={16} />}
+                label={ws.name}
+                right={
                   ws.id === activeWorkspaceId
-                    ? 'bg-surface-frost-08 text-text-primary'
-                    : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
-                }`}
-              >
-                <span className="truncate">{ws.name}</span>
-                {ws.id === activeWorkspaceId && <Check size={14} className="text-text-primary shrink-0" />}
-              </button>
+                    ? <ToggleRight size={16} className="text-status-success" />
+                    : <ToggleLeft size={16} className="text-text-quaternary" />
+                }
+                onClick={() => handleSelect(ws)}
+                variant={ws.id === activeWorkspaceId ? 'default' : 'muted'}
+              />
             ))}
-          </div>
+          </DropdownSection>
 
-          <div className="border-t border-border-subtle p-1.5 space-y-0.5">
-            <button
-              onClick={() => { setIsOpen(false); onSettingsClick(); }}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-standard text-caption-lg text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary transition-colors"
-            >
-              <Settings size={14} />
-              <span>Workspace settings</span>
-            </button>
-            <button
+          <DropdownDivider />
+
+          <DropdownSection label="ACTIONS">
+            <DropdownItem
+              icon={<Plus size={16} />}
+              label="Add user to workspace"
+              onClick={() => { setIsOpen(false); onInviteClick(); }}
+            />
+            <DropdownItem
+              icon={<Pencil size={16} />}
+              label="Rename workspace"
+              onClick={() => { setIsOpen(false); onRenameClick(); }}
+            />
+            <DropdownItem
+              icon={<Plus size={16} />}
+              label="Create new team"
+              onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
+            />
+            <DropdownItem
+              icon={<Plus size={16} />}
+              label="Create new workspace"
               onClick={() => { setIsOpen(false); onCreateClick(); }}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-standard text-caption-lg text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary transition-colors"
-            >
-              <Plus size={14} />
-              <span>Create workspace</span>
-            </button>
-          </div>
-        </div>
+            />
+          </DropdownSection>
+
+          <DropdownDivider />
+
+          <DropdownSection label="GENERAL">
+            <DropdownItem
+              icon={<Settings size={16} />}
+              label="Workspace settings"
+              onClick={() => { setIsOpen(false); onSettingsClick(); }}
+            />
+          </DropdownSection>
+
+          {canDeactivate && (
+            <>
+              <DropdownDivider />
+              <DropdownSection label="AVOID">
+                <DropdownItem
+                  icon={<Trash2 size={16} />}
+                  label="Deactivate workspace"
+                  variant="muted"
+                  right={<ToggleRight size={16} className="text-status-success" />}
+                  onClick={() => { setIsOpen(false); onDeactivateClick(); }}
+                />
+              </DropdownSection>
+            </>
+          )}
+        </DropdownPanel>
       )}
     </div>
   );

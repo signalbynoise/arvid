@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Folder, Loader2, Network } from 'lucide-react';
-import { IconButton } from './IconButton';
 import { ProjectIcon } from './ProjectIcon';
 import { SidebarItem } from './SidebarItem';
 import { NewProjectModal } from './NewProjectModal';
 import { RenameProjectModal } from './RenameProjectModal';
-import { DeleteProjectModal } from './DeleteProjectModal';
 import { ProjectItemMenu } from './ProjectItemMenu';
+import { TeamItemMenu } from './TeamItemMenu';
+import { DeactivateModal } from './DeactivateModal';
 import { SidebarFooter } from './SidebarFooter';
 import { WorkspacePicker } from './WorkspacePicker';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { WorkspaceSettingsModal } from './WorkspaceSettingsModal';
 import { CreateTeamModal } from './CreateTeamModal';
 import { InviteMemberModal } from './InviteMemberModal';
-import { useStore, selectProjects, selectSelectedProjectId, selectPendingModal, selectActiveWorkspaceId, selectTeams } from '../store';
+import { useNavigate } from 'react-router-dom';
+import { useStore, selectProjects, selectSelectedProjectId, selectPendingModal, selectActiveWorkspaceId, selectTeams, selectWorkspaces } from '../store';
 import { buildProjectTree, ProjectTreeNode } from '../domain/projects';
-import { loadNavigation } from '../lib/navigation';
+import { buildProjectPathFromEntities } from '../domain/paths';
 
 const DEPTH_INDENT_PX = 20;
 
@@ -24,22 +25,29 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen }: SidebarProps) {
+  const navigate = useNavigate();
   const projects = useStore(selectProjects);
   const projectsDataState = useStore(s => s.projectsDataState);
   const selectedProjectId = useStore(selectSelectedProjectId);
-  const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
-  const loadProjects = useStore(s => s.loadProjects);
   const slackConnection = useStore(s => s.slackConnection);
   const loadSlackStatus = useStore(s => s.loadSlackStatus);
   const loadSlackChannels = useStore(s => s.loadSlackChannels);
   const pendingModal = useStore(selectPendingModal);
   const clearPendingModal = useStore(s => s.clearPendingModal);
 
+  const workspaces = useStore(selectWorkspaces);
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
   const teams = useStore(selectTeams);
-  const loadWorkspaces = useStore(s => s.loadWorkspaces);
-  const loadTeams = useStore(s => s.loadTeams);
   const workspacesDataState = useStore(s => s.workspacesDataState);
+  const deleteWorkspace = useStore(s => s.deleteWorkspace);
+  const deleteTeam = useStore(s => s.deleteTeam);
+  const deleteProject = useStore(s => s.deleteProject);
+  const deactivationMap = useStore(s => s.deactivationMap);
+  const loadDeactivationMap = useStore(s => s.loadDeactivationMap);
+  const activeWorkspace = useMemo(
+    () => workspaces.find(w => w.id === activeWorkspaceId),
+    [workspaces, activeWorkspaceId],
+  );
 
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId),
@@ -74,8 +82,8 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; hasChildren: boolean } | null>(null);
+  const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+  const [deactivateTarget, setDeactivateTarget] = useState<{ id: string; name: string; type: 'workspace' | 'team' | 'project' } | null>(null);
 
   const [isCreateWsOpen, setIsCreateWsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -83,16 +91,8 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const [isInviteMemberOpen, setIsInviteMemberOpen] = useState(false);
 
   useEffect(() => {
-    loadWorkspaces();
     loadSlackStatus();
-  }, [loadWorkspaces, loadSlackStatus]);
-
-  useEffect(() => {
-    if (activeWorkspaceId) {
-      loadProjects(activeWorkspaceId);
-      loadTeams(activeWorkspaceId);
-    }
-  }, [activeWorkspaceId, loadProjects, loadTeams]);
+  }, [loadSlackStatus]);
 
   useEffect(() => {
     if (slackConnection.status === 'connected') {
@@ -101,22 +101,17 @@ export function Sidebar({ isOpen }: SidebarProps) {
   }, [slackConnection.status, loadSlackChannels]);
 
   useEffect(() => {
+    if (activeWorkspaceId) {
+      loadDeactivationMap(activeWorkspaceId);
+    }
+  }, [activeWorkspaceId, teams.length, projects.length, loadDeactivationMap]);
+
+  useEffect(() => {
     if (pendingModal?.type === 'createProject') {
       openCreate();
       clearPendingModal();
     }
   }, [pendingModal, clearPendingModal]);
-
-  useEffect(() => {
-    if (projects.length > 0 && !selectedProjectId) {
-      const saved = loadNavigation();
-      const restoredProject = saved.projectId && projects.find(p => p.id === saved.projectId);
-      const target = restoredProject ?? projects.find(p => !p.parentId);
-      if (target) {
-        setSelectedProjectId(target.id);
-      }
-    }
-  }, [projects, selectedProjectId, setSelectedProjectId]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -154,9 +149,9 @@ export function Sidebar({ isOpen }: SidebarProps) {
     setIsRenameOpen(true);
   };
 
-  const openDelete = (node: ProjectTreeNode) => {
-    setDeleteTarget({ id: node.id, name: node.name, hasChildren: node.children.length > 0 });
-    setIsDeleteOpen(true);
+  const openDeactivate = (id: string, name: string, type: 'workspace' | 'team' | 'project') => {
+    setDeactivateTarget({ id, name, type });
+    setIsDeactivateOpen(true);
   };
 
   const renderNode = (node: ProjectTreeNode, depth = 0) => {
@@ -172,21 +167,22 @@ export function Sidebar({ isOpen }: SidebarProps) {
           isSelected={isSelected}
           indent={depth * DEPTH_INDENT_PX}
           chevron={hasChildren ? { open: !!isExpanded, onToggle: (e) => toggleExpand(e, node.id) } : undefined}
-          onClick={() => setSelectedProjectId(node.id)}
+          onClick={() => {
+            const project = projects.find(p => p.id === node.id);
+            if (project && activeWorkspace) {
+              navigate(buildProjectPathFromEntities(activeWorkspace, teams, project));
+            }
+          }}
           actions={
-            <>
-              <IconButton
-                onClick={(e) => { e.stopPropagation(); openCreate(node.id); }}
-                title="Add sub-project"
-              >
-                <Plus size={14} />
-              </IconButton>
-              <ProjectItemMenu
-                onAddSubProject={() => openCreate(node.id)}
-                onRename={() => openRename(node.id, node.name)}
-                onDelete={() => openDelete(node)}
-              />
-            </>
+            <ProjectItemMenu
+              projectId={node.id}
+              onAddUser={() => {}}
+              onRename={() => openRename(node.id, node.name)}
+              onMove={() => {}}
+              onCreateSubProject={() => openCreate(node.id)}
+              onSettings={() => {}}
+              onDeactivate={() => openDeactivate(node.id, node.name, 'project')}
+            />
           }
         />
 
@@ -212,6 +208,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
       <div className="space-y-3">
         {teams.map(team => {
           const teamProjects = projectsByTeam.grouped.get(team.id) ?? [];
+          const teamProjectTree = buildProjectTree(teamProjects);
 
           return (
             <div key={team.id}>
@@ -219,22 +216,23 @@ export function Sidebar({ isOpen }: SidebarProps) {
                 label={team.name}
                 icon={<Network size={16} className="text-text-quaternary shrink-0" />}
                 actions={
-                  <IconButton
-                    onClick={() => openCreate(undefined, team.id)}
-                    title="New project"
-                  >
-                    <Plus size={12} />
-                  </IconButton>
+                  <TeamItemMenu
+                    teamId={team.id}
+                    onAddUser={() => {}}
+                    onRename={() => {}}
+                    onMove={() => {}}
+                    onCreateProject={() => openCreate(undefined, team.id)}
+                    onSettings={() => {}}
+                    onDeactivate={() => openDeactivate(team.id, team.name, 'team')}
+                  />
                 }
               />
 
-              <div className="space-y-0.5">
-                {teamProjects.length > 0 ? (
-                  buildProjectTree(teamProjects).map(node => renderNode(node))
-                ) : (
-                  <p className="px-6 py-1 text-caption-lg text-text-empty">No projects</p>
-                )}
-              </div>
+              {teamProjectTree.length > 0 && (
+                <div className="space-y-0.5">
+                  {teamProjectTree.map(node => renderNode(node))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -261,6 +259,13 @@ export function Sidebar({ isOpen }: SidebarProps) {
         <WorkspacePicker
           onSettingsClick={() => setIsSettingsOpen(true)}
           onCreateClick={() => setIsCreateWsOpen(true)}
+          onCreateTeamClick={() => setIsCreateTeamOpen(true)}
+          onInviteClick={() => setIsInviteMemberOpen(true)}
+          onRenameClick={() => {}}
+          onDeactivateClick={() => {
+            const ws = workspaces.find(w => w.id === activeWorkspaceId);
+            if (ws) openDeactivate(ws.id, ws.name, 'workspace');
+          }}
         />
       </div>
 
@@ -269,13 +274,15 @@ export function Sidebar({ isOpen }: SidebarProps) {
           <div className="flex justify-center py-4">
             <Loader2 size={16} className="text-text-quaternary animate-spin" />
           </div>
+        ) : hasTeams ? (
+          renderTeamSection()
         ) : tree.length === 0 ? (
           <div className="px-4 py-6 text-center">
             <Folder size={24} className="mx-auto mb-2 text-text-quaternary opacity-60" />
             <p className="text-caption-lg text-text-empty mb-3">No projects yet.</p>
             <button
               onClick={() => openCreate()}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-surface-frost-06 hover:bg-surface-frost-10 border border-border-default rounded-comfortable text-caption-lg text-text-tertiary hover:text-text-secondary transition-colors"
+              className="btn-ghost px-3 py-1.5 inline-flex items-center space-x-1.5"
             >
               <Plus size={12} />
               <span>Create Project</span>
@@ -306,13 +313,17 @@ export function Sidebar({ isOpen }: SidebarProps) {
         />
       )}
 
-      {deleteTarget && (
-        <DeleteProjectModal
-          isOpen={isDeleteOpen}
-          onClose={() => { setIsDeleteOpen(false); setDeleteTarget(null); }}
-          projectId={deleteTarget.id}
-          projectName={deleteTarget.name}
-          hasChildren={deleteTarget.hasChildren}
+      {deactivateTarget && (
+        <DeactivateModal
+          isOpen={isDeactivateOpen}
+          onClose={() => { setIsDeactivateOpen(false); setDeactivateTarget(null); }}
+          entityType={deactivateTarget.type}
+          entityName={deactivateTarget.name}
+          onConfirm={() => {
+            if (deactivateTarget.type === 'workspace') deleteWorkspace(deactivateTarget.id);
+            if (deactivateTarget.type === 'team') deleteTeam(deactivateTarget.id);
+            if (deactivateTarget.type === 'project') deleteProject(deactivateTarget.id);
+          }}
         />
       )}
 

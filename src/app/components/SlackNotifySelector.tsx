@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Hash, Lock, Loader2, ChevronDown } from 'lucide-react';
+import { Hash, Lock, Loader2 } from 'lucide-react';
+import { FooterDropdownTrigger } from './FooterDropdownTrigger';
+import { DropdownPanel } from './ui/DropdownPanel';
+import { DropdownSection } from './ui/DropdownSection';
+import { DropdownItem } from './ui/DropdownItem';
 import { useStore } from '../store';
 import { logger } from '../logger';
 
@@ -56,62 +60,40 @@ export function SlackNotifySelector({ projectId }: Props) {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isSaving}
-        className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-secondary bg-surface-frost-02 hover:bg-surface-frost-06 border border-border-default rounded-comfortable transition-colors disabled:opacity-50"
-      >
-        <span className="truncate">
+      <FooterDropdownTrigger onClick={() => setIsOpen(!isOpen)} disabled={isSaving} isOpen={isOpen}>
+        <span className={currentChannel ? 'text-text-primary' : 'text-text-tertiary'}>
           {isSaving ? 'Saving...' : currentChannel ? `#${currentChannel.name}` : 'Select channel'}
         </span>
-        <ChevronDown size={12} className="shrink-0 ml-auto" />
-      </button>
+      </FooterDropdownTrigger>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-1 z-50 max-h-[280px] min-w-[220px] w-max overflow-y-auto bg-surface-panel border border-border-default rounded-comfortable shadow-lg">
+        <DropdownPanel variant="attached" position="above">
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 size={16} className="animate-spin text-text-quaternary" />
             </div>
           ) : nonImChannels.length === 0 ? (
-            <div className="px-3 py-4 text-center text-[12px] text-text-quaternary">
+            <div className="px-3 py-4 text-center text-text-quaternary">
               No channels found. Reinstall the Slack app to grant channel permissions.
             </div>
           ) : (
-            <div className="py-1">
-              <div className="px-3 py-1.5 text-[10px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-                Notify on events
-              </div>
-              <button
-                type="button"
+            <DropdownSection label="NOTIFY ON EVENTS">
+              <DropdownItem
+                label="None (disabled)"
+                variant="muted"
                 onClick={() => handleSelect(null)}
-                className={`flex items-center gap-2 w-full px-3 py-2 text-left text-[12px] transition-colors ${
-                  !currentChannel ? 'bg-surface-frost-06 text-text-primary' : 'text-text-secondary hover:bg-surface-frost-04'
-                }`}
-              >
-                <span>None (disabled)</span>
-              </button>
+              />
               {nonImChannels.map(ch => (
-                <button
+                <DropdownItem
                   key={ch.id}
-                  type="button"
+                  icon={ch.isPrivate ? <Lock size={16} /> : <Hash size={16} />}
+                  label={ch.name}
                   onClick={() => handleSelect(ch.id)}
-                  className={`flex items-center gap-2 w-full px-3 py-2 text-left text-[12px] transition-colors ${
-                    currentChannel?.id === ch.id ? 'bg-surface-frost-06 text-text-primary' : 'text-text-secondary hover:bg-surface-frost-04'
-                  }`}
-                >
-                  {ch.isPrivate ? (
-                    <Lock size={12} className="shrink-0 text-text-quaternary" />
-                  ) : (
-                    <Hash size={12} className="shrink-0 text-text-quaternary" />
-                  )}
-                  <span className="font-[var(--fw-medium)] truncate">{ch.name}</span>
-                </button>
+                />
               ))}
-            </div>
+            </DropdownSection>
           )}
-        </div>
+        </DropdownPanel>
       )}
     </div>
   );

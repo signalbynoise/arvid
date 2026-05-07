@@ -259,16 +259,16 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                       const success = await leaveWorkspace(workspace.id, currentMember!.id);
                       if (success) onClose();
                     }}
-                    className="btn-destructive px-3 py-1.5 text-[13px] rounded-comfortable shrink-0"
+                    className="btn-primary px-3 py-1.5 shrink-0"
                   >
                     Confirm
                   </button>
-                  <button onClick={() => setConfirmLeave(false)} className="btn-ghost px-3 py-1.5 text-[13px] rounded-comfortable shrink-0">
+                  <button onClick={() => setConfirmLeave(false)} className="btn-ghost px-3 py-1.5 shrink-0">
                     Cancel
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmLeave(true)} className="btn-destructive px-4 py-2 text-[13px] rounded-comfortable">
+                <button onClick={() => setConfirmLeave(true)} className="btn-primary px-4 py-1.5">
                   Leave workspace
                 </button>
               )
@@ -278,15 +278,15 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
               confirmDelete ? (
                 <div className="flex items-center gap-3">
                   <span className="text-[13px] text-text-secondary">This will archive the workspace and all its teams and projects.</span>
-                  <button onClick={handleDeleteWorkspace} className="btn-destructive px-3 py-1.5 text-[13px] rounded-comfortable shrink-0">
+                  <button onClick={handleDeleteWorkspace} className="btn-primary px-3 py-1.5 shrink-0">
                     Confirm
                   </button>
-                  <button onClick={() => setConfirmDelete(false)} className="btn-ghost px-3 py-1.5 text-[13px] rounded-comfortable shrink-0">
+                  <button onClick={() => setConfirmDelete(false)} className="btn-ghost px-3 py-1.5 shrink-0">
                     Cancel
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmDelete(true)} className="btn-destructive px-4 py-2 text-[13px] rounded-comfortable">
+                <button onClick={() => setConfirmDelete(true)} className="btn-primary px-4 py-1.5">
                   Delete workspace
                 </button>
               )

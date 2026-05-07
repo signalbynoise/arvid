@@ -21,6 +21,46 @@ Hardcoded values are forbidden. If it's visual, it comes from a token.
 
 ---
 
+## Base Component Architecture (CRITICAL)
+
+**This is the most important rule in the design system.**
+
+All UI components follow a strict base/consumer separation:
+
+**Base components** (`src/app/components/ui/`) own **ALL** visual styling — every token class for backgrounds, borders, radii, shadows, spacing, typography, transitions, z-index, and positioning. Base components expose **typed props** (`variant`, `position`, `isOpen`, `icon`, `label`, etc.) that control visual variations internally.
+
+**Consumer components** (every component that uses a base component) pass **data props only**. They describe **what** they need, never **how** it looks.
+
+### Rules
+
+1. **Consumer components MUST NOT pass `className` to base components.** Base components do not accept `className`. There are zero exceptions.
+2. **Consumer components MUST NOT add any Tailwind classes** that affect the visual output of a base component — no border overrides, no padding overrides, no font overrides, no radius overrides, no shadow overrides, no positioning overrides.
+3. **If a visual variation is needed**, it is a **prop on the base component** with the styling handled internally by the base. The consumer passes the prop value. The base decides the CSS.
+4. **Base components are the SSOT for their visual domain.** Changing a token in the base automatically updates every consumer. No consumer can diverge.
+5. **No duplicate base components.** If two components render the same visual pattern (e.g. section headers), they must share the same base or use the same token class. Having two implementations of the same visual element is forbidden.
+
+### Example
+
+```tsx
+// CORRECT — consumer passes props, base owns styling
+<DropdownPanel variant="attached" position="above">
+  <DropdownSection label="PUBLIC">
+    <DropdownItem icon={<Globe size={16} />} label="arvid/arvid" onClick={...} />
+  </DropdownSection>
+</DropdownPanel>
+
+// WRONG — consumer adds className, overrides tokens
+<DropdownPanel className="absolute bottom-full mb-1 min-w-[300px] rounded-panel shadow-modal">
+  <div className="text-[12px] font-[var(--fw-medium)] uppercase tracking-widest px-3">
+    PUBLIC
+  </div>
+</DropdownPanel>
+```
+
+This rule applies to **every** base component: `DropdownPanel`, `DropdownSection`, `DropdownItem`, `DropdownDivider`, `FooterDropdownTrigger`, `SidebarItem`, `IconButton`, `Chevron`, and all Radix wrappers in `dropdown-menu.tsx`.
+
+---
+
 ## Colors
 
 ### Surfaces
@@ -150,17 +190,16 @@ Use these classes instead of combining `text-[Npx] font-[N] tracking-[...] leadi
 
 | Class | Background | Text | Border | Use |
 |-------|-----------|------|--------|-----|
-| `.btn-primary` | White | Black | None | Primary CTAs (Create, Submit, Sign in) |
-| `.btn-ghost` | `frost-02` | Secondary | Default | Standard actions, secondary CTAs |
+| `.btn-primary` | White | Black | None | Primary CTAs (Create, Submit, Delete, Sign in) |
+| `.btn-ghost` | `frost-02` | Secondary | Default | Standard actions, secondary CTAs, Cancel/Back |
 | `.btn-subtle` | `frost-04` | Secondary | None | Toolbar actions, contextual |
-| `.btn-destructive` | Error fill | Error | Error border | Delete, remove actions |
 
 ### How to Use
 
 ```jsx
-<button className="btn-primary px-4 py-2">Create</button>
-<button className="btn-ghost px-4 py-2">Cancel</button>
-<button className="btn-destructive px-4 py-2">Delete</button>
+<button className="btn-primary px-4 py-1.5">Create</button>
+<button className="btn-ghost px-4 py-1.5">Cancel</button>
+<button className="btn-subtle px-4 py-1.5">Filter</button>
 ```
 
 ---
@@ -257,6 +296,76 @@ All interactive icons (toolbar actions, toggles, triggers) **must** use the `<Ic
 
 ---
 
+## Dropdown Menu
+
+All dropdown menus, popups, and floating panels **must** use the base components from `src/app/components/ui/`. For Radix-powered menus, the restyled primitives in `dropdown-menu.tsx` apply the same tokens automatically.
+
+### Container (`DropdownPanel`)
+
+File: `src/app/components/ui/DropdownPanel.tsx`
+
+| Token | Class | Value | Use |
+|-------|-------|-------|-----|
+| Background | `bg-surface-panel` | `#0f1011` | Panel fill |
+| Border | `border border-border-default` | `rgba(255,255,255,0.08)` | Container edge |
+| Radius | `rounded-comfortable` | 6px | Corner rounding |
+| Shadow | `shadow-elevated` | Floating elevation | Drop shadow |
+| Vertical padding | `py-4` | 16px | Top/bottom space |
+| Z-index | `z-50` | 50 | Stacking |
+
+Positioning (`absolute`, `top-full`, `bottom-full`, `mt-1`, etc.) is applied via `className` by the consumer.
+
+### Section Header (`DropdownSection`)
+
+File: `src/app/components/ui/DropdownSection.tsx`
+
+- Optional `label` prop renders uppercase header
+- Typography: `.text-section` (includes uppercase + widest tracking — zero overrides)
+- Color: `text-text-quaternary`
+- Padding: `px-3`
+
+### Menu Item (`DropdownItem`)
+
+File: `src/app/components/ui/DropdownItem.tsx`
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `icon` | `ReactNode` | — | Left icon (16px lucide) |
+| `label` | `string` | — | Item text |
+| `right` | `ReactNode` | — | Right element (toggle, check) |
+| `onClick` | `function` | — | Click handler |
+| `variant` | `'default' \| 'muted' \| 'destructive'` | `'default'` | Color scheme |
+
+Layout: `flex items-center gap-2 px-3 py-1 text-caption-lg cursor-pointer transition-colors`
+
+| Variant | Color | Hover |
+|---------|-------|-------|
+| `default` | `text-text-primary` | `text-text-primary` |
+| `muted` | `text-text-tertiary` | `text-text-primary` |
+| `destructive` | `text-status-error` | `text-status-error` |
+
+Ghost style only — no background on hover.
+
+### Divider (`DropdownDivider`)
+
+File: `src/app/components/ui/DropdownDivider.tsx`
+
+Renders `border-t border-border-subtle my-4`. Used between sections.
+
+### Radix Integration
+
+The Radix primitives in `dropdown-menu.tsx` (`DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`) use the same tokens. Consumers using Radix (`ProjectItemMenu`, `SortGroupControls`) inherit the styling automatically — no `className` overrides needed.
+
+### Anti-patterns
+
+- **Custom popup container styling** — use `DropdownPanel` or Radix `DropdownMenuContent`
+- **`bg-surface-elevated`**, **`bg-surface-menu`**, **`rounded-panel`**, **`shadow-modal`** on dropdowns — use the standard tokens above
+- **`hover:bg-*` on menu items** — ghost style only (color transitions, no background)
+- **Inline font styles** (`text-[12px]`, `font-[var(--fw-medium)]`) in items — `DropdownItem` / `DropdownMenuItem` handle typography
+- **Custom click-outside listeners** without `DropdownPanel` — consolidate into the base pattern
+
+---
+
 ## Runtime CSS Variables
 
 Two exceptions exist for runtime-computed values (documented per Rule 21):
@@ -315,3 +424,5 @@ All expand/collapse indicators across the platform **must** use the canonical `<
 7. **No `fontFeatureSettings` inline**. It is set globally on `body`.
 8. **All new colors** must be added to `:root` in `theme.css`, registered in `@theme inline`, and documented here.
 9. **All new components** must use only token classes. No exceptions without documentation per Rule 21.
+10. **No `className` prop on base components.** Consumer components pass typed props only. Base components own all visual styling. See "Base Component Architecture" section above.
+11. **No typography preset overrides.** If a preset like `.text-label` sets tracking, do not add `tracking-widest` on top. Use a preset that already includes the desired tracking (e.g. `.text-section`).
