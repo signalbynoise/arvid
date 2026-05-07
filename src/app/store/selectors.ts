@@ -27,3 +27,9 @@ export const selectPendingModal = (state: AppState) => state.pendingModal;
 
 export const selectSlackConnection = (state: AppState) => state.slackConnection;
 export const selectSlackChannels = (state: AppState) => state.slackChannels;
+
+export const selectWorkspaces = (state: AppState) => state.workspaces;
+export const selectActiveWorkspaceId = (state: AppState) => state.activeWorkspaceId;
+export const selectTeams = (state: AppState) => state.teams;
+export const selectMembers = (state: AppState) => state.members;
+export const selectInvitations = (state: AppState) => state.invitations;

@@ -10,6 +10,10 @@ import { githubRouter, githubCallbackRouter } from './routes/github';
 import { linearRouter, linearCallbackRouter } from './routes/linear';
 import { slackRouter, slackCallbackRouter } from './routes/slack';
 import { webhooksRouter } from './routes/webhooks';
+import { workspacesRouter } from './routes/workspaces';
+import { teamsRouter } from './routes/teams';
+import { membershipsRouter } from './routes/memberships';
+import { invitationsRouter } from './routes/invitations';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +45,10 @@ app.use('/api/slack/callback', slackCallbackRouter);
 
 app.use('/api', requireAuth);
 
+app.use('/api/workspaces', workspacesRouter);
+app.use('/api/teams', teamsRouter);
+app.use('/api/memberships', membershipsRouter);
+app.use('/api/invitations', invitationsRouter);
 app.use('/api/requirements', requirementsRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/answers', answersRouter);

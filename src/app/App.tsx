@@ -29,8 +29,16 @@ export default function App() {
   const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
   const loadLinearStatus = useStore(s => s.loadLinearStatus);
   const loadSlackStatus = useStore(s => s.loadSlackStatus);
+  const loadWorkspaces = useStore(s => s.loadWorkspaces);
+  const acceptPendingInvitations = useStore(s => s.acceptPendingInvitations);
   const pendingModal = useStore(selectPendingModal);
   const clearPendingModal = useStore(s => s.clearPendingModal);
+
+  useEffect(() => {
+    acceptPendingInvitations();
+    loadWorkspaces();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

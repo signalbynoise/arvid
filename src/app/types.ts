@@ -10,4 +10,10 @@ export type {
   Answer,
   Project,
   Summary,
+  Workspace,
+  Team,
+  Membership,
+  WorkspaceRole,
+  Invitation,
+  InvitationStatus,
 } from '../../shared/schemas';

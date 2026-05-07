@@ -17,8 +17,8 @@ export interface ProjectsSlice {
   projects: Project[];
   projectsDataState: ProjectsDataState;
 
-  loadProjects: () => Promise<void>;
-  createProject: (name: string, parentId?: string) => Promise<void>;
+  loadProjects: (workspaceId?: string) => Promise<void>;
+  createProject: (name: string, parentId?: string, workspaceId?: string, teamId?: string) => Promise<void>;
   updateProject: (id: string, name: string) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
 }
@@ -29,12 +29,18 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
   projects: [],
   projectsDataState: { status: 'idle' },
 
-  loadProjects: async () => {
-    set({ projectsDataState: { status: 'loading' } });
-    log.info('loadProjects', 'Fetching projects');
+  loadProjects: async (workspaceId?: string) => {
+    set({
+      projects: [],
+      projectsDataState: { status: 'loading' },
+      selectedProjectId: null,
+      selectedReqId: null,
+      selectedQuestionId: null,
+    });
+    log.info('loadProjects', 'Fetching projects', { workspaceId });
 
     try {
-      const projects = await api.getProjects();
+      const projects = await api.getProjects(workspaceId);
       set({ projects, projectsDataState: { status: 'ready' } });
       log.info('loadProjects', 'Projects loaded', { count: projects.length });
     } catch (err) {
@@ -44,11 +50,11 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
     }
   },
 
-  createProject: async (name: string, parentId?: string) => {
-    log.info('createProject', 'Creating project', { name, parentId });
+  createProject: async (name: string, parentId?: string, workspaceId?: string, teamId?: string) => {
+    log.info('createProject', 'Creating project', { name, parentId, workspaceId, teamId });
 
     try {
-      const created = await api.createProject(name, parentId);
+      const created = await api.createProject(name, parentId, workspaceId, teamId);
       set(state => ({ projects: [...state.projects, created] }));
       log.info('createProject', 'Project created', { id: created.id });
     } catch (err) {

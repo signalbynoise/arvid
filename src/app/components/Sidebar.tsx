@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Plus, Folder, Hash, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, Folder, Hash, Loader2, Users } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { NewProjectModal } from './NewProjectModal';
 import { RenameProjectModal } from './RenameProjectModal';
@@ -8,8 +8,14 @@ import { ProjectItemMenu } from './ProjectItemMenu';
 import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
 import { SlackNotifySelector } from './SlackNotifySelector';
-import { useStore, selectProjects, selectSelectedProjectId, selectPendingModal } from '../store';
+import { WorkspacePicker } from './WorkspacePicker';
+import { CreateWorkspaceModal } from './CreateWorkspaceModal';
+import { WorkspaceSettingsModal } from './WorkspaceSettingsModal';
+import { CreateTeamModal } from './CreateTeamModal';
+import { InviteMemberModal } from './InviteMemberModal';
+import { useStore, selectProjects, selectSelectedProjectId, selectPendingModal, selectActiveWorkspaceId, selectTeams } from '../store';
 import { buildProjectTree, ProjectTreeNode } from '../domain/projects';
+import { loadNavigation } from '../lib/navigation';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,6 +37,12 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const pendingModal = useStore(selectPendingModal);
   const clearPendingModal = useStore(s => s.clearPendingModal);
 
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const teams = useStore(selectTeams);
+  const loadWorkspaces = useStore(s => s.loadWorkspaces);
+  const loadTeams = useStore(s => s.loadTeams);
+  const workspacesDataState = useStore(s => s.workspacesDataState);
+
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId),
     [projects, selectedProjectId],
@@ -38,7 +50,25 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
   const tree = useMemo(() => buildProjectTree(projects), [projects]);
 
+  const projectsByTeam = useMemo(() => {
+    const grouped = new Map<string, typeof projects>();
+    const ungrouped: typeof projects = [];
+    for (const p of projects) {
+      if (p.teamId) {
+        const list = grouped.get(p.teamId) ?? [];
+        list.push(p);
+        grouped.set(p.teamId, list);
+      } else {
+        ungrouped.push(p);
+      }
+    }
+    return { grouped, ungrouped };
+  }, [projects]);
+
+  const hasTeams = teams.length > 0;
+
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createParentId, setCreateParentId] = useState<string | undefined>(undefined);
@@ -49,10 +79,22 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; hasChildren: boolean } | null>(null);
 
+  const [isCreateWsOpen, setIsCreateWsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
+  const [isInviteMemberOpen, setIsInviteMemberOpen] = useState(false);
+
   useEffect(() => {
-    loadProjects();
+    loadWorkspaces();
     loadSlackStatus();
-  }, [loadProjects, loadSlackStatus]);
+  }, [loadWorkspaces, loadSlackStatus]);
+
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      loadProjects(activeWorkspaceId);
+      loadTeams(activeWorkspaceId);
+    }
+  }, [activeWorkspaceId, loadProjects, loadTeams]);
 
   useEffect(() => {
     if (slackConnection.status === 'connected') {
@@ -69,9 +111,11 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
-      const firstRoot = projects.find(p => !p.parentId);
-      if (firstRoot) {
-        setSelectedProjectId(firstRoot.id);
+      const saved = loadNavigation();
+      const restoredProject = saved.projectId && projects.find(p => p.id === saved.projectId);
+      const target = restoredProject ?? projects.find(p => !p.parentId);
+      if (target) {
+        setSelectedProjectId(target.id);
       }
     }
   }, [projects, selectedProjectId, setSelectedProjectId]);
@@ -175,10 +219,94 @@ export function Sidebar({ isOpen }: SidebarProps) {
     );
   };
 
+  const toggleTeamExpand = (e: React.MouseEvent, teamId: string) => {
+    e.stopPropagation();
+    setExpandedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
+
+  useEffect(() => {
+    if (teams.length > 0) {
+      setExpandedTeams(prev => {
+        const updated = { ...prev };
+        for (const t of teams) {
+          if (!(t.id in updated)) updated[t.id] = true;
+        }
+        return updated;
+      });
+    }
+  }, [teams]);
+
+  const renderTeamSection = () => {
+    if (!hasTeams) {
+      return (
+        <div className="space-y-0.5">
+          {tree.map(node => renderNode(node))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {teams.map(team => {
+          const teamProjects = projectsByTeam.grouped.get(team.id) ?? [];
+          const isExpanded = expandedTeams[team.id] !== false;
+
+          return (
+            <div key={team.id}>
+              <div className="flex items-center justify-between px-4 mb-0.5">
+                <button
+                  onClick={(e) => toggleTeamExpand(e, team.id)}
+                  className="flex items-center gap-1.5 text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest hover:text-text-tertiary transition-colors"
+                >
+                  {isExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                  <Users size={10} />
+                  <span>{team.name}</span>
+                </button>
+                <IconButton onClick={() => openCreate()} title="New Project">
+                  <Plus size={12} />
+                </IconButton>
+              </div>
+
+              {isExpanded && (
+                <div className="space-y-0.5">
+                  {teamProjects.length > 0 ? (
+                    buildProjectTree(teamProjects).map(node => renderNode(node))
+                  ) : (
+                    <p className="px-6 py-1 text-[11px] text-text-empty">No projects</p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {projectsByTeam.ungrouped.length > 0 && (
+          <div>
+            <div className="flex items-center px-4 mb-0.5">
+              <span className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
+                Ungrouped
+              </span>
+            </div>
+            <div className="space-y-0.5">
+              {buildProjectTree(projectsByTeam.ungrouped).map(node => renderNode(node))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="w-[240px] h-full flex-shrink-0 bg-surface-panel border-r border-border-subtle flex flex-col">
       <div className="h-14 flex items-center px-4 border-b border-border-subtle shrink-0">
         <img src="/logo_wide.svg" alt="Arvid" className="h-5" />
+      </div>
+
+      <div className="px-3 py-2 border-b border-border-subtle shrink-0">
+        <WorkspacePicker
+          onSettingsClick={() => setIsSettingsOpen(true)}
+          onCreateClick={() => setIsCreateWsOpen(true)}
+        />
       </div>
       
       <div className="flex-1 overflow-y-auto hide-scrollbar py-3">
@@ -189,7 +317,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
           </IconButton>
         </div>
         
-        {projectsDataState.status === 'loading' && projects.length === 0 ? (
+        {(projectsDataState.status === 'loading' || workspacesDataState.status === 'loading') && projects.length === 0 ? (
           <div className="flex justify-center py-4">
             <Loader2 size={16} className="text-text-quaternary animate-spin" />
           </div>
@@ -206,9 +334,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
             </button>
           </div>
         ) : (
-          <div className="space-y-0.5">
-            {tree.map(node => renderNode(node))}
-          </div>
+          renderTeamSection()
         )}
       </div>
 
@@ -307,6 +433,28 @@ export function Sidebar({ isOpen }: SidebarProps) {
           hasChildren={deleteTarget.hasChildren}
         />
       )}
+
+      <CreateWorkspaceModal
+        isOpen={isCreateWsOpen}
+        onClose={() => setIsCreateWsOpen(false)}
+      />
+
+      <WorkspaceSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onCreateTeam={() => { setIsSettingsOpen(false); setIsCreateTeamOpen(true); }}
+        onInviteMember={() => { setIsSettingsOpen(false); setIsInviteMemberOpen(true); }}
+      />
+
+      <CreateTeamModal
+        isOpen={isCreateTeamOpen}
+        onClose={() => setIsCreateTeamOpen(false)}
+      />
+
+      <InviteMemberModal
+        isOpen={isInviteMemberOpen}
+        onClose={() => setIsInviteMemberOpen(false)}
+      />
     </div>
   );
 }

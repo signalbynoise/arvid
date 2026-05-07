@@ -10,8 +10,16 @@ import {
   ProjectSchema,
   SummaryRowSchema,
   SummarySchema,
+  WorkspaceRowSchema,
+  WorkspaceSchema,
+  TeamRowSchema,
+  TeamSchema,
+  MembershipRowSchema,
+  MembershipSchema,
+  InvitationRowSchema,
+  InvitationSchema,
 } from '../../shared/schemas';
-import { Requirement, Question, Answer, Project, Summary } from './types';
+import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
@@ -124,16 +132,113 @@ function parseSingle<TRow, TOut>(
 }
 
 export const api = {
-  // --- Projects ---
+  // --- Workspaces ---
 
-  async getProjects(signal?: AbortSignal): Promise<Project[]> {
-    const rows = await request<unknown[]>('GET', '/projects', undefined, signal);
-    return parseArray(ProjectRowSchema, ProjectSchema, rows, '/projects');
+  async getWorkspaces(signal?: AbortSignal): Promise<Workspace[]> {
+    const rows = await request<unknown[]>('GET', '/workspaces', undefined, signal);
+    return parseArray(WorkspaceRowSchema, WorkspaceSchema, rows, '/workspaces');
   },
 
-  async createProject(name: string, parentId?: string): Promise<Project> {
+  async createWorkspace(name: string): Promise<Workspace> {
+    const row = await request<unknown>('POST', '/workspaces', { name });
+    return parseSingle(WorkspaceRowSchema, WorkspaceSchema, row, '/workspaces');
+  },
+
+  async updateWorkspace(id: string, updates: { name?: string }): Promise<Workspace> {
+    const row = await request<unknown>('PATCH', `/workspaces/${id}`, updates);
+    return parseSingle(WorkspaceRowSchema, WorkspaceSchema, row, `/workspaces/${id}`);
+  },
+
+  async deleteWorkspace(id: string): Promise<void> {
+    await request<void>('DELETE', `/workspaces/${id}`);
+  },
+
+  // --- Teams ---
+
+  async getTeams(workspaceId: string, signal?: AbortSignal): Promise<Team[]> {
+    const rows = await request<unknown[]>('GET', `/teams?workspace_id=${workspaceId}`, undefined, signal);
+    return parseArray(TeamRowSchema, TeamSchema, rows, '/teams');
+  },
+
+  async createTeam(name: string, workspaceId: string): Promise<Team> {
+    const row = await request<unknown>('POST', '/teams', { name, workspace_id: workspaceId });
+    return parseSingle(TeamRowSchema, TeamSchema, row, '/teams');
+  },
+
+  async updateTeam(id: string, updates: { name?: string }): Promise<Team> {
+    const row = await request<unknown>('PATCH', `/teams/${id}`, updates);
+    return parseSingle(TeamRowSchema, TeamSchema, row, `/teams/${id}`);
+  },
+
+  async deleteTeam(id: string): Promise<void> {
+    await request<void>('DELETE', `/teams/${id}`);
+  },
+
+  // --- Members ---
+
+  async getMembers(workspaceId: string, signal?: AbortSignal): Promise<Membership[]> {
+    const rows = await request<unknown[]>('GET', `/memberships?workspace_id=${workspaceId}`, undefined, signal);
+    return parseArray(MembershipRowSchema, MembershipSchema, rows, '/memberships');
+  },
+
+  async addMember(workspaceId: string, email: string, role: string): Promise<Membership> {
+    const row = await request<unknown>('POST', '/memberships', { workspace_id: workspaceId, email, role });
+    return parseSingle(MembershipRowSchema, MembershipSchema, row, '/memberships');
+  },
+
+  async updateMemberRole(id: string, role: string): Promise<Membership> {
+    const row = await request<unknown>('PATCH', `/memberships/${id}`, { role });
+    return parseSingle(MembershipRowSchema, MembershipSchema, row, `/memberships/${id}`);
+  },
+
+  async removeMember(id: string): Promise<void> {
+    await request<void>('DELETE', `/memberships/${id}`);
+  },
+
+  async leaveWorkspace(workspaceId: string): Promise<void> {
+    await request<void>('POST', '/memberships/leave', { workspace_id: workspaceId });
+  },
+
+  async searchUsers(query: string, signal?: AbortSignal): Promise<Array<{ id: string; email: string }>> {
+    return request<Array<{ id: string; email: string }>>('GET', `/memberships/search-users?q=${encodeURIComponent(query)}`, undefined, signal);
+  },
+
+  // --- Invitations ---
+
+  async getInvitations(workspaceId: string, signal?: AbortSignal): Promise<Invitation[]> {
+    const rows = await request<unknown[]>('GET', `/invitations?workspace_id=${workspaceId}`, undefined, signal);
+    return parseArray(InvitationRowSchema, InvitationSchema, rows, '/invitations');
+  },
+
+  async sendInvitation(workspaceId: string, teamId: string | undefined, email: string, role: string): Promise<Invitation> {
+    const body: Record<string, unknown> = { workspace_id: workspaceId, email, role };
+    if (teamId) body.team_id = teamId;
+    const row = await request<unknown>('POST', '/invitations', body);
+    return parseSingle(InvitationRowSchema, InvitationSchema, row, '/invitations');
+  },
+
+  async cancelInvitation(id: string): Promise<void> {
+    await request<void>('DELETE', `/invitations/${id}`);
+  },
+
+  async acceptInvitations(): Promise<Invitation[]> {
+    const rows = await request<unknown[]>('POST', '/invitations/accept');
+    return parseArray(InvitationRowSchema, InvitationSchema, rows, '/invitations/accept');
+  },
+
+  // --- Projects ---
+
+  async getProjects(workspaceId?: string, signal?: AbortSignal): Promise<Project[]> {
+    const params = workspaceId ? `?workspace_id=${workspaceId}` : '';
+    const rows = await request<unknown[]>('GET', `/projects${params}`, undefined, signal);
+    return parseArray(ProjectRowSchema, ProjectSchema, rows, `/projects${params}`);
+  },
+
+  async createProject(name: string, parentId?: string, workspaceId?: string, teamId?: string): Promise<Project> {
     const body: Record<string, unknown> = { name };
     if (parentId) body.parent_id = parentId;
+    if (workspaceId) body.workspace_id = workspaceId;
+    if (teamId) body.team_id = teamId;
     const row = await request<unknown>('POST', '/projects', body);
     return parseSingle(ProjectRowSchema, ProjectSchema, row, '/projects');
   },

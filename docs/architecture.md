@@ -47,11 +47,12 @@ The dashboard app calls Supabase Auth directly for sign-in/sign-up/OAuth. All da
 
 ## State Management
 
-Zustand store with four slices:
+Zustand store with slices:
 
+- **Workspaces** (`store/slices/workspaces.ts`) — workspace, team, and membership CRUD; active workspace selection
 - **Entities** (`store/slices/entities.ts`) — requirements, questions, answers, data-loading state machine, mutations
 - **Selection** (`store/slices/selection.ts`) — selected requirement, question, project
-- **Projects** (`store/slices/projects.ts`) — project CRUD backed by API
+- **Projects** (`store/slices/projects.ts`) — project CRUD backed by API, workspace-scoped loading
 - **Summaries** (`store/slices/summaries.ts`) — AI-generated summary cache, generation triggers
 
 Data loading uses an explicit state machine (`idle → loading → ready | error`). Derived data is computed via `useMemo`, never stored separately.
@@ -97,11 +98,25 @@ All endpoints (except `/api/health`) require `Authorization: Bearer <jwt>`.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Health check (no auth) |
-| GET | `/api/projects` | List user's projects |
+| GET | `/api/workspaces` | List workspaces for current user |
+| GET | `/api/workspaces/:id` | Get one workspace |
+| POST | `/api/workspaces` | Create workspace (+ default team + owner membership) |
+| PATCH | `/api/workspaces/:id` | Update workspace |
+| DELETE | `/api/workspaces/:id` | Soft-delete workspace (cascades to teams/projects) |
+| GET | `/api/teams?workspace_id=` | List teams in workspace |
+| GET | `/api/teams/:id` | Get one team |
+| POST | `/api/teams` | Create team |
+| PATCH | `/api/teams/:id` | Update team |
+| DELETE | `/api/teams/:id` | Soft-delete team (cascades to projects) |
+| GET | `/api/memberships?workspace_id=` | List workspace members |
+| POST | `/api/memberships` | Add member by email |
+| PATCH | `/api/memberships/:id` | Update member role |
+| DELETE | `/api/memberships/:id` | Remove member |
+| GET | `/api/projects?workspace_id=` | List projects (filterable by workspace) |
 | GET | `/api/projects/:id` | Get one project |
-| POST | `/api/projects` | Create project (auto-assigns `user_id`) |
+| POST | `/api/projects` | Create project |
 | PATCH | `/api/projects/:id` | Update project |
-| DELETE | `/api/projects/:id` | Delete project (cascades) |
+| DELETE | `/api/projects/:id` | Soft-delete project |
 | GET | `/api/requirements?project_id=` | List (filterable by project) |
 | GET | `/api/requirements/:id` | Get one |
 | POST | `/api/requirements` | Create |
@@ -119,15 +134,18 @@ All endpoints (except `/api/health`) require `Authorization: Bearer <jwt>`.
 
 ## Database
 
-Five tables with RLS enabled, user-scoped via FK chain from `projects.user_id`:
+Eight core tables with RLS enabled, scoped via workspace membership:
 
-- **projects** — id, name, parent_id (self-FK for sub-projects), user_id (FK to auth.users), created_at
+- **workspaces** — id, name, slug, created_by, created_at, is_deleted, deleted_at
+- **workspace_memberships** — id, workspace_id (FK), user_id (FK to auth.users), role (owner/admin/member), joined_at
+- **teams** — id, workspace_id (FK), name, slug, created_by, created_at, is_deleted, deleted_at
+- **projects** — id, name, parent_id (self-FK), user_id, workspace_id (FK), team_id (FK), is_deleted, deleted_at, created_at
 - **requirements** — id, title, source, owner, owner_team, owner_role, created_at, description, completeness, clarity, risk, project_id (FK)
 - **questions** — id, requirement_id (FK), text, status, importance, type, category, is_suggested, is_hidden, author, author_team, author_role, created_at, description
 - **answers** — id, question_id (FK), text, author, date, is_current, is_suggested, is_hidden
 - **summaries** — id, requirement_id (unique FK), synthesis, core_objective, architecture, constraints, unverified_risks, model, generated_at
 
-RLS policies enforce user isolation: `projects` checks `user_id = auth.uid()`, child tables join back to `projects` to verify ownership.
+RLS policies enforce workspace-based isolation: `workspaces`, `teams`, and `projects` check membership via `workspace_memberships`. Child tables (requirements, questions, answers, summaries) still join back to `projects` to verify ownership. Soft-delete is enforced via `is_deleted` + `deleted_at` on workspaces, teams, and projects.
 
 ## Environment Variables
 
@@ -150,6 +168,7 @@ Locally: set in `.env` (loaded via `--env-file`). On Render: set in Dashboard pe
 
 ```
 shared/schemas/       Zod schemas shared by client and server
+supabase/migrations/  Database migration SQL files
 server/
   index.ts            Express entry point, CORS, auth middleware
   supabase.ts         Supabase client (service-role + per-request factory)
@@ -158,6 +177,9 @@ server/
     requireAuth.ts    JWT verification middleware
     validateBody.ts   Zod body validation
   routes/             CRUD route handlers (per-request Supabase clients)
+    workspaces.ts     Workspace CRUD + default team/membership creation
+    teams.ts          Team CRUD
+    memberships.ts    Workspace membership CRUD
 src/app/
   lib/
     supabase.ts       Frontend Supabase client

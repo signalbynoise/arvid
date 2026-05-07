@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Folder, Hash } from 'lucide-react';
-import { useStore, selectProjects } from '../store';
+import { Folder, Hash, Users } from 'lucide-react';
+import { useStore, selectProjects, selectActiveWorkspaceId, selectTeams } from '../store';
 import { ProjectNameSchema } from '../../../shared/schemas';
 import { buildProjectTree, ProjectTreeNode } from '../domain/projects';
 import { BaseModal } from './BaseModal';
@@ -14,10 +14,13 @@ interface Props {
 export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
   const createProject = useStore(s => s.createProject);
   const projects = useStore(selectProjects);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const teams = useStore(selectTeams);
   const tree = useMemo(() => buildProjectTree(projects), [projects]);
 
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState<string | undefined>(defaultParentId);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | undefined>(undefined);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,9 +28,12 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
   useEffect(() => {
     if (isOpen) {
       setParentId(defaultParentId);
+      if (teams.length > 0 && !selectedTeamId) {
+        setSelectedTeamId(teams[0].id);
+      }
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [isOpen, defaultParentId]);
+  }, [isOpen, defaultParentId, teams, selectedTeamId]);
 
   const handleCreate = async () => {
     const result = ProjectNameSchema.safeParse({ name: name.trim() });
@@ -38,7 +44,7 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
     setValidationError(null);
     setIsCreating(true);
 
-    await createProject(result.data.name, parentId);
+    await createProject(result.data.name, parentId, activeWorkspaceId ?? undefined, selectedTeamId);
 
     setIsCreating(false);
     handleClose();
@@ -54,6 +60,7 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
   const reset = () => {
     setName('');
     setParentId(undefined);
+    setSelectedTeamId(teams.length > 0 ? teams[0].id : undefined);
     setValidationError(null);
     setIsCreating(false);
   };
@@ -113,6 +120,30 @@ export function NewProjectModal({ isOpen, onClose, defaultParentId }: Props) {
             <p className="text-[12px] text-status-error">{validationError}</p>
           )}
         </div>
+
+        {teams.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
+              Team
+            </label>
+            <div className="bg-surface-frost-02 border border-border-default rounded-card p-1.5 max-h-[120px] overflow-y-auto hide-scrollbar space-y-0.5">
+              {teams.map(team => (
+                <button
+                  key={team.id}
+                  onClick={() => setSelectedTeamId(team.id)}
+                  className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-standard text-[13px] font-[var(--fw-medium)] transition-colors text-left ${
+                    selectedTeamId === team.id
+                      ? 'bg-surface-frost-08 text-text-primary'
+                      : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
+                  }`}
+                >
+                  <Users size={14} />
+                  <span className="truncate">{team.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {tree.length > 0 && (
           <div className="space-y-2">
