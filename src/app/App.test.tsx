@@ -65,7 +65,7 @@ describe('App', () => {
   it('renders the main layout after loading', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('1. Requirements')).toBeInTheDocument();
+      expect(screen.getByText('Requirements')).toBeInTheDocument();
     });
   });
 
@@ -111,7 +111,7 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Test Requirement'));
 
     await waitFor(() => {
-      expect(screen.getByText('2. Questions')).toBeInTheDocument();
+      expect(screen.getByText('Questions')).toBeInTheDocument();
     });
   });
 
@@ -136,7 +136,7 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Test Requirement'));
 
     await waitFor(() => {
-      expect(screen.getByText('4. Summary')).toBeInTheDocument();
+      expect(screen.getByText('Summary')).toBeInTheDocument();
     });
   });
 

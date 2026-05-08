@@ -31,22 +31,20 @@ export function SidebarItem({
       style={{ paddingLeft: `${16 + indent}px` }}
     >
       <div className="flex items-center gap-2 overflow-hidden">
-        {chevron ? (
+        {icon}
+        <span className="truncate">{label}</span>
+        {chevron && (
           <button
             onClick={chevron.onToggle}
-            className="p-0.5 rounded-standard hover:bg-surface-frost-10 transition-colors"
+            className="shrink-0 p-0.5 rounded-standard hover:bg-surface-frost-10 opacity-0 group-hover:opacity-100 transition-all"
           >
             <Chevron open={chevron.open} size={12} />
           </button>
-        ) : (
-          <span className="w-[16px] shrink-0" />
         )}
-        {icon}
-        <span className="truncate">{label}</span>
       </div>
 
       {actions && (
-        <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 has-[[data-menu-open]]:opacity-100 transition-opacity">
           {actions}
         </div>
       )}

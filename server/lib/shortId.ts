@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function formatShortId(prefix: string, count: number): string {
-  return `${prefix}${String(count + 1).padStart(2, '0')}`;
+export function formatShortId(prefix: string, num: number): string {
+  return `${prefix}${String(num).padStart(2, '0')}`;
 }
 
 export async function nextShortId(
@@ -11,10 +11,19 @@ export async function nextShortId(
   scopeColumn: string,
   scopeValue: string,
 ): Promise<string> {
-  const { count } = await db
+  const { data } = await db
     .from(table)
-    .select('*', { count: 'exact', head: true })
-    .eq(scopeColumn, scopeValue);
+    .select('short_id')
+    .eq(scopeColumn, scopeValue)
+    .not('short_id', 'is', null)
+    .order('short_id', { ascending: false })
+    .limit(1);
 
-  return formatShortId(prefix, count ?? 0);
+  if (!data || data.length === 0) {
+    return formatShortId(prefix, 1);
+  }
+
+  const lastShortId = data[0].short_id as string;
+  const numPart = parseInt(lastShortId.replace(prefix, ''), 10);
+  return formatShortId(prefix, (isNaN(numPart) ? 0 : numPart) + 1);
 }

@@ -36,13 +36,13 @@ export function TeamItemMenu({ teamId, onAddUser, onRename, onMove, onCreateProj
   }, [isOpen, handleClickOutside]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={menuRef} data-menu-open={isOpen || undefined}>
       <IconButton onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }}>
         <MoreHorizontal size={14} />
       </IconButton>
 
       {isOpen && (
-        <DropdownPanel position="below" align="end">
+        <DropdownPanel position="right" anchorRef={menuRef}>
           <DropdownSection label="ACTIONS">
             <DropdownItem icon={<Plus size={16} />} label="Add user to team" onClick={() => { setIsOpen(false); onAddUser(); }} />
             <DropdownItem icon={<Pencil size={16} />} label="Rename team" onClick={() => { setIsOpen(false); onRename(); }} />

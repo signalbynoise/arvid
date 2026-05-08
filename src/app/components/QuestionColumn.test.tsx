@@ -19,7 +19,7 @@ describe('QuestionColumn', () => {
 
   it('renders the column header', () => {
     render(<QuestionColumn />);
-    expect(screen.getByText('2. Questions')).toBeInTheDocument();
+    expect(screen.getByText('Questions')).toBeInTheDocument();
   });
 
   it('renders all question cards with short IDs', () => {

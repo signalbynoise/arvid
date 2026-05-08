@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { generateSlug } from '../domain/workspaces';
 import { BaseModal } from './BaseModal';
+import { FormField } from './ui/FormField';
+import { TextInput } from './ui/TextInput';
 
 interface Props {
   isOpen: boolean;
@@ -17,9 +19,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
   }, [isOpen]);
 
   const slug = name.trim() ? generateSlug(name) : '';
@@ -41,7 +41,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && name.trim()) {
       e.preventDefault();
       handleCreate();
@@ -55,51 +55,28 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
     setIsCreating(false);
   };
 
+  const hint = slug
+    ? <>Slug: <span className="font-mono text-text-tertiary">{slug}</span></>
+    : undefined;
+
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="Create Workspace" size="sm">
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-            Name
-          </label>
-          <input
-            ref={inputRef}
-            type="text"
+      <div className="flex flex-col gap-6">
+        <FormField label="Name" error={error} hint={hint}>
+          <TextInput
             value={name}
-            onChange={(e) => { setName(e.target.value); setError(null); }}
+            onChange={(v) => { setName(v); setError(null); }}
             onKeyDown={handleKeyDown}
             placeholder="e.g. Acme Corp"
-            className={`w-full bg-surface-frost-02 border rounded-comfortable px-3 py-2.5 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all ${
-              error ? 'border-status-error-border-focus' : 'border-border-default'
-            }`}
+            inputRef={inputRef}
+            hasError={!!error}
           />
-          {slug && (
-            <p className="text-[12px] text-text-quaternary">
-              Slug: <span className="text-text-tertiary font-mono">{slug}</span>
-            </p>
-          )}
-          {error && (
-            <p className="text-[12px] text-status-error">{error}</p>
-          )}
-        </div>
+        </FormField>
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button onClick={handleClose} className="btn-ghost px-4 py-1.5">
-            Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={!name.trim() || isCreating}
-            className="btn-primary px-4 py-1.5"
-          >
-            {isCreating ? (
-              <span className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 border-2 border-surface-frost-08 border-t-black rounded-full animate-spin" />
-                <span>Creating...</span>
-              </span>
-            ) : (
-              <span>Create</span>
-            )}
+        <div className="flex justify-end gap-3 pt-6">
+          <button onClick={handleClose} className="btn-ghost">Cancel</button>
+          <button onClick={handleCreate} disabled={!name.trim() || isCreating} className="btn-primary">
+            {isCreating ? 'Creating...' : 'Create'}
           </button>
         </div>
       </div>

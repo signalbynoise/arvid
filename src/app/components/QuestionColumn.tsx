@@ -12,7 +12,7 @@ import { Button } from './Button';
 import { formatCardDate } from '../lib/formatDate';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore, selectQuestions, selectSelectedReqId, selectSelectedQuestionId, selectIsSuggestingQuestions, selectPendingModal, selectRequirements } from '../store';
-import { buildQuestionPath } from '../domain/paths';
+import { buildRequirementPath, buildQuestionPath } from '../domain/paths';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
@@ -137,7 +137,11 @@ export function QuestionColumn({ onOpenDetails }: Props) {
     const question = allQuestions.find(q => q.id === questionId);
     const currentReqShortId = reqShortId ?? requirements.find(r => r.id === selectedReqId)?.shortId;
     if (wsShortId && teamShortId && projectShortId && currentReqShortId && question?.shortId) {
-      navigate(buildQuestionPath(wsShortId, teamShortId, projectShortId, currentReqShortId, question.shortId));
+      if (selectedId === questionId) {
+        navigate(buildRequirementPath(wsShortId, teamShortId, projectShortId, currentReqShortId));
+      } else {
+        navigate(buildQuestionPath(wsShortId, teamShortId, projectShortId, currentReqShortId, question.shortId));
+      }
     }
   };
   const useSuggestion = useStore(s => s.useSuggestion);
@@ -226,7 +230,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
 
   if (questions.length === 0) {
     return (
-      <ColumnShell title="2. Questions" headerControls={headerControls}>
+      <ColumnShell title="Questions" headerControls={headerControls}>
         <ColumnEmptyState
           icon={isSuggestingQuestions
             ? <LoaderPinwheel size={32} className="mb-3 opacity-20" />
@@ -240,7 +244,7 @@ export function QuestionColumn({ onOpenDetails }: Props) {
   }
 
   return (
-    <ColumnShell title="2. Questions" headerControls={headerControls}>
+    <ColumnShell title="Questions" headerControls={headerControls}>
       <ColumnBody>
         {Object.entries(processedQuestions).map(([group, qs]) => {
           if (groupBy === 'none') {

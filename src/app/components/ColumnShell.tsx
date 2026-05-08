@@ -13,7 +13,7 @@ export function ColumnShell({ title, headerControls, borderRight = true, childre
   return (
     <div className={`${COLUMN_CLASSES}${borderRight ? ' border-r border-border-subtle' : ''}`}>
       <div className="sticky top-0 z-10 bg-surface-panel px-4 h-[46px] border-b border-border-subtle flex items-center justify-between shrink-0">
-        <h2 className="text-section text-text-tertiary uppercase">{title}</h2>
+        <h2 className="text-label text-text-tertiary">{title}</h2>
         {headerControls && (
           <div className="flex items-center">
             {headerControls}

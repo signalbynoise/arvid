@@ -123,10 +123,10 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
                 : 'Delete this question and all its answers?'}
             </p>
             <div className="flex items-center gap-2 ml-4 shrink-0">
-              <button onClick={() => setConfirmDelete(false)} className="btn-ghost px-3 py-1.5">
+              <button onClick={() => setConfirmDelete(false)} className="btn-ghost">
                 Cancel
               </button>
-              <button onClick={handleDelete} disabled={isDeleting} className="btn-primary px-3 py-1.5">
+              <button onClick={handleDelete} disabled={isDeleting} className="btn-primary">
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
@@ -156,11 +156,11 @@ export function DetailsModal({ isOpen, onClose, type, data }: Props) {
 
         {isEditing && (
           <div className="flex justify-end gap-2">
-            <button onClick={handleCancelEdit} className="btn-ghost px-3 py-1.5 flex items-center gap-1.5">
+            <button onClick={handleCancelEdit} className="btn-ghost flex items-center gap-1.5">
               <X size={14} />
               Cancel
             </button>
-            <button onClick={handleSaveEdit} disabled={!editTitle.trim()} className="btn-primary px-3 py-1.5 flex items-center gap-1.5">
+            <button onClick={handleSaveEdit} disabled={!editTitle.trim()} className="btn-primary flex items-center gap-1.5">
               <Check size={14} />
               Save
             </button>

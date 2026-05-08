@@ -25,11 +25,11 @@ export function ImportFromFiles({ onBack, onImport }: Props) {
         <p className="text-[13px] text-text-quaternary">Supports PDF, DOCX, TXT (Max 50MB)</p>
       </div>
       <div className="flex justify-between items-center pt-3">
-        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
+        <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button onClick={handleImport} disabled={isProcessing} className="btn-primary px-4 py-1.5 flex items-center space-x-2">
+        <button onClick={handleImport} disabled={isProcessing} className="btn-primary flex items-center space-x-2">
           {isProcessing ? (
             <>
               <Loader2 size={14} className="animate-spin" />

@@ -42,13 +42,13 @@ describe('SummaryColumn', () => {
   it('renders the column header', () => {
     setStoreState({ requirements: [mockReq], questions: mockQuestions, selectedReqId: 'r1' });
     render(<SummaryColumn />);
-    expect(screen.getByText('4. Summary')).toBeInTheDocument();
+    expect(screen.getByText('Summary')).toBeInTheDocument();
   });
 
   it('renders with no requirement selected without crashing', () => {
     setStoreState({ requirements: [], questions: [], selectedReqId: null });
     render(<SummaryColumn />);
-    expect(screen.getByText('4. Summary')).toBeInTheDocument();
+    expect(screen.getByText('Summary')).toBeInTheDocument();
   });
 
   it('shows the requirement title with summary short ID', () => {

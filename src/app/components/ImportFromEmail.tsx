@@ -23,16 +23,16 @@ export function ImportFromEmail({ onBack, onImport }: Props) {
         <Mail size={24} className="mx-auto text-text-tertiary mb-3" />
         <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">Connect Google Workspace</h3>
         <p className="text-[13px] text-text-tertiary mb-4">Automatically extract requirements from product threads.</p>
-        <button className="btn-primary px-4 py-1.5 w-full">
+        <button className="btn-primary w-full">
           Connect Gmail
         </button>
       </div>
       <div className="flex justify-between items-center pt-3">
-        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
+        <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button onClick={handleImport} disabled={isProcessing} className="btn-primary px-4 py-1.5 flex items-center space-x-2">
+        <button onClick={handleImport} disabled={isProcessing} className="btn-primary flex items-center space-x-2">
           {isProcessing ? (
             <>
               <Loader2 size={14} className="animate-spin" />

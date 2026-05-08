@@ -104,7 +104,7 @@ export function SummaryColumn() {
 
   if (!requirement) {
     return (
-      <ColumnShell title="4. Summary" borderRight={false}>
+      <ColumnShell title="Summary" borderRight={false}>
         <ColumnEmptyState
           icon={<FileText size={32} className="mb-3 opacity-20" />}
           message="Select a requirement to view its live summary."
@@ -130,7 +130,7 @@ export function SummaryColumn() {
 
   return (
     <ColumnShell
-      title="4. Summary"
+      title="Summary"
       borderRight={false}
       headerControls={
         <>

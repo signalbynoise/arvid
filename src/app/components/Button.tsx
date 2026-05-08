@@ -16,7 +16,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 export function Button({ variant = 'ghost', className, children, ...props }: ButtonProps) {
   return (
     <button
-      className={`${VARIANT_CLASSES[variant]} px-4 py-1.5${className ? ` ${className}` : ''}`}
+      className={`${VARIANT_CLASSES[variant]}${className ? ` ${className}` : ''}`}
       {...props}
     >
       {children}

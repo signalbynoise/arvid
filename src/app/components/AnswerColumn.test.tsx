@@ -48,7 +48,7 @@ describe('AnswerColumn', () => {
 
   it('renders the column header', () => {
     render(<AnswerColumn />);
-    expect(screen.getByText('3. Answers')).toBeInTheDocument();
+    expect(screen.getByText('Answers')).toBeInTheDocument();
   });
 
   it('renders answer cards with short IDs', () => {

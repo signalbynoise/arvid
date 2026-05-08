@@ -71,7 +71,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 size={14} className="text-text-tertiary" />
-            <h3 className="text-section text-text-tertiary">CONFIDENCE</h3>
+            <h3 className="text-label text-text-tertiary">Confidence</h3>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-2 bg-surface-frost-04 rounded-pill overflow-hidden">
@@ -90,7 +90,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Target size={14} className="text-text-tertiary" />
-              <h3 className="text-section text-text-tertiary">ACCORDANCE SCORE</h3>
+              <h3 className="text-label text-text-tertiary">Accordance Score</h3>
             </div>
             <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-2 bg-surface-frost-04 rounded-pill overflow-hidden">
@@ -128,7 +128,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <FileCode size={14} className="text-text-tertiary" />
-              <h3 className="text-section text-text-tertiary">EVIDENCE</h3>
+              <h3 className="text-label text-text-tertiary">Evidence</h3>
             </div>
             <div className="rounded-card border border-border-subtle bg-surface-frost-02 p-3">
               <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">

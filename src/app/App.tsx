@@ -145,7 +145,7 @@ export default function App() {
         <div className="flex-1 flex flex-col items-center justify-center bg-surface-panel space-y-4">
           <AlertTriangle size={32} className="text-status-error" />
           <p className="text-[14px] text-text-tertiary">{dataState.error}</p>
-          <button onClick={() => loadEntities(selectedProjectId)} className="btn-ghost px-4 py-1.5 flex items-center space-x-2">
+          <button onClick={() => loadEntities(selectedProjectId)} className="btn-ghost flex items-center space-x-2">
             <RotateCw size={14} />
             <span>Retry</span>
           </button>

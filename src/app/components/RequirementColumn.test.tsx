@@ -28,7 +28,7 @@ describe('RequirementColumn', () => {
 
   it('renders the column header', () => {
     render(<RequirementColumn />);
-    expect(screen.getByText('1. Requirements')).toBeInTheDocument();
+    expect(screen.getByText('Requirements')).toBeInTheDocument();
   });
 
   it('renders all requirement cards with short IDs', () => {

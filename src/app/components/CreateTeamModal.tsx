@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useStore, selectActiveWorkspaceId } from '../store';
+import { useStore } from '../store';
 import { BaseModal } from './BaseModal';
+import { FormField } from './ui/FormField';
+import { TextInput } from './ui/TextInput';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  workspaceId: string;
+  workspaceName: string;
 }
 
-export function CreateTeamModal({ isOpen, onClose }: Props) {
+export function CreateTeamModal({ isOpen, onClose, workspaceId, workspaceName }: Props) {
   const createTeam = useStore(s => s.createTeam);
-  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
 
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -17,19 +20,17 @@ export function CreateTeamModal({ isOpen, onClose }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
   }, [isOpen]);
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    if (!trimmed || !activeWorkspaceId) return;
+    if (!trimmed || !workspaceId) return;
 
     setError(null);
     setIsCreating(true);
 
-    const result = await createTeam(trimmed, activeWorkspaceId);
+    const result = await createTeam(trimmed, workspaceId);
     setIsCreating(false);
 
     if (result) {
@@ -39,7 +40,7 @@ export function CreateTeamModal({ isOpen, onClose }: Props) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && name.trim()) {
       e.preventDefault();
       handleCreate();
@@ -54,45 +55,27 @@ export function CreateTeamModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Create Team" size="sm">
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-            Team Name
-          </label>
-          <input
-            ref={inputRef}
-            type="text"
+    <BaseModal isOpen={isOpen} onClose={handleClose} title="Create new team" size="sm">
+      <div className="flex flex-col gap-6">
+        <FormField
+          label="Team Name"
+          error={error}
+          hint={<>Team will be added to workspace <span className="text-text-primary">{workspaceName}</span></>}
+        >
+          <TextInput
             value={name}
-            onChange={(e) => { setName(e.target.value); setError(null); }}
+            onChange={(v) => { setName(v); setError(null); }}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. Engineering"
-            className={`w-full bg-surface-frost-02 border rounded-comfortable px-3 py-2.5 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all ${
-              error ? 'border-status-error-border-focus' : 'border-border-default'
-            }`}
+            placeholder="Team name"
+            inputRef={inputRef}
+            hasError={!!error}
           />
-          {error && (
-            <p className="text-[12px] text-status-error">{error}</p>
-          )}
-        </div>
+        </FormField>
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button onClick={handleClose} className="btn-ghost px-4 py-1.5">
-            Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={!name.trim() || isCreating}
-            className="btn-primary px-4 py-1.5"
-          >
-            {isCreating ? (
-              <span className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 border-2 border-surface-frost-08 border-t-black rounded-full animate-spin" />
-                <span>Creating...</span>
-              </span>
-            ) : (
-              <span>Create</span>
-            )}
+        <div className="flex justify-end gap-3 pt-6">
+          <button onClick={handleClose} className="btn-ghost">Cancel</button>
+          <button onClick={handleCreate} disabled={!name.trim() || isCreating} className="btn-primary">
+            {isCreating ? 'Creating...' : 'Create new team'}
           </button>
         </div>
       </div>

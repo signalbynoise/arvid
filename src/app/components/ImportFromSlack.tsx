@@ -180,12 +180,12 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
           <MessageSquare size={24} className="mx-auto text-text-tertiary mb-3" />
           <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">Connect Slack Workspace</h3>
           <p className="text-[13px] text-text-tertiary mb-4">Connect your workspace to extract knowledge from channels.</p>
-          <button onClick={handleConnect} className="btn-primary px-4 py-1.5 w-full">
+          <button onClick={handleConnect} className="btn-primary w-full">
             Connect Slack
           </button>
         </div>
         <div className="flex pt-3">
-          <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
+          <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
             <ArrowLeft size={14} />
             <span>Back</span>
           </button>
@@ -283,12 +283,12 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
         <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
           <button
             onClick={() => { setStep('select-channel'); onWideChange?.(false); }}
-            className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5"
+            className="btn-ghost flex items-center space-x-1.5"
           >
             <ArrowLeft size={14} />
             <span>Back</span>
           </button>
-          <button onClick={handleAnalyzeSelected} disabled={selectedMessageTs.size === 0} className="btn-primary px-4 py-1.5 flex items-center space-x-2">
+          <button onClick={handleAnalyzeSelected} disabled={selectedMessageTs.size === 0} className="btn-primary flex items-center space-x-2">
             <Sparkles size={13} />
             <span>Analyze {selectedMessageTs.size || ''} Selected</span>
           </button>
@@ -387,11 +387,11 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
 
         {/* Footer */}
         <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
-          <button onClick={() => setStep('browse')} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5">
+          <button onClick={() => setStep('browse')} className="btn-ghost flex items-center space-x-1.5">
             <ArrowLeft size={14} />
             <span>Back to messages</span>
           </button>
-          <button onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} className="btn-primary px-4 py-1.5">
+          <button onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} className="btn-primary">
             Create {suggestions.filter(s => s.selected).length} Requirement{suggestions.filter(s => s.selected).length !== 1 ? 's' : ''}
           </button>
         </div>
@@ -444,11 +444,11 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
       </div>
 
       <div className="flex justify-between items-center pt-2">
-        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
+        <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button onClick={handleExtract} disabled={!selectedChannelId} className="btn-primary px-4 py-1.5">
+        <button onClick={handleExtract} disabled={!selectedChannelId} className="btn-primary">
           Load Messages
         </button>
       </div>

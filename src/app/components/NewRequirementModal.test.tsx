@@ -39,15 +39,15 @@ describe('NewRequirementModal', () => {
     expect(screen.getByPlaceholderText('Describe what needs to be built in plain text...')).toBeInTheDocument();
   });
 
-  it('shows Next button instead of Create on step 1', () => {
+  it('shows Check with Arvid button on write step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    expect(screen.getByText('Next')).toBeInTheDocument();
+    expect(screen.getByText('Check with Arvid')).toBeInTheDocument();
   });
 
-  it('Next button is disabled without text', () => {
+  it('Check with Arvid button is disabled without text', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    const nextBtn = screen.getByText('Next');
-    expect(nextBtn).toBeDisabled();
+    const btn = screen.getByText('Check with Arvid').closest('button');
+    expect(btn).toBeDisabled();
   });
 
   it('calls onClose when X button is clicked', () => {
@@ -59,37 +59,37 @@ describe('NewRequirementModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows source import options (Files, Email, Slack)', () => {
+  it('shows external source import options', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    expect(screen.getByText('Files')).toBeInTheDocument();
-    expect(screen.getByText('Email')).toBeInTheDocument();
-    expect(screen.getByText('Slack')).toBeInTheDocument();
+    expect(screen.getByText('Process from documents')).toBeInTheDocument();
+    expect(screen.getByText('Process from Gmail')).toBeInTheDocument();
+    expect(screen.getByText('Process from Slack')).toBeInTheDocument();
   });
 
   it('navigates to file upload step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Files'));
+    fireEvent.click(screen.getByText('Process from documents'));
     expect(screen.getByText('Import from Files')).toBeInTheDocument();
     expect(screen.getByText(/drag files here/i)).toBeInTheDocument();
   });
 
   it('navigates to email import step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Email'));
+    fireEvent.click(screen.getByText('Process from Gmail'));
     expect(screen.getByText('Import from Email')).toBeInTheDocument();
     expect(screen.getByText('Connect Gmail')).toBeInTheDocument();
   });
 
   it('navigates to slack import step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Slack'));
+    fireEvent.click(screen.getByText('Process from Slack'));
     expect(screen.getByText('Import from Slack')).toBeInTheDocument();
     expect(screen.getByText('Connect Slack')).toBeInTheDocument();
   });
 
   it('back button returns to write step from file upload', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Files'));
+    fireEvent.click(screen.getByText('Process from documents'));
     expect(screen.getByText('Import from Files')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Back'));

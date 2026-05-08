@@ -178,7 +178,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
               <button
                 onClick={() => logoInputRef.current?.click()}
                 disabled={logoUploading}
-                className="btn-ghost px-3 py-1.5 text-[13px] rounded-comfortable flex items-center gap-1.5"
+                className="btn-ghost flex items-center gap-1.5"
               >
                 {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                 <span>{logoUploading ? 'Uploading...' : 'Upload'}</span>
@@ -212,10 +212,10 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
               autoFocus
               className="flex-1 bg-surface-frost-02 border border-border-default rounded-comfortable px-3 py-2 text-[14px] text-text-primary focus:outline-none focus:border-border-focus transition-all"
             />
-            <button onClick={handleSaveName} className="btn-primary px-3 py-2 text-[13px] rounded-comfortable">
+            <button onClick={handleSaveName} className="btn-primary">
               Save
             </button>
-            <button onClick={() => setEditingName(false)} className="btn-ghost px-3 py-2 text-[13px] rounded-comfortable">
+            <button onClick={() => setEditingName(false)} className="btn-ghost">
               Cancel
             </button>
           </div>
@@ -259,16 +259,16 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                       const success = await leaveWorkspace(workspace.id, currentMember!.id);
                       if (success) onClose();
                     }}
-                    className="btn-primary px-3 py-1.5 shrink-0"
+                    className="btn-primary shrink-0"
                   >
                     Confirm
                   </button>
-                  <button onClick={() => setConfirmLeave(false)} className="btn-ghost px-3 py-1.5 shrink-0">
+                  <button onClick={() => setConfirmLeave(false)} className="btn-ghost shrink-0">
                     Cancel
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmLeave(true)} className="btn-primary px-4 py-1.5">
+                <button onClick={() => setConfirmLeave(true)} className="btn-primary">
                   Leave workspace
                 </button>
               )
@@ -278,15 +278,15 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
               confirmDelete ? (
                 <div className="flex items-center gap-3">
                   <span className="text-[13px] text-text-secondary">This will archive the workspace and all its teams and projects.</span>
-                  <button onClick={handleDeleteWorkspace} className="btn-primary px-3 py-1.5 shrink-0">
+                  <button onClick={handleDeleteWorkspace} className="btn-primary shrink-0">
                     Confirm
                   </button>
-                  <button onClick={() => setConfirmDelete(false)} className="btn-ghost px-3 py-1.5 shrink-0">
+                  <button onClick={() => setConfirmDelete(false)} className="btn-ghost shrink-0">
                     Cancel
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmDelete(true)} className="btn-primary px-4 py-1.5">
+                <button onClick={() => setConfirmDelete(true)} className="btn-primary">
                   Delete workspace
                 </button>
               )

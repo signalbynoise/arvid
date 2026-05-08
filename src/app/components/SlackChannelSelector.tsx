@@ -105,7 +105,7 @@ export function SlackChannelSelector({ projectId, onLinked }: SlackChannelSelect
                 </DropdownSection>
               </div>
               <div className="border-t border-border-subtle px-3 py-2 shrink-0">
-                <button type="button" onClick={handleSave} disabled={isLinking} className="btn-primary px-3 py-1.5 w-full">
+                <button type="button" onClick={handleSave} disabled={isLinking} className="btn-primary w-full">
                   {isLinking ? 'Saving...' : `Link ${selectedIds.size} channel${selectedIds.size !== 1 ? 's' : ''}`}
                 </button>
               </div>

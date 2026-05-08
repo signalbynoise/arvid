@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { ArrowLeft, LoaderPinwheel, GitBranch } from 'lucide-react';
+import { FormField } from '../ui/FormField';
+import { TextInput } from '../ui/TextInput';
+import { TextArea } from '../ui/TextArea';
 
 interface Props {
   isEnhancing: boolean;
@@ -23,10 +26,10 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
 
   if (isEnhancing) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="flex flex-col items-center justify-center py-12 gap-4">
         <LoaderPinwheel size={28} className="text-text-tertiary animate-spin" />
-        <p className="text-[14px] font-[var(--fw-medium)] text-text-primary">Arvid is enhancing the requirement</p>
-        <p className="text-[13px] text-text-quaternary">
+        <p className="text-caption-lg text-text-primary">Arvid is enhancing the requirement</p>
+        <p className="text-caption text-text-quaternary">
           {hasRepoContext
             ? 'Generating specification using your codebase context...'
             : 'Generating title and structured specification...'}
@@ -36,43 +39,38 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       {hasRepoContext && (
         <div className="flex items-center gap-2 px-3 py-2 bg-surface-frost-02 border border-border-default rounded-comfortable">
-          <GitBranch size={13} className="shrink-0 text-green-500" />
-          <span className="text-[12px] text-text-secondary">
+          <GitBranch size={13} className="shrink-0 text-status-success" />
+          <span className="text-caption text-text-secondary">
             Enhanced with codebase context from your linked repository
           </span>
         </div>
       )}
 
-      <div className="space-y-2">
-        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Title</label>
-        <input
-          type="text"
+      <FormField label="Title">
+        <TextInput
           value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
+          onChange={onTitleChange}
           placeholder="Requirement title"
-          className="w-full bg-surface-frost-02 border border-border-default rounded-comfortable px-3 py-2.5 text-[14px] font-[var(--fw-medium)] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all"
         />
-      </div>
+      </FormField>
 
-      <div className="space-y-2">
-        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Description</label>
-        <textarea
-          ref={descriptionRef}
+      <FormField label="Description">
+        <TextArea
           value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
-          className="w-full h-40 bg-surface-frost-02 border border-border-default rounded-card p-3 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all resize-none"
+          onChange={onDescriptionChange}
+          textareaRef={descriptionRef}
         />
-      </div>
+      </FormField>
 
-      <div className="flex justify-between items-center pt-3">
-        <button onClick={onBack} className="btn-ghost px-3 py-1.5 flex items-center space-x-1.5 -ml-2">
+      <div className="flex justify-between items-center pt-6">
+        <button onClick={onBack} className="btn-ghost flex items-center gap-1.5 -ml-2">
           <ArrowLeft size={14} />
           <span>Back</span>
         </button>
-        <button onClick={onCreate} disabled={!description.trim()} className="btn-primary px-4 py-1.5">
+        <button onClick={onCreate} disabled={!description.trim()} className="btn-primary">
           Create
         </button>
       </div>

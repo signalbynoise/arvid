@@ -142,7 +142,7 @@ export function AnswerColumn() {
 
   if (!questionSelected) {
     return (
-      <ColumnShell title="3. Answers">
+      <ColumnShell title="Answers">
         <ColumnEmptyState
           icon={<MessageSquare size={32} className="mb-3 opacity-20" />}
           message="Select a question to view or add answers."
@@ -153,7 +153,7 @@ export function AnswerColumn() {
 
   return (
     <ColumnShell
-      title="3. Answers"
+      title="Answers"
       headerControls={
         <>
           {isSuggestingAnswer && (

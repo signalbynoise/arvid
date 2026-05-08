@@ -12,7 +12,7 @@ export function SidebarFooterItem({ icon, label, isConnected, children }: Sideba
     <div className="px-4 space-y-2">
       <div className="flex items-center gap-2">
         {icon}
-        <span className="text-label text-text-tertiary uppercase tracking-widest">
+        <span className="text-label text-text-tertiary">
           {label}
         </span>
         {isConnected && (

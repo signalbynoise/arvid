@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
-import { ProjectNameSchema } from '../../../shared/schemas';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -8,22 +7,22 @@ import { TextInput } from './ui/TextInput';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  projectId: string;
+  teamId: string;
   currentName: string;
 }
 
-export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: Props) {
-  const updateProject = useStore(s => s.updateProject);
+export function RenameTeamModal({ isOpen, onClose, teamId, currentName }: Props) {
+  const updateTeam = useStore(s => s.updateTeam);
 
   const [name, setName] = useState(currentName);
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setName(currentName);
-      setValidationError(null);
+      setError(null);
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -33,20 +32,18 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
 
   const handleSave = async () => {
     const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Team name is required');
+      return;
+    }
     if (trimmed === currentName) {
       onClose();
       return;
     }
 
-    const result = ProjectNameSchema.safeParse({ name: trimmed });
-    if (!result.success) {
-      setValidationError(result.error.issues[0].message);
-      return;
-    }
-
-    setValidationError(null);
+    setError(null);
     setIsSaving(true);
-    await updateProject(projectId, result.data.name);
+    await updateTeam(teamId, trimmed);
     setIsSaving(false);
     onClose();
   };
@@ -59,15 +56,15 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
   };
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Project" size="sm">
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Team" size="sm">
       <div className="flex flex-col gap-6">
-        <FormField label="Name" error={validationError}>
+        <FormField label="Team Name" error={error}>
           <TextInput
             value={name}
-            onChange={(v) => { setName(v); setValidationError(null); }}
+            onChange={(v) => { setName(v); setError(null); }}
             onKeyDown={handleKeyDown}
             inputRef={inputRef}
-            hasError={!!validationError}
+            hasError={!!error}
           />
         </FormField>
 

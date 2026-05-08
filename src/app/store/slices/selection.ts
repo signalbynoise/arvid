@@ -8,8 +8,8 @@ export interface SelectionSlice {
   selectedQuestionId: string | null;
   selectedProjectId: string | null;
 
-  selectRequirement: (id: string) => void;
-  selectQuestion: (id: string) => void;
+  selectRequirement: (id: string | null) => void;
+  selectQuestion: (id: string | null) => void;
   setSelectedProjectId: (id: string) => void;
 }
 
@@ -18,7 +18,12 @@ export const createSelectionSlice: StateCreator<SelectionSlice, [], [], Selectio
   selectedQuestionId: null,
   selectedProjectId: null,
 
-  selectRequirement: (id: string) => {
+  selectRequirement: (id: string | null) => {
+    if (id === null) {
+      set({ selectedReqId: null, selectedQuestionId: null });
+      log.debug('selectRequirement', 'Cleared requirement selection');
+      return;
+    }
     const current = get().selectedReqId;
     if (id === current) {
       set({ selectedReqId: null, selectedQuestionId: null });
@@ -29,7 +34,12 @@ export const createSelectionSlice: StateCreator<SelectionSlice, [], [], Selectio
     }
   },
 
-  selectQuestion: (id: string) => {
+  selectQuestion: (id: string | null) => {
+    if (id === null) {
+      set({ selectedQuestionId: null });
+      log.debug('selectQuestion', 'Cleared question selection');
+      return;
+    }
     const current = get().selectedQuestionId;
     const next = id === current ? null : id;
     set({ selectedQuestionId: next });

@@ -30,28 +30,28 @@ export function DeleteProjectModal({ isOpen, onClose, projectId, projectName, ha
             <AlertTriangle size={20} className="text-status-error" />
           </div>
           <div>
-            <p className="text-[14px] text-text-primary leading-relaxed">
+            <p className="text-caption-lg text-text-primary">
               Are you sure you want to delete <span className="font-[var(--fw-medium)]">{projectName}</span>?
             </p>
             {hasChildren && (
-              <p className="text-[13px] text-status-warning mt-2 leading-relaxed">
+              <p className="text-caption text-status-warning mt-2">
                 This will also delete all sub-projects within it.
               </p>
             )}
-            <p className="text-[13px] text-text-tertiary mt-2 leading-relaxed">
+            <p className="text-caption text-text-tertiary mt-2">
               Requirements in this project will be unlinked, not deleted.
             </p>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-3 border-t border-border-subtle">
-          <button onClick={onClose} className="btn-ghost px-4 py-1.5">
+        <div className="flex justify-end gap-3 pt-6">
+          <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="btn-primary px-4 py-1.5"
+            className="btn-primary"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </button>

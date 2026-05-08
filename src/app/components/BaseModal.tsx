@@ -5,10 +5,10 @@ import { useStore, selectCommandPaletteOpen } from '../store';
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_CLASSES: Record<ModalSize, string> = {
-  sm: 'max-w-[400px]',
-  md: 'max-w-[480px]',
-  lg: 'max-w-[520px]',
-  xl: 'max-w-4xl',
+  sm: 'max-w-modal-sm',
+  md: 'max-w-modal-md',
+  lg: 'max-w-modal-lg',
+  xl: 'max-w-modal-xl',
 };
 
 interface BaseModalProps {
@@ -45,8 +45,8 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
       <div
         className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border-subtle">
-          <h2 className="text-[14px] font-[var(--fw-medium)] text-text-primary">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle">
+          <h2 className="text-caption-lg text-text-primary">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -56,7 +56,7 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
           </button>
         </div>
 
-        <div className={size === 'xl' ? '' : 'p-5'}>
+        <div className={size === 'xl' ? '' : 'p-6'}>
           {children}
         </div>
       </div>

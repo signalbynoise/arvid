@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore, selectSelectedQuestionId } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { BaseModal } from './BaseModal';
+import { FormField } from './ui/FormField';
+import { TextArea } from './ui/TextArea';
 
 interface Props {
   isOpen: boolean;
@@ -50,31 +52,26 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
 
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="New Answer" size="md">
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">Answer</label>
-          <textarea
-            ref={textareaRef}
+      <div className="flex flex-col gap-6">
+        <FormField
+          label="Answer"
+          error={validationError}
+          hint={<>Answering as <span className="text-text-secondary font-[var(--fw-medium)]">{authorName}</span></>}
+        >
+          <TextArea
             value={text}
-            onChange={(e) => { setText(e.target.value); setValidationError(null); }}
+            onChange={(v) => { setText(v); setValidationError(null); }}
             placeholder="Provide your answer or clarification..."
-            className={`w-full h-28 bg-surface-frost-02 border rounded-card p-3 text-[14px] text-text-primary placeholder:text-text-quaternary focus:outline-none focus:border-border-focus focus:bg-surface-frost-04 transition-all resize-none ${
-              validationError ? 'border-status-error-border-focus' : 'border-border-default'
-            }`}
+            hasError={!!validationError}
+            textareaRef={textareaRef}
           />
-          {validationError && <p className="text-[12px] text-status-error">{validationError}</p>}
-        </div>
+        </FormField>
 
-        <div className="flex items-center justify-between pt-3">
-          <span className="text-[12px] text-text-quaternary">
-            Answering as <span className="text-text-secondary font-[var(--fw-medium)]">{authorName}</span>
-          </span>
-          <div className="flex space-x-3">
-            <button onClick={handleClose} className="btn-ghost px-4 py-1.5">Cancel</button>
-            <button onClick={handleCreate} disabled={!text.trim() || isCreating} className="btn-primary px-4 py-1.5">
-              {isCreating ? 'Submitting...' : 'Submit'}
-            </button>
-          </div>
+        <div className="flex justify-end gap-3 pt-6">
+          <button onClick={handleClose} className="btn-ghost">Cancel</button>
+          <button onClick={handleCreate} disabled={!text.trim() || isCreating} className="btn-primary">
+            {isCreating ? 'Submitting...' : 'Submit'}
+          </button>
         </div>
       </div>
     </BaseModal>

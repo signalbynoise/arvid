@@ -24,7 +24,7 @@ export function ConnectLinearButton({ compact }: ConnectLinearButtonProps) {
 
   if (compact) {
     return (
-      <button type="button" onClick={handleConnect} className="btn-ghost px-2.5 py-1.5 flex items-center gap-1.5">
+      <button type="button" onClick={handleConnect} className="btn-ghost flex items-center gap-1.5">
         <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
         <span>Connect Linear</span>
       </button>
@@ -32,7 +32,7 @@ export function ConnectLinearButton({ compact }: ConnectLinearButtonProps) {
   }
 
   return (
-    <button type="button" onClick={handleConnect} className="btn-ghost px-4 py-1.5 w-full flex items-center justify-center gap-2">
+    <button type="button" onClick={handleConnect} className="btn-ghost w-full flex items-center justify-center gap-2">
       <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
       <span>Connect Linear Account</span>
     </button>

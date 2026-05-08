@@ -127,6 +127,11 @@
   /* --- Component Sizing --- */
   --dropdown-min-w: 200px;
   --dropdown-max-h: 600px;
+  --modal-width-sm: 400px;
+  --modal-width-md: 480px;
+  --modal-width-lg: 520px;
+  --modal-width-xl: 896px;
+  --textarea-min-h: 100px;
 
   /* --- Spacing --- */
   --space-1: 4px;
@@ -142,6 +147,9 @@
   --space-20: 80px;
   --space-24: 96px;
 
+  /* --- Sidebar --- */
+  --sidebar-width: 250px;
+
   /* --- Grid Layout --- */
   --grid-columns: 12;
   --grid-gutter: 16px;
@@ -150,6 +158,7 @@
 
   /* --- Font Size --- */
   --font-size: 16px;
+  --fs-btn: 12px;
 }
 
 /* ============================================================
@@ -258,6 +267,14 @@
   /* Component Sizing */
   --min-width-dropdown: var(--dropdown-min-w);
   --max-height-dropdown: var(--dropdown-max-h);
+  --max-width-modal-sm: var(--modal-width-sm);
+  --max-width-modal-md: var(--modal-width-md);
+  --max-width-modal-lg: var(--modal-width-lg);
+  --max-width-modal-xl: var(--modal-width-xl);
+  --min-height-textarea: var(--textarea-min-h);
+
+  /* Sidebar */
+  --width-sidebar: var(--sidebar-width);
 
   /* Shadows */
   --shadow-subtle: var(--shadow-subtle);
@@ -337,46 +354,39 @@
   .text-sm-md      { font-size: 15px; font-weight: var(--fw-medium); line-height: 1.60; letter-spacing: -0.165px; }
   .text-caption-lg { font-size: 14px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
   .text-caption    { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.13px; }
-  .text-label      { font-size: 12px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: normal; }
+  .text-btn        { font-size: var(--fs-btn); font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: normal; }
+  .text-label      { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: 0.1em; text-transform: uppercase; }
   .text-label-sm   { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: normal; }
   .text-tiny       { font-size: 10px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.15px; }
-  .text-section    { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* --- Button Variants --- */
   .btn-primary, .btn-ghost, .btn-subtle {
     cursor: pointer;
-  }
-
-  .btn-primary {
-    height: 2.5rem;
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-comfortable);
-    font-size: 12px;
+    font-size: var(--fs-btn);
     font-weight: var(--fw-medium);
-    color: var(--text-on-primary);
-    background: var(--btn-primary-bg);
-    transition: background-color 150ms;
-    &:hover { background: var(--btn-primary-hover); }
+    line-height: 1.5;
+    transition: all 150ms;
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 
+  .btn-primary {
+    color: var(--text-on-primary);
+    background: var(--btn-primary-bg);
+    &:hover { background: var(--btn-primary-hover); }
+  }
+
   .btn-ghost {
-    border-radius: var(--radius-comfortable);
     border: 1px solid var(--border-default);
     background: var(--surface-frost-02);
-    font-size: 12px;
-    font-weight: var(--fw-medium);
     color: var(--text-secondary);
-    transition: all 150ms;
     &:hover { background: var(--surface-frost-04); color: var(--text-primary); }
   }
 
   .btn-subtle {
-    border-radius: var(--radius-comfortable);
     background: var(--surface-frost-04);
-    font-size: 12px;
-    font-weight: var(--fw-medium);
     color: var(--text-secondary);
-    transition: background-color 150ms;
     &:hover { background: var(--surface-frost-05); }
   }
 

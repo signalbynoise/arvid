@@ -37,11 +37,11 @@ export function ChangeIntegrationModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-border-subtle">
-          <button onClick={onClose} className="btn-ghost px-4 py-1.5">
+        <div className="flex justify-end gap-3 pt-6">
+          <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
-          <button onClick={handleConfirm} className="btn-primary px-4 py-1.5">
+          <button onClick={handleConfirm} className="btn-primary">
             Change {integrationName}
           </button>
         </div>

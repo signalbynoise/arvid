@@ -12,7 +12,7 @@ interface Props {
   onAddUser: () => void;
   onRename: () => void;
   onMove: () => void;
-  onCreateSubProject: () => void;
+  onCreateSubProject?: () => void;
   onSettings: () => void;
   onDeactivate: () => void;
 }
@@ -36,18 +36,20 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
   }, [isOpen, handleClickOutside]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={menuRef} data-menu-open={isOpen || undefined}>
       <IconButton onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }}>
         <MoreHorizontal size={14} />
       </IconButton>
 
       {isOpen && (
-        <DropdownPanel position="below" align="end">
+        <DropdownPanel position="right" anchorRef={menuRef}>
           <DropdownSection label="ACTIONS">
             <DropdownItem icon={<Plus size={16} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
             <DropdownItem icon={<Pencil size={16} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
             <DropdownItem icon={<Network size={16} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
-            <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
+            {onCreateSubProject && (
+              <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
+            )}
           </DropdownSection>
 
           <DropdownDivider />

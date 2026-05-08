@@ -162,10 +162,9 @@ Use these classes instead of combining `text-[Npx] font-[N] tracking-[...] leadi
 | `.text-sm-md` | 15px | 510 | -0.165px | 1.60 | Emphasized small |
 | `.text-caption-lg` | 14px | 510 | -0.182px | 1.50 | Sub-labels |
 | `.text-caption` | 13px | 510 | -0.13px | 1.50 | Metadata, buttons |
-| `.text-label` | 12px | 510 | normal | 1.40 | Small labels |
+| `.text-label` | 11px | 510 | 0.1em | 1.40 | Section headers, column headers (includes uppercase) |
 | `.text-label-sm` | 11px | 510 | normal | 1.40 | Tiny labels |
 | `.text-tiny` | 10px | 510 | -0.15px | 1.50 | Overline text |
-| `.text-section` | 11px | 510 | widest | 1.40 | Column headers (uppercase) |
 
 ### Font Weights
 
@@ -196,10 +195,12 @@ Use these classes instead of combining `text-[Npx] font-[N] tracking-[...] leadi
 
 ### How to Use
 
+All button variants share the same padding (`--space-2` / `--space-4`) and radius (`--radius-comfortable`) via the base class. No inline padding or radius overrides needed.
+
 ```jsx
-<button className="btn-primary px-4 py-1.5">Create</button>
-<button className="btn-ghost px-4 py-1.5">Cancel</button>
-<button className="btn-subtle px-4 py-1.5">Filter</button>
+<button className="btn-primary">Create</button>
+<button className="btn-ghost">Cancel</button>
+<button className="btn-subtle">Filter</button>
 ```
 
 ---
@@ -320,7 +321,7 @@ Positioning (`absolute`, `top-full`, `bottom-full`, `mt-1`, etc.) is applied via
 File: `src/app/components/ui/DropdownSection.tsx`
 
 - Optional `label` prop renders uppercase header
-- Typography: `.text-section` (includes uppercase + widest tracking — zero overrides)
+- Typography: `.text-label` (includes uppercase + wide tracking — zero overrides)
 - Color: `text-text-quaternary`
 - Padding: `px-3`
 
@@ -363,6 +364,95 @@ The Radix primitives in `dropdown-menu.tsx` (`DropdownMenuContent`, `DropdownMen
 - **`hover:bg-*` on menu items** — ghost style only (color transitions, no background)
 - **Inline font styles** (`text-[12px]`, `font-[var(--fw-medium)]`) in items — `DropdownItem` / `DropdownMenuItem` handle typography
 - **Custom click-outside listeners** without `DropdownPanel` — consolidate into the base pattern
+
+---
+
+## Form Controls
+
+All text inputs, textareas, and labeled form fields **must** use the base components from `src/app/components/ui/`. No inline input styling in consumer components.
+
+### Text Input (`TextInput`)
+
+File: `src/app/components/ui/TextInput.tsx`
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `string` | — | Controlled value |
+| `onChange` | `(value: string) => void` | — | Change handler (receives value, not event) |
+| `placeholder` | `string` | — | Placeholder text |
+| `type` | `'text' \| 'email' \| 'password' \| 'url'` | `'text'` | Input type |
+| `hasError` | `boolean` | `false` | Error border state |
+| `disabled` | `boolean` | `false` | Disabled state |
+| `autoFocus` | `boolean` | — | Auto-focus on mount |
+| `autoComplete` | `string` | — | Autocomplete attribute |
+| `inputRef` | `React.Ref<HTMLInputElement>` | — | Ref forwarding |
+| `onKeyDown` | `function` | — | Keyboard handler |
+| `onFocus` | `function` | — | Focus handler |
+| `onBlur` | `function` | — | Blur handler |
+
+| Token | Class | Value | Use |
+|-------|-------|-------|-----|
+| Background | `bg-surface-panel` | `#0f1011` | Input fill |
+| Border | `border border-border-default` | `rgba(255,255,255,0.08)` | Standard border |
+| Radius | `rounded-comfortable` | 6px | Corner rounding |
+| Padding | `p-3` | 12px | Internal spacing |
+| Typography | `text-caption-lg text-text-primary` | 14px/510 | Input text |
+| Placeholder | `placeholder:text-text-empty` | `#4a4e54` | Placeholder color |
+| Focus | `focus:border-border-focus` | `rgba(255,255,255,0.2)` | Focus ring |
+| Error | `border-status-error-border-focus` | — | Error state border |
+
+### Text Area (`TextArea`)
+
+File: `src/app/components/ui/TextArea.tsx`
+
+Same token styling as `TextInput` plus `resize-none min-h-textarea` (100px minimum height). Props mirror `TextInput` except `textareaRef` replaces `inputRef` and there is no `type` prop.
+
+### Form Field (`FormField`)
+
+File: `src/app/components/ui/FormField.tsx`
+
+Wraps a label, children (input/textarea/any content), and optional hint or error text.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `label` | `string` | — | Uppercase field label |
+| `hint` | `ReactNode` | — | Helper text below field |
+| `error` | `string \| null` | — | Error message (replaces hint when present) |
+| `children` | `ReactNode` | — | Input or other content |
+
+| Element | Token classes | Notes |
+|---------|--------------|-------|
+| Label | `text-label text-text-quaternary` | Preset includes uppercase + tracking |
+| Hint | `text-label-sm text-text-quaternary` | Shown when no error |
+| Error | `text-label-sm text-status-error` | Replaces hint |
+
+### Action Row (`ActionRow`)
+
+File: `src/app/components/ui/ActionRow.tsx`
+
+Full-width action button with left icon and label. Used for import source buttons and similar row actions.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `icon` | `ReactNode` | — | Left icon (16px lucide) |
+| `label` | `string` | — | Button text |
+| `onClick` | `function` | — | Click handler |
+| `disabled` | `boolean` | `false` | Disabled state |
+
+| Token | Class | Value | Use |
+|-------|-------|-------|-----|
+| Background | `bg-surface-elevated` | `#191a1b` | Row fill |
+| Border | `border border-border-default` | Standard | Row edge |
+| Radius | `rounded-comfortable` | 6px | Corner rounding |
+| Typography | `text-btn text-text-tertiary` | 12px/510 | Label text |
+| Hover | `hover:bg-surface-frost-04` | — | Hover state |
+
+### Anti-patterns
+
+- **Inline input classes** (`bg-surface-frost-02 border rounded-comfortable px-3 py-2.5 text-[14px]...`) — use `TextInput` or `TextArea`
+- **Manual labels** (`<label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">`) — use `FormField`
+- **Manual error/hint text** (`<p className="text-[12px] text-status-error">`) — use `FormField` error/hint props
+- **`className` on form base components** — not accepted; use typed props
 
 ---
 
@@ -425,4 +515,4 @@ All expand/collapse indicators across the platform **must** use the canonical `<
 8. **All new colors** must be added to `:root` in `theme.css`, registered in `@theme inline`, and documented here.
 9. **All new components** must use only token classes. No exceptions without documentation per Rule 21.
 10. **No `className` prop on base components.** Consumer components pass typed props only. Base components own all visual styling. See "Base Component Architecture" section above.
-11. **No typography preset overrides.** If a preset like `.text-label` sets tracking, do not add `tracking-widest` on top. Use a preset that already includes the desired tracking (e.g. `.text-section`).
+11. **No typography preset overrides.** Never add `uppercase`, `tracking-*`, or `font-*` on top of a typography preset. `.text-label` already includes uppercase + wide tracking.

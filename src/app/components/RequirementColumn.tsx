@@ -13,7 +13,7 @@ import { CompletenessChip } from './CompletenessChip';
 import { formatCardDate } from '../lib/formatDate';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore, selectRequirements, selectQuestions, selectSelectedReqId } from '../store';
-import { buildRequirementPath } from '../domain/paths';
+import { buildProjectPath, buildRequirementPath } from '../domain/paths';
 
 interface Props {
   onNewReqClick?: () => void;
@@ -105,7 +105,11 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
         connectorRight={isSelected}
         onClick={() => {
           if (wsShortId && teamShortId && projectShortId && req.shortId) {
-            navigate(buildRequirementPath(wsShortId, teamShortId, projectShortId, req.shortId));
+            if (isSelected) {
+              navigate(buildProjectPath(wsShortId, teamShortId, projectShortId));
+            } else {
+              navigate(buildRequirementPath(wsShortId, teamShortId, projectShortId, req.shortId));
+            }
           }
         }}
       >
@@ -164,7 +168,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
 
   return (
     <ColumnShell
-      title="1. Requirements"
+      title="Requirements"
       headerControls={
         <>
           <SortGroupControls 

@@ -102,7 +102,15 @@ export function WorkspaceLayout() {
   }, [projectShortId, projectsDataState.status, projects, workspaces, teams, wsShortId, navigate]);
 
   useEffect(() => {
-    if (!reqShortId || dataState.status !== 'ready' || requirements.length === 0) return;
+    if (!reqShortId) {
+      if (syncedReqRef.current) {
+        log.debug('sync', 'Clearing requirement selection (URL has no reqShortId)');
+        syncedReqRef.current = null;
+        selectRequirement(null);
+      }
+      return;
+    }
+    if (dataState.status !== 'ready' || requirements.length === 0) return;
     if (syncedReqRef.current === reqShortId) return;
 
     const req = requirements.find(r => r.shortId === reqShortId);
@@ -117,19 +125,30 @@ export function WorkspaceLayout() {
   }, [reqShortId, requirements, dataState.status, selectRequirement]);
 
   useEffect(() => {
-    if (!questionShortId || dataState.status !== 'ready' || questions.length === 0) return;
+    if (!questionShortId) {
+      if (syncedQuestionRef.current) {
+        log.debug('sync', 'Clearing question selection (URL has no questionShortId)');
+        syncedQuestionRef.current = null;
+        selectQuestion(null);
+      }
+      return;
+    }
+    if (dataState.status !== 'ready' || questions.length === 0) return;
     if (syncedQuestionRef.current === questionShortId) return;
 
-    const question = questions.find(q => q.shortId === questionShortId);
+    const currentReq = requirements.find(r => r.shortId === reqShortId);
+    if (!currentReq) return;
+
+    const question = questions.find(q => q.shortId === questionShortId && q.requirementId === currentReq.id);
     if (!question) {
-      log.debug('sync', 'Unknown question short ID', { questionShortId });
+      log.debug('sync', 'Unknown question short ID', { questionShortId, reqShortId });
       return;
     }
 
     log.debug('sync', 'Syncing question from URL', { questionShortId, questionId: question.id });
     syncedQuestionRef.current = questionShortId;
     selectQuestion(question.id);
-  }, [questionShortId, questions, dataState.status, selectQuestion]);
+  }, [questionShortId, reqShortId, questions, requirements, dataState.status, selectQuestion]);
 
   return <Outlet />;
 }
