@@ -622,6 +622,9 @@ export interface SuggestQuestionsInput {
   existingQuestions?: ExistingQuestionContext[];
   suggestionHistory?: PriorSuggestionContext[];
   repoContext?: RepoAnalysis;
+  repoFileTree?: FileTreeEntry[];
+  repoKeyFiles?: Record<string, string>;
+  repoRecentCommits?: CommitEntry[];
 }
 
 export interface SuggestedQuestion {
@@ -690,6 +693,48 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
     }
   }
 
+  let repoContextBlock = '';
+  if (input.repoContext) {
+    repoContextBlock += `\n${buildCodebaseContextBlock(input.repoContext)}`;
+  }
+
+  if (input.repoFileTree && input.repoFileTree.length > 0) {
+    const filePaths = input.repoFileTree
+      .filter(f => f.type === 'blob')
+      .map(f => f.path);
+    if (filePaths.length > 0) {
+      repoContextBlock += `## Repository File Tree (${filePaths.length} files)\n`;
+      repoContextBlock += filePaths.slice(0, 200).join('\n') + '\n';
+      if (filePaths.length > 200) {
+        repoContextBlock += `... and ${filePaths.length - 200} more files\n`;
+      }
+      repoContextBlock += '\n';
+    }
+  }
+
+  if (input.repoKeyFiles) {
+    const keyFileEntries = Object.entries(input.repoKeyFiles);
+    if (keyFileEntries.length > 0) {
+      repoContextBlock += `## Key File Contents\n`;
+      for (const [path, content] of keyFileEntries.slice(0, 15)) {
+        const truncated = content.length > 3000
+          ? content.substring(0, 3000) + '\n... (truncated)'
+          : content;
+        repoContextBlock += `\n### ${path}\n\`\`\`\n${truncated}\n\`\`\`\n`;
+      }
+      repoContextBlock += '\n';
+    }
+  }
+
+  if (input.repoRecentCommits && input.repoRecentCommits.length > 0) {
+    const commits = input.repoRecentCommits.slice(0, 10);
+    repoContextBlock += `## Recent Commits\n`;
+    for (const c of commits) {
+      repoContextBlock += `- ${c.message} (${c.author}, ${c.date})\n`;
+    }
+    repoContextBlock += '\n';
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -710,6 +755,14 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
 - Write like a human, not a consultant. Short, plain-language questions a non-technical stakeholder can answer.
 - Avoid jargon, implementation details, and edge-case rabbit holes unless the requirement explicitly involves them.
 - Trust that engineers can make reasonable decisions about minor details — focus on the big unknowns.
+
+## Codebase Awareness (CRITICAL)
+If codebase context is provided (file tree, key files, recent commits), you MUST use it to avoid asking questions about things that are already implemented or already decided in the code:
+- Do NOT ask "how should X be done?" if the file tree or key files show X is already built.
+- Do NOT ask about technology choices, architecture patterns, or implementation approaches that are already visible in the codebase.
+- DO ask about gaps between the requirement and what exists — things the requirement calls for that the codebase does NOT yet have.
+- DO ask about business/product decisions that the code cannot answer (priorities, user expectations, rollout plans).
+- If the codebase shows the requirement is largely implemented, focus on what's MISSING or what might need to CHANGE, not on how existing things work.
 
 ## Coverage Dimensions (use as a mental checklist, NOT as a quota to fill)
 - **Scope**: What's in, what's out?
@@ -747,13 +800,14 @@ You MUST NOT repeat, rephrase, or closely paraphrase ANY prior suggestion, regar
 
 ## Process
 1. Review what's already been asked, answered, AND previously suggested (including rejected suggestions).
-2. Identify only the MOST IMPORTANT remaining gaps — things that would block or derail work.
-3. Skip dimensions that are already well-covered OR where the answer is obvious from context.
-4. If coverage is good enough to start work, return an EMPTY questions array.
+2. If codebase context is provided, review what's already implemented — do NOT ask about things the code already answers.
+3. Identify only the MOST IMPORTANT remaining gaps — things that would block or derail work.
+4. Skip dimensions that are already well-covered OR where the answer is obvious from context or code.
+5. If coverage is good enough to start work, return an EMPTY questions array.
 
 ## Output Format
 Your output MUST be valid JSON with these keys:
-- "coverage_analysis": A brief (1-2 sentence) assessment of current coverage state.
+- "coverage_analysis": A brief (1-2 sentence) assessment of current coverage state. If codebase context is available, mention what's already implemented.
 - "questions": An array of objects, each with "text" (string ending in "?"), "importance" ("Critical"|"Important"|"Optional"), and "category" ("Scope"|"Data"|"Time"|"Output"|"Quality").
 
 Return an EMPTY questions array if coverage is sufficient to start implementation. Err on the side of "good enough".
@@ -766,7 +820,7 @@ Respond ONLY with the JSON object, no markdown fences.`,
 
 Title: ${input.requirementTitle}
 ${input.requirementDescription ? `Description: ${input.requirementDescription}` : ''}
-${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${input.repoContext ? `\n${buildCodebaseContextBlock(input.repoContext)}` : ''}`,
+${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}`,
         },
       ],
       temperature: 0.4,

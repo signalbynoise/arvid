@@ -182,17 +182,17 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-row h-screen w-full bg-surface-base text-text-primary antialiased">
+    <div className="flex flex-row h-screen w-full overflow-hidden bg-surface-base text-text-primary antialiased">
       <Outlet />
       <Sidebar isOpen={isSidebarOpen} />
       
-      <div className="flex-1 flex flex-col h-screen relative">
+      <div className="flex-1 min-w-0 flex flex-col h-screen relative">
         <Topbar
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
         />
 
-        <main className="flex-1 flex w-full min-h-0 overflow-x-auto overflow-y-hidden bg-surface-panel">
+        <main className="flex-1 flex w-full min-h-0 overflow-x-auto overflow-y-hidden hide-scrollbar bg-surface-panel">
           {renderMainContent()}
         </main>
       </div>

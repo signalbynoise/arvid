@@ -6,27 +6,22 @@ import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore, selectCommandPaletteOpen } from '../../store';
 import { useCommands } from './useCommands';
+import { useGlobalShortcuts, isEditableTarget } from './useGlobalShortcuts';
 import { CommandItem } from './CommandItem';
 import { logger } from '../../logger';
 import type { PaletteCommand, CommandCategory } from './types';
 
 const log = logger.create('command-palette');
 
-const CATEGORY_ORDER: CommandCategory[] = ['Create', 'Navigation', 'Integrations'];
-
-function isEditableTarget(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false;
-  const tag = el.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
-  if (el.isContentEditable) return true;
-  return false;
-}
+const CATEGORY_ORDER: CommandCategory[] = ['Create', 'Edit', 'Navigation', 'Integrations'];
 
 export function CommandPalette() {
   const open = useStore(selectCommandPaletteOpen);
   const openPalette = useStore(s => s.openCommandPalette);
   const closePalette = useStore(s => s.closeCommandPalette);
   const togglePalette = useStore(s => s.toggleCommandPalette);
+
+  useGlobalShortcuts();
 
   const commands = useCommands();
   const [search, setSearch] = useState('');
@@ -35,7 +30,7 @@ export function CommandPalette() {
   const fuseRef = useRef<Fuse<PaletteCommand> | null>(null);
   useEffect(() => {
     fuseRef.current = new Fuse(commands, {
-      keys: ['label', 'keywords', 'shortcut'],
+      keys: ['label', 'keywords', 'chord'],
       threshold: 0.4,
       ignoreLocation: true,
     });

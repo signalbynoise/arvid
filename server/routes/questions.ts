@@ -135,6 +135,9 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       })),
       suggestionHistory: context.suggestionHistory,
       repoContext: context.repoContext,
+      repoFileTree: context.repoFileTree,
+      repoKeyFiles: context.repoKeyFiles,
+      repoRecentCommits: context.repoRecentCommits,
     });
 
     const existingTexts = new Set(

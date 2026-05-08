@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useStore, selectActiveWorkspaceId } from '../../store';
+import React, { useState, useEffect } from 'react';
+import { useStore, selectActiveWorkspaceId, selectPendingModal } from '../../store';
 import { NewProjectModal } from '../NewProjectModal';
 import { RenameProjectModal } from '../RenameProjectModal';
 import { RenameTeamModal } from '../RenameTeamModal';
@@ -62,6 +62,63 @@ export function useSidebarModals(
 
   const [isInviteMemberOpen, setIsInviteMemberOpen] = useState(false);
   const [inviteContext, setInviteContext] = useState<InviteContext | null>(null);
+
+  const pendingModal = useStore(selectPendingModal);
+  const clearPendingModal = useStore(s => s.clearPendingModal);
+
+  useEffect(() => {
+    if (!pendingModal) return;
+    switch (pendingModal.type) {
+      case 'createWorkspace':
+        setIsCreateWsOpen(true);
+        clearPendingModal();
+        break;
+      case 'createTeam':
+        setIsCreateTeamOpen(true);
+        clearPendingModal();
+        break;
+      case 'inviteMember': {
+        const inviteData = pendingModal.data as { scope?: 'workspace' | 'team' | 'project' } | undefined;
+        const scope = inviteData?.scope ?? 'workspace';
+
+        if (scope === 'workspace' && activeWorkspace) {
+          setInviteContext({ scope: 'workspace', scopeId: activeWorkspace.id, scopeName: activeWorkspace.name });
+          setIsInviteMemberOpen(true);
+        } else if (scope === 'team') {
+          const team = teams[0];
+          if (team) {
+            setInviteContext({ scope: 'team', scopeId: team.id, scopeName: team.name });
+            setIsInviteMemberOpen(true);
+          }
+        } else if (scope === 'project') {
+          const projectId = useStore.getState().selectedProjectId;
+          const project = projectId ? projects.find(p => p.id === projectId) : undefined;
+          if (project) {
+            setInviteContext({ scope: 'project', scopeId: project.id, scopeName: project.name });
+            setIsInviteMemberOpen(true);
+          }
+        }
+        clearPendingModal();
+        break;
+      }
+      case 'renameEntity': {
+        const data = pendingModal.data as { entityType: string; entityId: string } | undefined;
+        if (data) {
+          if (data.entityType === 'project') {
+            const p = projects.find(x => x.id === data.entityId);
+            if (p) { setRenameTarget({ id: p.id, name: p.name }); setIsRenameOpen(true); }
+          } else if (data.entityType === 'team') {
+            const t = teams.find(x => x.id === data.entityId);
+            if (t) { setRenameTeamTarget({ id: t.id, name: t.name }); setIsRenameTeamOpen(true); }
+          } else if (data.entityType === 'workspace') {
+            setIsSettingsOpen(true);
+          }
+        }
+        clearPendingModal();
+        break;
+      }
+    }
+  }, [pendingModal]);
 
   const openCreate = (parentId?: string, teamId?: string) => {
     const team = teamId ? teams.find(t => t.id === teamId) : teams[0];
