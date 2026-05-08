@@ -77,6 +77,24 @@ export function useSidebarModals(
         setIsCreateTeamOpen(true);
         clearPendingModal();
         break;
+      case 'createProject': {
+        const currentProjectId = useStore.getState().selectedProjectId;
+        const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) : undefined;
+        const isRootProject = currentProject && !currentProject.parentId;
+        const projectTeamId = currentProject?.teamId;
+        const team = projectTeamId ? teams.find(t => t.id === projectTeamId) : teams[0];
+        if (team) {
+          setCreateProjectContext({
+            parentId: isRootProject ? currentProject.id : undefined,
+            parentName: isRootProject ? currentProject.name : undefined,
+            teamId: team.id,
+            teamName: team.name,
+          });
+          setIsCreateOpen(true);
+        }
+        clearPendingModal();
+        break;
+      }
       case 'inviteMember': {
         const inviteData = pendingModal.data as { scope?: 'workspace' | 'team' | 'project' } | undefined;
         const scope = inviteData?.scope ?? 'workspace';

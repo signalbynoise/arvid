@@ -54,7 +54,7 @@ export function ProjectTreeItem({
             onAddUser={() => onAddUser(node.id, node.name)}
             onRename={() => onRename(node.id, node.name)}
             onMove={() => {}}
-            onCreateSubProject={depth === 0 ? () => onCreateSubProject(node.id, getTeamId(node.id)) : undefined}
+            onCreateSubProject={!node.parentId ? () => onCreateSubProject(node.id, getTeamId(node.id)) : undefined}
             onSettings={() => {}}
             onDeactivate={() => onDeactivate(node.id, node.name)}
           />
