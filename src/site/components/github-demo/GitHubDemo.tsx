@@ -1,70 +1,108 @@
-import { PanelLeft } from 'lucide-react';
+import { Plus, LoaderPinwheel, Folder } from 'lucide-react';
+import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniSidebar } from '../mini-demo';
+import { DemoRequirementCard } from '../app-demo/DemoRequirementCard';
+import { DemoQuestionCard } from '../app-demo/DemoQuestionCard';
 import { useSequence } from '../app-demo/useSequence';
-import { SEQUENCE } from './data';
-import { RepoConnector } from './RepoConnector';
-import { EnhancedRequirements } from './EnhancedRequirements';
-import { SuggestedQuestions } from './SuggestedQuestions';
+import { GitHubDemoRepoFooter } from './GitHubDemoRepoFooter';
+import { WORKSPACE_NAME, TEAMS, REQUIREMENTS, QUESTIONS, SEQUENCE } from './data';
+
+const BREADCRUMBS = [
+  { label: WORKSPACE_NAME },
+  { label: 'Engineering', icon: Folder },
+  { label: 'Arvid', icon: Folder },
+];
 
 export function GitHubDemo() {
   const s = useSequence(SEQUENCE);
 
   const showShell = s.has('show_shell');
-  const showRepoSection = s.has('show_repo_section');
-  const openSelector = s.has('open_selector');
+  const expandProject = s.has('expand_project');
+  const showFooter = s.has('show_footer');
+  const openSelector = s.has('open_selector') && !s.has('select_repo');
   const selectRepo = s.has('select_repo');
   const startFetching = s.has('start_fetching');
   const fetchDone = s.has('fetch_done');
-  const showBranchIcon = s.has('show_branch_icon');
+
   const showReq1 = s.has('show_req_1');
   const showReq2 = s.has('show_req_2');
   const selectReq = s.has('select_req');
-  const showContextBadge = s.has('show_context_badge');
+
   const suggestQ1 = s.has('suggest_q1');
   const suggestQ2 = s.has('suggest_q2');
   const suggestQ3 = s.has('suggest_q3');
   const acceptQ1 = s.has('accept_q1');
   const acceptQ2 = s.has('accept_q2');
 
+  const q1Visible = suggestQ1;
+  const q1Suggested = suggestQ1 && !acceptQ1;
+  const q2Visible = suggestQ2;
+  const q2Suggested = suggestQ2 && !acceptQ2;
+  const q3Visible = suggestQ3;
+
   return (
-    <div className={`w-full h-full flex items-center justify-center bg-surface-frost-10 transition-all duration-700 ${
-      showShell ? 'opacity-100' : 'opacity-0'
-    }`}>
-      <div className="w-[92%] h-[90%] flex rounded-lg overflow-hidden border border-border-subtle bg-surface-base shadow-elevated">
-        <RepoConnector
-          showRepoSection={showRepoSection}
-          openSelector={openSelector}
-          selectRepo={selectRepo}
-          startFetching={startFetching}
-          fetchDone={fetchDone}
-          showBranchIcon={showBranchIcon}
+    <MiniShell visible={showShell} shadow={false} roundedRight={false} className="absolute w-[800px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0">
+      <MiniSidebar
+          workspaceName={WORKSPACE_NAME}
+          teams={TEAMS}
+          expandedProjectId={expandProject ? 'p1' : undefined}
+          footer={
+            <GitHubDemoRepoFooter
+              visible={showFooter}
+              selectorOpen={openSelector}
+              repoSelected={selectRepo}
+              fetching={startFetching}
+              fetchDone={fetchDone}
+            />
+          }
         />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="h-8 border-b border-border-subtle flex items-center px-3 bg-surface-panel shrink-0">
-            <PanelLeft size={10} className="text-text-tertiary" />
-            <div className="ml-auto flex items-center space-x-1.5">
-              <div className="w-4 h-4 rounded-full bg-surface-frost-08 border border-border-subtle" />
-            </div>
-          </div>
+          <MiniTopbar segments={BREADCRUMBS} />
 
           <div className="flex-1 flex min-h-0 overflow-hidden">
-            <EnhancedRequirements
-              showReq1={showReq1}
-              showReq2={showReq2}
-              selectReq={selectReq}
-              showContextBadge={showContextBadge}
-            />
-            <SuggestedQuestions
-              selectReq={selectReq}
-              suggestQ1={suggestQ1}
-              suggestQ2={suggestQ2}
-              suggestQ3={suggestQ3}
-              acceptQ1={acceptQ1}
-              acceptQ2={acceptQ2}
-            />
+            <MiniColumn
+              title="Requirements"
+              width="w-1/2"
+              controls={<Plus size={8} className="text-text-quaternary" />}
+            >
+              {showReq1 || showReq2 ? (
+                <>
+                  <DemoRequirementCard
+                    req={REQUIREMENTS[0]}
+                    selected={selectReq}
+                    dimmed={false}
+                    visible={showReq1}
+                  />
+                  <DemoRequirementCard
+                    req={REQUIREMENTS[1]}
+                    selected={false}
+                    dimmed={selectReq}
+                    visible={showReq2}
+                  />
+                </>
+              ) : (
+                <MiniColumnEmpty icon={null} message="Select a requirement" />
+              )}
+            </MiniColumn>
+
+            <MiniColumn
+              title="Questions"
+              width="w-1/2"
+              borderRight={false}
+              controls={selectReq ? <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" /> : undefined}
+            >
+              {selectReq ? (
+                <>
+                  <DemoQuestionCard q={QUESTIONS[0]} visible={q1Visible} suggested={q1Suggested} selected={!q1Suggested && q1Visible} />
+                  <DemoQuestionCard q={QUESTIONS[1]} visible={q2Visible} suggested={q2Suggested} />
+                  <DemoQuestionCard q={QUESTIONS[2]} visible={q3Visible} suggested />
+                </>
+              ) : (
+                <MiniColumnEmpty icon={null} message="Select a requirement" />
+              )}
+            </MiniColumn>
           </div>
         </div>
-      </div>
-    </div>
+    </MiniShell>
   );
 }

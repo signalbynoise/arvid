@@ -1,4 +1,4 @@
-import { User, Clock, Check } from 'lucide-react';
+import { LoaderPinwheel } from 'lucide-react';
 import type { Answer } from './types';
 
 interface DemoAnswerCardProps {
@@ -8,26 +8,32 @@ interface DemoAnswerCardProps {
 
 export function DemoAnswerCard({ answer, visible }: DemoAnswerCardProps) {
   return (
-    <div className={`p-2.5 rounded-md border border-border-subtle transition-all duration-500 ${
-      visible ? (answer.isCurrent ? 'opacity-100' : 'opacity-70') : 'opacity-0'
-    } ${visible ? 'translate-y-0' : 'translate-y-3'} ${answer.isCurrent ? 'bg-surface-frost-05' : 'bg-surface-frost-02'}`}>
-      <div className="flex items-center space-x-2 text-[8px] text-text-tertiary mb-1.5">
-        <div className="flex items-center space-x-1">
-          <User size={7} />
-          <span className="font-[var(--fw-medium)] text-text-secondary">{answer.author}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Clock size={7} />
-          <span>{answer.date}</span>
-        </div>
+    <div className={`relative flex flex-col gap-2 p-2 rounded-[3px] border overflow-hidden transition-all duration-500 ${
+      visible ? 'translate-y-0' : 'translate-y-3'
+    } ${visible ? (answer.isCurrent ? 'opacity-100' : 'opacity-60') : 'opacity-0'} ${
+      answer.isCurrent
+        ? 'bg-surface-frost-03 border-border-hover'
+        : 'bg-surface-elevated border-border-default'
+    }`}>
+      <div className="absolute top-1/2 -left-2 w-2 h-[1px] bg-border-focus z-10" />
+
+      <div className="flex items-center justify-between">
+        <span className="text-[6px] font-mono text-text-quaternary">{answer.shortId}</span>
       </div>
-      <p className="text-[8px] text-text-primary leading-relaxed mb-2">{answer.text}</p>
-      <div className="border-t border-border-subtle pt-1.5">
-        <div className={`inline-flex items-center space-x-1 text-[7px] font-[var(--fw-medium)] px-1.5 py-0.5 rounded-sm border border-border-subtle ${
-          answer.isCurrent ? 'bg-surface-frost-08 text-text-primary' : 'bg-surface-frost-02 text-text-tertiary'
-        }`}>
-          <Check size={6} />
-          <span>{answer.isCurrent ? 'Active' : 'Mark Active'}</span>
+
+      <p className="text-[8px] text-text-primary leading-relaxed">{answer.text}</p>
+
+      <div className={`self-start flex items-center gap-1 px-1.5 py-0.5 rounded-[1px] border border-dashed text-[7px] font-[var(--fw-medium)] border-border-default`}>
+        <LoaderPinwheel size={7} className={answer.isCurrent ? 'text-text-primary' : 'text-text-quaternary'} />
+        <span className={answer.isCurrent ? 'text-text-primary' : 'text-text-tertiary'}>
+          {answer.isCurrent ? 'Active Answer' : 'Mark Active'}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[6px] text-text-quaternary">{answer.author} - {answer.date}</span>
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-indicator-high" />
         </div>
       </div>
     </div>

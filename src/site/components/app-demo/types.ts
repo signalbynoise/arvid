@@ -1,20 +1,11 @@
-export interface ProjectChild {
-  id: string;
-  name: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  children: ProjectChild[];
-}
+export type { MiniTeam as Team, MiniProject as Project } from '../mini-demo/types';
 
 export interface Requirement {
   id: string;
+  shortId: string;
   title: string;
   owner: string;
+  createdAt: string;
   completeness: number;
   clarity: 'High' | 'Medium' | 'Low';
   risk: 'Low' | 'Medium' | 'High';
@@ -22,14 +13,18 @@ export interface Requirement {
 
 export interface Question {
   id: string;
+  shortId: string;
   text: string;
   status: 'Answered' | 'Unanswered';
   importance: string;
   category: string;
+  author: string;
+  createdAt: string;
 }
 
 export interface Answer {
   id: string;
+  shortId: string;
   author: string;
   date: string;
   text: string;
@@ -38,6 +33,7 @@ export interface Answer {
 
 export interface Summary {
   title: string;
+  shortId: string;
   objective: string;
   tags: string[];
   targetCompleteness: number;

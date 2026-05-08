@@ -1,4 +1,4 @@
-import { Check, X, CheckCircle2, CircleDashed, LoaderPinwheel } from 'lucide-react';
+import { LoaderPinwheel } from 'lucide-react';
 import type { Question } from './types';
 
 interface DemoQuestionCardProps {
@@ -9,48 +9,65 @@ interface DemoQuestionCardProps {
 }
 
 export function DemoQuestionCard({ q, visible, selected = false, suggested = false }: DemoQuestionCardProps) {
-  const StatusIcon = q.status === 'Answered' ? CheckCircle2 : CircleDashed;
-  const statusColor = q.status === 'Answered' ? 'text-status-success' : 'text-status-error';
-  const statusBg = q.status === 'Answered' ? 'bg-status-success-surface border-status-success-border' : 'bg-status-error-surface border-status-error-border';
+  const importanceClass = q.importance === 'Critical' ? 'bg-indicator-high' : q.importance === 'Important' ? 'bg-indicator-medium' : 'bg-indicator-low';
+  const statusAccent = q.status === 'Answered' ? 'border-status-success' : 'border-border-default';
 
   if (suggested) {
     return (
-      <div className={`p-2.5 rounded-md border border-dashed border-border-strong bg-surface-frost-01 transition-all duration-500 ${
+      <div className={`relative flex flex-col gap-2 p-2 rounded-[3px] border border-dashed border-border-strong bg-surface-frost-03 transition-all duration-500 ${
         visible ? 'opacity-70 translate-y-0' : 'opacity-0 translate-y-3'
       }`}>
-        <div className="flex items-center mb-1.5">
-          <span className="text-[6px] font-[var(--fw-medium)] text-text-tertiary bg-surface-frost-05 px-1 py-0.5 rounded-sm uppercase tracking-wider border border-border-subtle">AI Suggestion</span>
+        <div className="flex items-center justify-between">
+          <span className="text-[6px] font-mono text-text-quaternary">{q.shortId}</span>
         </div>
-        <h4 className="text-[9px] font-[var(--fw-regular)] text-text-tertiary leading-snug mb-2">{q.text}</h4>
-        <div className="flex items-center space-x-1.5">
-          <div className="flex-1 py-1 flex items-center justify-center space-x-1 bg-surface-frost-08 text-text-primary rounded-sm text-[7px] font-[var(--fw-medium)]">
-            <Check size={6} />
-            <span>Use</span>
-          </div>
-          <div className="flex-1 py-1 flex items-center justify-center space-x-1 bg-surface-frost-05 text-text-tertiary rounded-sm text-[7px] font-[var(--fw-medium)]">
-            <X size={6} />
-            <span>Hide</span>
-          </div>
+
+        <h4 className="text-[8px] font-[var(--fw-regular)] text-text-quaternary leading-snug">{q.text}</h4>
+
+        <div className="flex items-center gap-1">
+          <button className="flex-1 py-0.5 flex items-center justify-center bg-surface-frost-08 text-text-primary rounded-[1px] text-[7px] font-[var(--fw-medium)]">
+            Use
+          </button>
+          <button className="flex-1 py-0.5 flex items-center justify-center bg-surface-frost-05 text-text-tertiary rounded-[1px] text-[7px] font-[var(--fw-medium)]">
+            Hide
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`p-2.5 rounded-md border border-border-subtle transition-all duration-500 ${
+    <div className={`relative flex flex-col gap-2 p-2 rounded-[3px] border overflow-hidden transition-all duration-500 ${
       visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-    } ${selected ? 'bg-surface-frost-05' : 'bg-surface-frost-02'}`}>
-      <h4 className="text-[9px] font-[var(--fw-regular)] text-text-primary leading-snug mb-2">{q.text}</h4>
-      <div className="flex items-center text-[8px] text-text-tertiary mb-2 space-x-1">
-        <LoaderPinwheel size={8} className="opacity-70" />
-        <span>Arvid</span>
-      </div>
+    } ${selected
+        ? 'bg-surface-frost-03 border-border-hover'
+        : 'bg-surface-elevated border-border-default'
+    }`}>
+      {selected && (
+        <>
+          <div className="absolute top-1/2 -left-2 w-2 h-[1px] bg-border-focus z-10" />
+          <div className="absolute top-1/2 -right-2 w-2 h-[1px] bg-border-focus z-10" />
+        </>
+      )}
+
       <div className="flex items-center justify-between">
-        <div className={`flex items-center space-x-1 px-1.5 py-0.5 rounded-sm border text-[7px] font-[var(--fw-medium)] ${statusColor} ${statusBg}`}>
-          <StatusIcon size={7} />
-          <span>{q.status}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[6px] font-mono text-text-quaternary">{q.shortId}</span>
+          <span className="text-[6px] font-mono text-text-quaternary uppercase">{q.category}</span>
         </div>
-        <span className="text-[7px] text-text-quaternary uppercase tracking-wider font-[var(--fw-medium)]">{q.category}</span>
+      </div>
+
+      <h4 className="text-[8px] font-[var(--fw-regular)] text-text-primary leading-snug">{q.text}</h4>
+
+      <div className={`self-start flex items-center gap-1 px-1.5 py-0.5 rounded-[1px] border border-dashed text-[7px] font-[var(--fw-medium)] ${statusAccent}`}>
+        <LoaderPinwheel size={7} className={q.status === 'Answered' ? 'text-status-success' : 'text-text-quaternary'} />
+        <span className={q.status === 'Answered' ? 'text-status-success' : 'text-text-tertiary'}>{q.status}</span>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[6px] text-text-quaternary">{q.author} - {q.createdAt}</span>
+        <div className="flex items-center gap-1">
+          <div className={`w-1.5 h-1.5 rounded-full ${importanceClass}`} title={q.importance} />
+        </div>
       </div>
     </div>
   );

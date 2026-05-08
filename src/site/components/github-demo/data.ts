@@ -1,34 +1,58 @@
-import type { Step } from '../app-demo/types';
+import type { MiniTeam } from '../mini-demo/types';
+import type { Requirement, Question, Step } from '../app-demo/types';
+
+export const WORKSPACE_NAME = 'Acme Inc.';
+
+export const TEAMS: MiniTeam[] = [
+  {
+    id: 't1',
+    name: 'Engineering',
+    projects: [
+      { id: 'p1', name: 'Arvid', isActive: true, children: [
+        { id: 'p1a', name: 'Commerce Co...' },
+      ]},
+      { id: 'p2', name: 'Design System', children: [] },
+    ],
+  },
+];
 
 export interface Repo {
   name: string;
-  desc: string;
-  lang: string;
-  isPrivate: boolean;
+  visibility: 'public' | 'private';
 }
 
 export const REPOS: Repo[] = [
-  { name: 'acme/web-app', desc: 'Main product frontend', lang: 'TypeScript', isPrivate: true },
-  { name: 'acme/api-server', desc: 'REST + GraphQL backend', lang: 'Go', isPrivate: true },
-  { name: 'acme/design-system', desc: 'Shared component library', lang: 'TypeScript', isPrivate: false },
+  { name: 'acme/web-app', visibility: 'private' },
+  { name: 'acme/api-server', visibility: 'private' },
+  { name: 'acme/design-system', visibility: 'public' },
+];
+
+export const REQUIREMENTS: Requirement[] = [
+  { id: 'r1', shortId: 'R01', title: 'Post-Login OAuth Profile Refresh', owner: 'Erik L.', createdAt: 'May 1', completeness: 55, clarity: 'Medium', risk: 'Low' },
+  { id: 'r2', shortId: 'R02', title: 'GitHub OAuth & Repository Analysis', owner: 'Erik L.', createdAt: 'Apr 28', completeness: 100, clarity: 'High', risk: 'Low' },
+];
+
+export const QUESTIONS: Question[] = [
+  { id: 'q1', shortId: 'Q01', text: 'How should the system detect a \'successful login\' to trigger the refresh—via a session flag, or event?', status: 'Unanswered', importance: 'Critical', category: 'Auth', author: 'Arvid', createdAt: 'May 2' },
+  { id: 'q2', shortId: 'Q02', text: 'What specific profile fields from GitHub should be synced to the Supabase users table?', status: 'Unanswered', importance: 'Important', category: 'Data', author: 'Arvid', createdAt: 'May 2' },
+  { id: 'q3', shortId: 'Q03', text: 'How does the system determine which provider to query for profile data?', status: 'Unanswered', importance: 'Important', category: 'Auth', author: 'Arvid', createdAt: 'May 3' },
 ];
 
 export const SEQUENCE: Step[] = [
   { action: 'show_shell', delay: 0 },
-  { action: 'show_repo_section', delay: 800 },
-  { action: 'open_selector', delay: 800 },
-  { action: 'select_repo', delay: 1600 },
-  { action: 'start_fetching', delay: 600 },
-  { action: 'fetch_done', delay: 1600 },
-  { action: 'show_branch_icon', delay: 400 },
-  { action: 'show_req_1', delay: 600 },
-  { action: 'show_req_2', delay: 400 },
-  { action: 'select_req', delay: 600 },
-  { action: 'show_context_badge', delay: 600 },
-  { action: 'suggest_q1', delay: 400 },
-  { action: 'suggest_q2', delay: 600 },
-  { action: 'accept_q1', delay: 600 },
-  { action: 'suggest_q3', delay: 600 },
-  { action: 'accept_q2', delay: 600 },
-  { action: 'reset', delay: 2700 },
+  { action: 'expand_project', delay: 1000 },
+  { action: 'show_footer', delay: 1000 },
+  { action: 'open_selector', delay: 1200 },
+  { action: 'select_repo', delay: 2000 },
+  { action: 'start_fetching', delay: 800 },
+  { action: 'fetch_done', delay: 2400 },
+  { action: 'show_req_1', delay: 1000 },
+  { action: 'show_req_2', delay: 800 },
+  { action: 'select_req', delay: 1200 },
+  { action: 'suggest_q1', delay: 800 },
+  { action: 'suggest_q2', delay: 1000 },
+  { action: 'accept_q1', delay: 1200 },
+  { action: 'suggest_q3', delay: 800 },
+  { action: 'accept_q2', delay: 1000 },
+  { action: 'reset', delay: 3500 },
 ];

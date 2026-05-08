@@ -1,0 +1,37 @@
+import React from 'react';
+
+interface MiniColumnProps {
+  title: string;
+  controls?: React.ReactNode;
+  borderRight?: boolean;
+  width?: string;
+  children: React.ReactNode;
+}
+
+export function MiniColumn({ title, controls, borderRight = true, width = 'w-1/4', children }: MiniColumnProps) {
+  return (
+    <div className={`${width} shrink-0 flex flex-col bg-surface-panel${borderRight ? ' border-r border-border-subtle' : ''}`}>
+      <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
+        <span className="text-[7px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{title}</span>
+        {controls}
+      </div>
+      <div className="flex-1 p-2 space-y-2 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+interface MiniColumnEmptyProps {
+  icon: React.ReactNode;
+  message: string;
+}
+
+export function MiniColumnEmpty({ icon, message }: MiniColumnEmptyProps) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center h-full">
+      {icon}
+      <p className="text-[8px] text-text-quaternary">{message}</p>
+    </div>
+  );
+}

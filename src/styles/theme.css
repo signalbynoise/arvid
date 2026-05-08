@@ -123,6 +123,7 @@
   --icon-lg: 20px;
   --icon-xl: 24px;
   --icon-2xl: 32px;
+  --icon-3xl: 48px;
 
   /* --- Component Sizing --- */
   --dropdown-min-w: 200px;
@@ -272,6 +273,9 @@
   --max-width-modal-lg: var(--modal-width-lg);
   --max-width-modal-xl: var(--modal-width-xl);
   --min-height-textarea: var(--textarea-min-h);
+
+  /* Icon Sizes */
+  --size-icon-3xl: var(--icon-3xl);
 
   /* Sidebar */
   --width-sidebar: var(--sidebar-width);

@@ -1,4 +1,3 @@
-import { User } from 'lucide-react';
 import type { Requirement } from './types';
 
 interface DemoRequirementCardProps {
@@ -9,31 +8,41 @@ interface DemoRequirementCardProps {
 }
 
 export function DemoRequirementCard({ req, selected, visible, dimmed }: DemoRequirementCardProps) {
-  const clarityColor = req.clarity === 'High' ? 'bg-status-success' : req.clarity === 'Medium' ? 'bg-status-warning' : 'bg-status-error';
-  const riskColor = req.risk === 'Low' ? 'bg-status-success' : req.risk === 'Medium' ? 'bg-status-warning' : 'bg-status-error';
-  const barColor = req.completeness >= 80 ? 'bg-status-success' : req.completeness >= 50 ? 'bg-status-warning' : 'bg-status-error';
+  const clarityClass = req.clarity === 'High' ? 'bg-indicator-high' : req.clarity === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low';
+  const riskClass = req.risk === 'Low' ? 'bg-indicator-high' : req.risk === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low';
+  const chipColor = req.completeness >= 80 ? 'var(--status-success)' : req.completeness >= 50 ? 'var(--status-warning)' : 'var(--status-error)';
 
   return (
-    <div className={`p-2.5 rounded-md border border-border-subtle transition-all duration-500 ${
+    <div className={`relative flex flex-col gap-2 p-2 rounded-[3px] border overflow-hidden transition-all duration-500 ${
       visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-    } ${selected ? 'bg-surface-frost-05' : 'bg-surface-frost-02'} ${
-      dimmed ? 'opacity-30' : ''
-    }`}>
-      <h4 className="text-[9px] font-[var(--fw-medium)] text-text-primary leading-tight mb-1.5">{req.title}</h4>
-      <div className="flex items-center text-[8px] text-text-tertiary mb-2 space-x-1">
-        <User size={8} className="opacity-70" />
-        <span>{req.owner}</span>
+    } ${selected
+        ? 'bg-surface-frost-03 border-border-hover'
+        : 'bg-surface-elevated border-border-default'
+    } ${dimmed ? 'opacity-30 saturate-50' : ''}`}>
+      {selected && (
+        <div className="absolute top-1/2 -right-2 w-2 h-[1px] bg-border-focus z-10" />
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className="text-[6px] font-mono text-text-quaternary">{req.shortId}</span>
       </div>
-      <div className="flex items-center justify-between text-[7px]">
-        <div className="flex items-center space-x-1.5">
-          <div className="w-8 h-1 bg-surface-frost-10 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${req.completeness}%` }} />
-          </div>
-          <span className="text-text-secondary font-[var(--fw-medium)]">{req.completeness}%</span>
+
+      <h4 className="text-[8px] font-[var(--fw-medium)] text-text-primary leading-tight">{req.title}</h4>
+
+      <div
+        className="self-start flex items-center p-px rounded-[1px]"
+        style={{ background: `conic-gradient(${chipColor} 0% ${req.completeness}%, var(--border-default) ${req.completeness}% 100%)` }}
+      >
+        <div className="px-1.5 py-0.5 bg-surface-elevated rounded-[1px] flex items-center">
+          <span className="text-[7px] font-[var(--fw-medium)] text-text-tertiary">{req.completeness}%</span>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className={`w-1.5 h-1.5 rounded-full ${clarityColor}`} />
-          <div className={`w-1.5 h-1.5 rounded-full ${riskColor}`} />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[6px] text-text-quaternary">{req.owner} - {req.createdAt}</span>
+        <div className="flex items-center gap-1">
+          <div className={`w-1.5 h-1.5 rounded-full ${clarityClass}`} title={`Clarity: ${req.clarity}`} />
+          <div className={`w-1.5 h-1.5 rounded-full ${riskClass}`} title={`Risk: ${req.risk}`} />
         </div>
       </div>
     </div>

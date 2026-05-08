@@ -1,4 +1,5 @@
-import { Plus, LoaderPinwheel, MessageSquare, FileText, PanelLeft } from 'lucide-react';
+import { Plus, LoaderPinwheel, MessageSquare, FileText, Network, Folder } from 'lucide-react';
+import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty } from '../mini-demo';
 import { useSequence } from './useSequence';
 import { DemoSidebar } from './DemoSidebar';
 import { DemoRequirementCard } from './DemoRequirementCard';
@@ -14,7 +15,14 @@ import {
   SUMMARY_R1,
   SUMMARY_R2,
   SEQUENCE,
+  WORKSPACE_NAME,
 } from './data';
+
+const BREADCRUMBS = [
+  { label: WORKSPACE_NAME },
+  { label: 'Engineering', icon: Network },
+  { label: 'Mobile App', icon: Folder },
+];
 
 export function AppDemo() {
   const s = useSequence(SEQUENCE);
@@ -71,91 +79,66 @@ export function AppDemo() {
   const q5Visible = req1Selected && suggestQ5;
 
   return (
-    <div className={`max-w-[1040px] w-full h-full flex rounded-lg overflow-hidden border border-border-subtle bg-surface-base shadow-elevated transition-all duration-700 ${
-      showShell ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-    }`}>
+    <MiniShell visible={showShell} className="min-w-[900px] w-full h-full max-w-[1180px]">
       <DemoSidebar expanded={projectExpanded} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-8 border-b border-border-subtle flex items-center px-3 bg-surface-panel shrink-0">
-          <PanelLeft size={10} className="text-text-tertiary" />
-          <div className="ml-auto flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-surface-frost-08 border border-border-subtle" />
-          </div>
-        </div>
+        <MiniTopbar segments={BREADCRUMBS} />
 
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* Requirements */}
-          <div className="w-1/4 shrink-0 flex flex-col border-r border-border-subtle bg-surface-panel">
-            <div className="p-2 border-b border-border-subtle flex items-center justify-between">
-              <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">1. Requirements</span>
-              <Plus size={8} className="text-text-quaternary" />
-            </div>
-            <div className="flex-1 p-2 space-y-2 overflow-hidden">
-              {REQUIREMENTS.map((req, i) => (
-                <DemoRequirementCard
-                  key={req.id}
-                  req={req}
-                  selected={activeReqIdx === i}
-                  dimmed={anyReqSelected && activeReqIdx !== i}
-                  visible={showReqs}
-                />
-              ))}
-            </div>
-          </div>
+          <MiniColumn title="Requirements" controls={<Plus size={8} className="text-text-quaternary" />}>
+            {REQUIREMENTS.map((req, i) => (
+              <DemoRequirementCard
+                key={req.id}
+                req={req}
+                selected={activeReqIdx === i}
+                dimmed={anyReqSelected && activeReqIdx !== i}
+                visible={showReqs}
+              />
+            ))}
+          </MiniColumn>
 
-          {/* Questions */}
-          <div className="w-1/4 shrink-0 flex flex-col border-r border-border-subtle bg-surface-panel">
-            <div className="p-2 border-b border-border-subtle flex items-center justify-between">
-              <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">2. Questions</span>
-              {anyReqSelected && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
-            </div>
-            <div className="flex-1 p-2 space-y-2 overflow-hidden">
-              {req1Selected ? (
-                <>
-                  <DemoQuestionCard q={QUESTIONS_R2[0]} visible={q4Visible} suggested={q4Suggested} selected={selectQuestionR2 && !q4Suggested} />
-                  <DemoQuestionCard q={QUESTIONS_R2[1]} visible={q5Visible} suggested />
-                </>
-              ) : anyReqSelected ? (
-                <>
-                  <DemoQuestionCard q={QUESTIONS_R1[0]} visible={q1Visible} suggested={q1Suggested} selected={selectQuestion && !q1Suggested} />
-                  <DemoQuestionCard q={QUESTIONS_R1[1]} visible={q2Visible} suggested={q2Suggested} />
-                  <DemoQuestionCard q={QUESTIONS_R1[2]} visible={q3Visible} suggested />
-                </>
+          <MiniColumn
+            title="Questions"
+            controls={anyReqSelected ? <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" /> : undefined}
+          >
+            {req1Selected ? (
+              <>
+                <DemoQuestionCard q={QUESTIONS_R2[0]} visible={q4Visible} suggested={q4Suggested} selected={selectQuestionR2 && !q4Suggested} />
+                <DemoQuestionCard q={QUESTIONS_R2[1]} visible={q5Visible} suggested />
+              </>
+            ) : anyReqSelected ? (
+              <>
+                <DemoQuestionCard q={QUESTIONS_R1[0]} visible={q1Visible} suggested={q1Suggested} selected={selectQuestion && !q1Suggested} />
+                <DemoQuestionCard q={QUESTIONS_R1[1]} visible={q2Visible} suggested={q2Suggested} />
+                <DemoQuestionCard q={QUESTIONS_R1[2]} visible={q3Visible} suggested />
+              </>
+            ) : (
+              <MiniColumnEmpty icon={null} message="Select a requirement" />
+            )}
+          </MiniColumn>
+
+          <MiniColumn
+            title="Answers"
+            controls={questionIsSelected ? <Plus size={8} className="text-text-quaternary" /> : undefined}
+          >
+            {questionIsSelected ? (
+              req1Selected ? (
+                <DemoAnswerCard answer={ANSWERS_R2[0]} visible={showAR2} />
               ) : (
-                <div className="flex-1 flex items-center justify-center h-full">
-                  <p className="text-[8px] text-text-quaternary">Select a requirement</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <>
+                  <DemoAnswerCard answer={ANSWERS_R1[0]} visible={showA1} />
+                  <DemoAnswerCard answer={ANSWERS_R1[1]} visible={showA2} />
+                </>
+              )
+            ) : (
+              <MiniColumnEmpty
+                icon={<MessageSquare size={12} className="text-text-quaternary opacity-20 mb-1" />}
+                message="Select a question"
+              />
+            )}
+          </MiniColumn>
 
-          {/* Answers */}
-          <div className="w-1/4 shrink-0 flex flex-col border-r border-border-subtle bg-surface-panel">
-            <div className="p-2 border-b border-border-subtle flex items-center justify-between">
-              <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">3. Answers</span>
-              {questionIsSelected && <Plus size={8} className="text-text-quaternary" />}
-            </div>
-            <div className="flex-1 p-2 space-y-2 overflow-hidden">
-              {questionIsSelected ? (
-                req1Selected ? (
-                  <DemoAnswerCard answer={ANSWERS_R2[0]} visible={showAR2} />
-                ) : (
-                  <>
-                    <DemoAnswerCard answer={ANSWERS_R1[0]} visible={showA1} />
-                    <DemoAnswerCard answer={ANSWERS_R1[1]} visible={showA2} />
-                  </>
-                )
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center h-full">
-                  <MessageSquare size={12} className="text-text-quaternary opacity-20 mb-1" />
-                  <p className="text-[8px] text-text-quaternary">Select a question</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Summary */}
           <div className="w-1/4 shrink-0 min-w-0 bg-surface-panel">
             {showSummary ? (
               <DemoSummary
@@ -165,19 +148,16 @@ export function AppDemo() {
                 generating={summaryGenerating}
               />
             ) : (
-              <div className="flex flex-col h-full">
-                <div className="p-2 border-b border-border-subtle flex items-center justify-between">
-                  <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">4. Summary</span>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <FileText size={12} className="text-text-quaternary opacity-20 mb-1" />
-                  <p className="text-[8px] text-text-quaternary">Select a requirement</p>
-                </div>
-              </div>
+              <MiniColumn title="Summary" borderRight={false}>
+                <MiniColumnEmpty
+                  icon={<FileText size={12} className="text-text-quaternary opacity-20 mb-1" />}
+                  message="Select a requirement"
+                />
+              </MiniColumn>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </MiniShell>
   );
 }

@@ -265,6 +265,7 @@ Spacing tokens are registered in Tailwind as `--spacing-{N}` and used via standa
 | `--icon-lg` | 20px | Feature icons, card headers |
 | `--icon-xl` | 24px | Loading spinners, empty states |
 | `--icon-2xl` | 32px | Large empty state icons |
+| `--icon-3xl` | 48px | Integration logos, feature icons |
 
 ---
 
@@ -560,3 +561,94 @@ export function Topbar() {
   );
 }
 ```
+
+---
+
+## Mini Demo Apps (MDA)
+
+Mini demo apps are scaled-down interactive previews of the real application, used on the marketing site to demonstrate features. They live in `src/site/components/` and share a reusable component library at `src/site/components/mini-demo/`.
+
+### Shared Component Library
+
+All MDAs must compose from the shared building blocks in `mini-demo/`:
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `MiniShell` | `MiniShell.tsx` | Outer container — rounded, bordered, shadow, fade-in transition |
+| `MiniTopbar` | `MiniTopbar.tsx` | Topbar with PanelLeft, configurable breadcrumb segments, Settings icon |
+| `MiniColumn` | `MiniColumn.tsx` | Column with header title, optional controls, configurable width |
+| `MiniColumnEmpty` | `MiniColumn.tsx` | Empty state for columns (icon + message) |
+| `MiniSidebar` | `MiniSidebar.tsx` | Sidebar with workspace picker, team sections, project tree, footer slot |
+| `MiniSidebarFooterItem` | `MiniSidebarFooterItem.tsx` | Single integration footer item (icon, label, connected dot, value) |
+
+Shared types (`MiniTeam`, `MiniProject`, `BreadcrumbSegment`) are in `mini-demo/types.ts`.
+
+Card components (`DemoRequirementCard`, `DemoQuestionCard`, `DemoAnswerCard`) live in `app-demo/` but are imported by any demo that needs them.
+
+### Rules
+
+1. **No inline components.** Every MDA sub-element must be its own named component in its own file. No render helpers, no anonymous JSX blocks. This applies to cards, footers, sidebars, and all visual elements.
+
+2. **Reuse shared components.** Never duplicate card, column, sidebar, or topbar rendering across demos. Import from `mini-demo/` or `app-demo/`.
+
+3. **Scale radii proportionally.** The real app's radius tokens are too large at mini scale. Use proportionally reduced arbitrary values:
+
+   | Real app token | Real value | MDA scale |
+   |---|---|---|
+   | `rounded-card` | 8px | `rounded-[4px]` |
+   | `rounded-comfortable` | 6px | `rounded-[3px]` |
+   | `rounded-standard` | 4px | `rounded-[2px]` |
+   | `rounded-micro` | 2px | `rounded-[1px]` |
+   | `rounded-full` | pill | `rounded-full` (unchanged) |
+
+4. **Fixed font sizes.** MDA text uses explicit pixel sizes (`text-[6px]` through `text-[9px]`) rather than typography presets, which are designed for full-scale UI.
+
+5. **Animation via `useSequence`.** All MDA animations use the shared `useSequence` hook from `app-demo/useSequence.ts`. Define a `SEQUENCE` array of `{ action, delay }` steps ending with `{ action: 'reset', delay: N }` to loop.
+
+### Positioning in Feature Sections
+
+MDAs placed inside `FeatureSection` must follow this pattern to work correctly across all viewport sizes:
+
+**Container** (`FeatureSection` frame):
+- Fixed height: `h-[680px]` — never changes between breakpoints
+- `overflow-hidden relative` — clips the MDA when it extends beyond the container
+- `bg-surface-frost-05` — visible frame background around the MDA
+
+**MDA positioning** (`MiniShell` inside the frame):
+- Fixed dimensions: e.g. `w-[800px] h-[600px]` — the MDA never resizes
+- Fixed vertical offset: `top-[40px]` — equal frame visible on top and bottom (680 - 600 - 40 = 40)
+- **Mobile** (`< md`): `left-[40px]` — locks the MDA in place, right side clips
+- **Desktop/Tablet** (`md+`): `md:left-auto md:right-0` — flush to the right edge, left side clips when container is narrower than MDA
+
+```tsx
+// CORRECT — fixed size, responsive anchoring
+<MiniShell className="absolute w-[800px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0">
+
+// WRONG — percentage sizing, centering, dynamic calculations
+<MiniShell className="w-[92%] h-[90%]">
+<MiniShell className="absolute top-1/2 -translate-y-1/2">
+<MiniShell style={{ left: 'max(40px, calc(100% - 800px))' }}>
+```
+
+**Key principles:**
+- The MDA has a **fixed pixel size** that is identical at every viewport width
+- Only the **visible portion** changes as the viewport shrinks
+- The MDA **never moves** on mobile — it locks at `left-[40px]` and stays there
+- On desktop it is **flush right** (`md:right-0`) with no frame on the right edge
+- Frame is visible on **top, bottom, and left** (on desktop) or **top, bottom, and left** (on mobile, right clips)
+
+### Hero Section MDA
+
+The hero demo (`AppDemo`) uses a different pattern because it sits inside a Grainient background:
+- `MiniShell` with `w-full h-full max-w-[1180px] min-w-[900px]`
+- Parent container: `items-start justify-start lg:items-center lg:justify-center overflow-hidden`
+- On mobile the left side stays visible, right clips due to `min-w-[900px]`
+
+### Anti-patterns
+
+- **Scaling the MDA** with percentage widths (`w-[92%]`) — use fixed pixel dimensions
+- **Centering the MDA** with transforms (`translate-x/y`) — use fixed `top`/`left`/`right` offsets
+- **Variable container heights** (`h-[360px] lg:h-full`) — use a single fixed height
+- **Adding padding/rounding on the bleeding edge** — the edge where the MDA clips should have no padding
+- **Inline `style={{}}` for positioning** — use Tailwind responsive classes (`md:right-0`)
+- **Custom card/column components per demo** — reuse from `mini-demo/` and `app-demo/`

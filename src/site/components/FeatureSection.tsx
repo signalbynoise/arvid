@@ -15,7 +15,7 @@ export function FeatureSection({ title, description, imagePosition, children }: 
     <PageGrid as="section" className="w-full">
       <div className="col-span-full overflow-hidden rounded-card bg-surface-panel">
         <div
-          className={`flex flex-col lg:flex-row lg:h-[600px] ${isImageRight ? '' : 'lg:flex-row-reverse'}`}
+          className={`flex flex-col lg:flex-row ${isImageRight ? '' : 'lg:flex-row-reverse'}`}
         >
           <div className="flex flex-col justify-center gap-2 px-8 py-10 lg:w-[calc(4/12*100%)] lg:shrink-0 lg:px-10">
             <h2 className="text-[20px] font-[var(--fw-medium)] leading-normal text-text-primary">
@@ -26,21 +26,13 @@ export function FeatureSection({ title, description, imagePosition, children }: 
             </p>
           </div>
 
-          <div
-            className={`flex-1 py-5 lg:py-10 ${
-              isImageRight ? 'px-5 lg:pl-0 lg:pr-0' : 'px-5 lg:pr-0 lg:pl-0'
-            }`}
-          >
+          <div className="flex-1 min-w-0">
             {children ? (
-              <div className={`h-[280px] lg:h-full w-full ${isImageRight ? 'rounded-l-card' : 'rounded-r-card'} overflow-hidden`}>
+              <div className="h-[680px] w-full bg-surface-frost-05 overflow-hidden relative">
                 {children}
               </div>
             ) : (
-              <div
-                className={`h-[280px] lg:h-full w-full bg-surface-frost-10 ${
-                  isImageRight ? 'rounded-l-card' : 'rounded-r-card'
-                }`}
-              />
+              <div className="h-[680px] w-full bg-surface-frost-10" />
             )}
           </div>
         </div>

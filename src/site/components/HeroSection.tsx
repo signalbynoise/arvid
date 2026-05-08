@@ -32,7 +32,7 @@ export function HeroSection() {
         </a>
       </div>
 
-      <div className="col-span-full relative mt-[60px] h-[600px] w-full overflow-hidden rounded-card bg-surface-frost-08">
+      <div className="col-span-full relative mt-[60px] h-[680px] w-full overflow-hidden rounded-card bg-surface-frost-08">
         <div className="absolute inset-0">
           <Grainient
             color1="#616161"
@@ -59,7 +59,7 @@ export function HeroSection() {
             zoom={0.9}
           />
         </div>
-        <div className="absolute inset-0 z-10 flex items-center justify-center p-10">
+        <div className="absolute inset-0 z-10 flex items-start justify-start lg:items-center lg:justify-center p-5 lg:p-10 overflow-hidden">
           <AppDemo />
         </div>
       </div>

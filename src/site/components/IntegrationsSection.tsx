@@ -18,9 +18,9 @@ export function IntegrationsSection() {
       <h2 className="col-span-full text-center text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
         Arvid works with everyone. In and out.
       </h2>
-      <div className="col-span-full lg:col-start-3 lg:col-span-8 flex items-center justify-between">
+      <div className="col-span-full lg:col-start-3 lg:col-span-8 flex flex-wrap items-center justify-center gap-8 md:gap-10 lg:justify-between">
         {INTEGRATIONS.map(integration => (
-          <div key={integration.name} className="h-16 w-16 shrink-0">
+          <div key={integration.name} className="size-icon-3xl shrink-0">
             <img
               src={integration.src}
               alt={integration.name}
