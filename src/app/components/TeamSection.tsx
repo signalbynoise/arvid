@@ -86,7 +86,7 @@ export function TeamSection({
           <div key={team.id}>
             <SidebarItem
               label={team.name}
-              icon={<Network size={16} className="text-text-quaternary shrink-0" />}
+              icon={<Network size={14} className="text-text-quaternary shrink-0" />}
               chevron={teamProjectTree.length > 0 ? { open: isTeamExpanded, onToggle: (e) => onToggleTeamExpand(e, team.id) } : undefined}
               actions={
                 <TeamItemMenu

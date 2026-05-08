@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Plus, Pencil, Settings, Trash2, GitCompare, LoaderPinwheel, ToggleRight, ToggleLeft } from 'lucide-react';
+import { Plus, Pencil, Settings, Trash2, GitCompare, LoaderPinwheel, ToggleRight, ToggleLeft } from 'lucide-react';
+import { Chevron } from './Chevron';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
 import { buildWorkspacePath } from '../domain/paths';
 import { DropdownPanel } from './ui/DropdownPanel';
@@ -64,7 +65,9 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
         <span className="text-caption-lg text-text-primary truncate">
           {activeWorkspace?.name ?? 'No workspace'}
         </span>
-        <ChevronDown size={14} className="text-text-quaternary shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="shrink-0 p-0.5 rounded-standard hover:bg-surface-frost-10 opacity-0 group-hover:opacity-100 transition-all">
+          <Chevron open={isOpen} size={14} />
+        </span>
       </button>
 
       {isOpen && (

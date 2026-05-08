@@ -516,3 +516,47 @@ All expand/collapse indicators across the platform **must** use the canonical `<
 9. **All new components** must use only token classes. No exceptions without documentation per Rule 21.
 10. **No `className` prop on base components.** Consumer components pass typed props only. Base components own all visual styling. See "Base Component Architecture" section above.
 11. **No typography preset overrides.** Never add `uppercase`, `tracking-*`, or `font-*` on top of a typography preset. `.text-label` already includes uppercase + wide tracking.
+12. **No inline components.** Every component that renders JSX must live in its own file with a named export. No function components defined inside other components. No anonymous JSX blocks acting as components. No render helpers (`renderFoo()`) inside component bodies — extract them into standalone components that receive data via props. This applies everywhere: modals, sidebars, topbars, columns, pages, and layouts. A component file should import its children, never define them.
+
+### Why Rule 12 matters
+
+Inline components (functions that return JSX defined inside another component) cause:
+- **Unnecessary re-renders** — React re-creates the function on every parent render, breaking referential equality and defeating memoization.
+- **Hidden dependencies** — Closures over parent state create invisible coupling that is impossible to test or trace.
+- **Untestable code** — Inline components cannot be imported, rendered, or asserted on independently.
+- **Naming blindness** — React DevTools shows them as anonymous, making debugging harder.
+
+**Example of what is forbidden:**
+
+```tsx
+// WRONG — breadcrumbs rendering is inline inside Topbar
+export function Topbar() {
+  const breadcrumbs = useMemo(() => [...], [deps]);
+  return (
+    <div>
+      {breadcrumbs.map((crumb, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && <ChevronRight size={12} />}
+          <span>{crumb}</span>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+```
+
+```tsx
+// CORRECT — Breadcrumbs is its own component in its own file
+// Breadcrumbs.tsx
+export function Breadcrumbs() { ... }
+
+// Topbar.tsx
+import { Breadcrumbs } from './Breadcrumbs';
+export function Topbar() {
+  return (
+    <div>
+      <Breadcrumbs />
+    </div>
+  );
+}
+```

@@ -123,6 +123,9 @@ answersRouter.post('/suggest/:questionId', async (req, res) => {
         answers: q.answers.map(a => ({ text: a.text, author: a.author })),
       })),
       repoContext: context.repoContext,
+      repoFileTree: context.repoFileTree,
+      repoKeyFiles: context.repoKeyFiles,
+      repoRecentCommits: context.repoRecentCommits,
     });
 
     if (!result.answerable || !result.answer_text) {

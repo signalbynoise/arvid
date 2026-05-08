@@ -30,7 +30,7 @@ export function SidebarItem({
       }`}
       style={{ paddingLeft: `${16 + indent}px` }}
     >
-      <div className="flex items-center gap-2 overflow-hidden">
+      <div className="flex items-center gap-1 overflow-hidden">
         {icon}
         <span className="truncate">{label}</span>
         {chevron && (
@@ -38,7 +38,7 @@ export function SidebarItem({
             onClick={chevron.onToggle}
             className="shrink-0 p-0.5 rounded-standard hover:bg-surface-frost-10 opacity-0 group-hover:opacity-100 transition-all"
           >
-            <Chevron open={chevron.open} size={12} />
+            <Chevron open={chevron.open} size={14} />
           </button>
         )}
       </div>

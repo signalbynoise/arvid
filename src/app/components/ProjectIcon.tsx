@@ -8,5 +8,5 @@ interface ProjectIconProps {
 
 export function ProjectIcon({ depth: _depth, isSelected }: ProjectIconProps) {
   const colorClass = isSelected ? 'text-text-primary' : 'text-text-quaternary';
-  return <Folder size={16} className={`${colorClass} shrink-0`} />;
+  return <Folder size={14} className={`${colorClass} shrink-0`} />;
 }

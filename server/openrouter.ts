@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { GenerateSummaryResponseSchema, GenerateSummaryResponse, ImplementationCheckResponseSchema } from '../shared/schemas';
 import type { ImplementationCheckResponse } from '../shared/schemas';
-import type { RepoAnalysis } from '../shared/schemas/repoContext';
+import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_MODEL = 'x-ai/grok-4.1-fast';
@@ -828,6 +828,9 @@ export interface SuggestAnswerInput {
   projectName?: string;
   existingQuestions?: ExistingQuestionContext[];
   repoContext?: RepoAnalysis;
+  repoFileTree?: FileTreeEntry[];
+  repoKeyFiles?: Record<string, string>;
+  repoRecentCommits?: CommitEntry[];
 }
 
 const SuggestAnswerResponseSchema = z.object({
@@ -875,6 +878,48 @@ export async function suggestAnswer(input: SuggestAnswerInput): Promise<SuggestA
     }
   }
 
+  let repoContextBlock = '';
+  if (input.repoContext) {
+    repoContextBlock += `\n${buildCodebaseContextBlock(input.repoContext)}`;
+  }
+
+  if (input.repoFileTree && input.repoFileTree.length > 0) {
+    const filePaths = input.repoFileTree
+      .filter(f => f.type === 'blob')
+      .map(f => f.path);
+    if (filePaths.length > 0) {
+      repoContextBlock += `## Repository File Tree (${filePaths.length} files)\n`;
+      repoContextBlock += filePaths.slice(0, 200).join('\n') + '\n';
+      if (filePaths.length > 200) {
+        repoContextBlock += `... and ${filePaths.length - 200} more files\n`;
+      }
+      repoContextBlock += '\n';
+    }
+  }
+
+  if (input.repoKeyFiles) {
+    const keyFileEntries = Object.entries(input.repoKeyFiles);
+    if (keyFileEntries.length > 0) {
+      repoContextBlock += `## Key File Contents\n`;
+      for (const [path, content] of keyFileEntries.slice(0, 15)) {
+        const truncated = content.length > 3000
+          ? content.substring(0, 3000) + '\n... (truncated)'
+          : content;
+        repoContextBlock += `\n### ${path}\n\`\`\`\n${truncated}\n\`\`\`\n`;
+      }
+      repoContextBlock += '\n';
+    }
+  }
+
+  if (input.repoRecentCommits && input.repoRecentCommits.length > 0) {
+    const commits = input.repoRecentCommits.slice(0, 10);
+    repoContextBlock += `## Recent Commits\n`;
+    for (const c of commits) {
+      repoContextBlock += `- ${c.message} (${c.author}, ${c.date})\n`;
+    }
+    repoContextBlock += '\n';
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -888,14 +933,15 @@ export async function suggestAnswer(input: SuggestAnswerInput): Promise<SuggestA
       messages: [
         {
           role: 'system',
-          content: `You are Arvid, a friendly AI specification assistant. Your job is to determine whether a clarifying question about a software requirement can be answered from general technical knowledge and best practices, and if so, provide a suggested answer.
+          content: `You are Arvid, a friendly AI specification assistant. Your job is to determine whether a clarifying question about a software requirement can be answered from the provided codebase context, general technical knowledge, and best practices — and if so, provide a suggested answer.
 
 ## Step 1: Classify the Question
 
 Determine whether the question is ANSWERABLE BY AI or REQUIRES A HUMAN.
 
 ### Answerable by AI (set "answerable": true)
-Questions where general software engineering knowledge, industry best practices, or widely-known technical patterns provide a reasonable answer:
+Questions where the codebase context, general software engineering knowledge, industry best practices, or widely-known technical patterns provide a reasonable answer:
+- Questions about the current codebase: tech stack, frameworks, file structure, dependencies, architecture patterns, existing implementations — use the provided Repository File Tree, Key File Contents, and Recent Commits to answer these directly.
 - Technical architecture decisions ("Should we use OAuth2 or session-based auth?")
 - Best practice questions ("What fields should the users table have?")
 - Implementation pattern questions ("How should we handle token refresh?")
@@ -903,16 +949,18 @@ Questions where general software engineering knowledge, industry best practices,
 - Security and compliance patterns ("How should we store passwords?")
 - Common integration approaches ("How should the frontend and backend communicate?")
 
+IMPORTANT: If the codebase context contains information that answers the question (e.g. the file tree shows what technologies are used, a config file reveals the architecture, a package.json lists dependencies), the question IS answerable — do NOT mark it as "requires human".
+
 ### Requires human (set "answerable": false)
-Questions that depend on internal knowledge, organizational context, or subjective stakeholder preferences:
+Questions that depend on internal knowledge, organizational context, or subjective stakeholder preferences that cannot be determined from the codebase:
 - Internal workflow questions ("Who is the product owner for this feature?")
 - Business-specific decisions ("What is our budget for this?")
 - Timeline/scheduling questions ("When is the deadline?")
 - Organization-specific questions ("Which team handles deployments?")
 - User preference questions that only the requester can decide ("Do you want a modal or a full page?")
-- Domain-specific data that only the organization has ("What are the current API rate limits?")
+- Domain-specific data not present in the codebase context
 
-When in doubt, lean toward "requires human" — it's better to leave a question for a human than to provide a bad answer.
+When in doubt and codebase context is available, lean toward answerable — the codebase often contains the answer.
 
 ## Step 2: Provide an Answer (only if answerable)
 
@@ -920,8 +968,8 @@ If answerable:
 - Keep it SHORT: 1-3 sentences maximum. Think "quick Slack reply from a senior engineer", not a tutorial.
 - Write in plain language a non-technical product owner would understand. Avoid jargon, acronyms, and implementation details unless the question specifically asks for them.
 - Lead with the recommendation, not the reasoning: "Use X" not "There are several approaches, including X, Y, and Z, each with tradeoffs..."
-- Ground the answer in the requirement context and codebase context if available.
-- Present it as a recommendation, not a decree: "A common approach is..." or "Best practice suggests..."
+- Ground the answer in the codebase context when available — cite specific files, dependencies, or patterns you observed.
+- Present it as a recommendation, not a decree: "A common approach is..." or "Based on the codebase..."
 - Do NOT list multiple options with pros/cons. Pick the best default and state it simply.
 - Do NOT hallucinate specific details about the project that aren't in the provided context.
 
@@ -929,13 +977,13 @@ If not answerable:
 - Set "answer_text" to null.
 
 ## Confidence
-- "high": The best practice is clear and widely agreed upon.
-- "medium": There are valid alternatives, but this recommendation is solid.
+- "high": The answer is directly supported by codebase evidence or is a clear best practice.
+- "medium": There are valid alternatives, but this recommendation is solid given the context.
 - "low": The answer is reasonable but the question has significant nuance.
 
 ## Output Format
 Your output MUST be valid JSON with exactly these keys:
-- "answerable": boolean — can this question be answered from general technical knowledge?
+- "answerable": boolean — can this question be answered from codebase context or general technical knowledge?
 - "answer_text": string or null — the suggested answer, or null if not answerable
 - "confidence": "high" | "medium" | "low"
 - "reasoning": A brief (1 sentence) explanation of why the question is or isn't answerable by AI.
@@ -953,7 +1001,7 @@ ${contextBlock}
 
 ## Question to Answer
 ${input.questionText}
-${qaTreeBlock}${input.repoContext ? `\n${buildCodebaseContextBlock(input.repoContext)}` : ''}`,
+${qaTreeBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}`,
         },
       ],
       temperature: 0.3,

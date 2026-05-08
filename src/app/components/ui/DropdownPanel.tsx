@@ -29,6 +29,7 @@ interface DropdownPanelProps {
   position?: DropdownPanelPosition;
   align?: DropdownPanelAlign;
   anchorRef?: React.RefObject<HTMLElement | null>;
+  panelRef?: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export function DropdownPanel({
   position = 'below',
   align = 'start',
   anchorRef,
+  panelRef,
   children,
 }: DropdownPanelProps) {
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
@@ -60,6 +62,7 @@ export function DropdownPanel({
 
     const panel = (
       <div
+        ref={panelRef}
         className={`fixed z-[100] bg-surface-panel py-4 min-w-(--dropdown-min-w) max-h-(--dropdown-max-h) overflow-y-auto ${VARIANT_CLASSES[variant]}`}
         style={{ top: coords.top, left: coords.left, transform: alignTransform || undefined }}
       >

@@ -20,12 +20,14 @@ interface Props {
 export function TeamItemMenu({ teamId, onAddUser, onRename, onMove, onCreateProject, onSettings, onDeactivate }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const canDeactivate = useStore(s => s.deactivationMap.teams[teamId] ?? false);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-      setIsOpen(false);
-    }
+    const target = e.target as Node;
+    if (menuRef.current?.contains(target)) return;
+    if (panelRef.current?.contains(target)) return;
+    setIsOpen(false);
   }, []);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export function TeamItemMenu({ teamId, onAddUser, onRename, onMove, onCreateProj
       </IconButton>
 
       {isOpen && (
-        <DropdownPanel position="right" anchorRef={menuRef}>
+        <DropdownPanel position="right" anchorRef={menuRef} panelRef={panelRef}>
           <DropdownSection label="ACTIONS">
             <DropdownItem icon={<Plus size={16} />} label="Add user to team" onClick={() => { setIsOpen(false); onAddUser(); }} />
             <DropdownItem icon={<Pencil size={16} />} label="Rename team" onClick={() => { setIsOpen(false); onRename(); }} />

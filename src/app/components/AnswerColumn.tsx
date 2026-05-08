@@ -1,16 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Answer } from '../types';
-import { Plus, MessageSquare, MoreHorizontal, LoaderPinwheel } from 'lucide-react';
-import { Chevron } from './Chevron';
+import { Plus, MessageSquare, LoaderPinwheel } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
+import { AnswerCard } from './AnswerCard';
+import { GroupHeader } from './GroupHeader';
 import { NewAnswerModal } from './NewAnswerModal';
 import { SuggestedAnswerCard } from './SuggestedAnswerCard';
 import { ColumnShell, ColumnBody, ColumnEmptyState } from './ColumnShell';
-import { CardShell } from './CardShell';
-import { Chip } from './Chip';
-import { formatCardDate } from '../lib/formatDate';
-import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer, selectIsAnswerSuggestionSkipped, selectPendingModal } from '../store';
+import { useStore, selectAnswers, selectSelectedQuestionId, selectIsSuggestingAnswer, selectPendingModal } from '../store';
+import { useAutoSuggestAnswer } from '../hooks/useAutoSuggestAnswer';
 
 const GROUP_OPTIONS = [
   { label: 'None', value: 'none' },
@@ -24,48 +23,13 @@ const SORT_OPTIONS = [
   { label: 'Status (Active First)', value: 'status_active' }
 ];
 
-function AnswerCard({ ans, onToggleActive }: { ans: Answer; onToggleActive: (id: string) => void }) {
-  return (
-    <CardShell
-      id={`answer-${ans.id}`}
-      variant={ans.isCurrent ? 'selected' : 'inactive'}
-      connectorLeft
-    >
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          {ans.shortId && (
-            <span className="text-tiny font-mono text-text-quaternary">{ans.shortId}</span>
-          )}
-          <button
-            className="p-1 rounded-standard text-text-quaternary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-          >
-            <MoreHorizontal size={14} />
-          </button>
-        </div>
-        <p className="text-text-primary">{ans.text}</p>
-      </div>
-
-      <Chip border="dashed" onClick={(e) => { e.stopPropagation(); onToggleActive(ans.id); }}>
-        <LoaderPinwheel size={14} className={ans.isCurrent ? 'text-text-primary' : 'text-text-quaternary'} />
-        <span className={ans.isCurrent ? 'text-text-primary' : 'text-text-tertiary'}>
-          {ans.isCurrent ? 'Active Answer' : 'Mark Active'}
-        </span>
-      </Chip>
-
-      <div className="flex items-center justify-between">
-        <p className="text-label text-text-quaternary">{ans.author} - {formatCardDate(ans.date)}</p>
-        <div className="w-2 h-2 rounded-full bg-indicator-high" />
-      </div>
-    </CardShell>
-  );
-}
-
 export function AnswerColumn() {
   const allAnswers = useStore(selectAnswers);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
   const isSuggestingAnswer = useStore(selectIsSuggestingAnswer);
-  const isAnswerSkipped = useStore(selectIsAnswerSuggestionSkipped);
   const questionSelected = selectedQuestionId !== null;
+
+  useAutoSuggestAnswer();
 
   const allForQuestion = useMemo(
     () => allAnswers.filter(a => a.questionId === selectedQuestionId),
@@ -83,16 +47,8 @@ export function AnswerColumn() {
   );
 
   const toggleCurrentAnswer = useStore(s => s.toggleCurrentAnswer);
-
   const useSuggestedAnswer = useStore(s => s.useSuggestedAnswer);
   const hideSuggestedAnswer = useStore(s => s.hideSuggestedAnswer);
-  const suggestAnswer = useStore(s => s.suggestAnswer);
-
-  useEffect(() => {
-    if (selectedQuestionId && allForQuestion.length === 0 && !isSuggestingAnswer && !isAnswerSkipped) {
-      suggestAnswer(selectedQuestionId);
-    }
-  }, [selectedQuestionId, allForQuestion.length, isSuggestingAnswer, isAnswerSkipped, suggestAnswer]);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('date_desc');
@@ -107,10 +63,6 @@ export function AnswerColumn() {
       clearPendingModal();
     }
   }, [pendingModal, clearPendingModal]);
-
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => ({ ...prev, [group]: prev[group] === false ? true : false }));
-  };
 
   const processedAnswers = useMemo(() => {
     let sorted = [...answers];
@@ -129,16 +81,17 @@ export function AnswerColumn() {
       let key = 'Other';
       if (groupBy === 'author') key = ans.author || 'Unknown';
       else if (groupBy === 'status') key = ans.isCurrent ? 'Active Answers' : 'Historical Answers';
-      
+
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(ans);
     });
     return grouped;
   }, [answers, groupBy, sortBy]);
 
-  const renderAnswer = (ans: Answer) => (
-    <AnswerCard key={ans.id} ans={ans} onToggleActive={toggleCurrentAnswer} />
-  );
+  const renderCards = (items: Answer[]) =>
+    items.map(a => (
+      <AnswerCard key={a.id} answer={a} onToggleActive={toggleCurrentAnswer} />
+    ));
 
   if (!questionSelected) {
     return (
@@ -160,7 +113,7 @@ export function AnswerColumn() {
             <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-2" />
           )}
           {answers.length > 0 && (
-            <SortGroupControls 
+            <SortGroupControls
               groupByOptions={GROUP_OPTIONS}
               sortByOptions={SORT_OPTIONS}
               currentGroup={groupBy}
@@ -193,28 +146,21 @@ export function AnswerColumn() {
             />
           )
         ) : (
-          Object.entries(processedAnswers).map(([group, ans]) => {
+          Object.entries(processedAnswers).map(([group, items]) => {
             if (groupBy === 'none') {
-              return <div key="all" className="space-y-3">{ans.map(renderAnswer)}</div>;
+              return <div key="all" className="space-y-3">{renderCards(items)}</div>;
             }
-            
+
             const isExpanded = expandedGroups[group] !== false;
             return (
               <div key={group} className="flex flex-col space-y-2">
-                <button 
-                  onClick={() => toggleGroup(group)}
-                  className="flex items-center text-[11px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors"
-                >
-                  <Chevron open={isExpanded} />
-                  <span className="uppercase tracking-wider">{group}</span>
-                  <span className="ml-2 text-text-quaternary bg-surface-frost-05 px-1.5 py-0.5 rounded-standard">{ans.length}</span>
-                </button>
-                
-                {isExpanded && (
-                  <div className="space-y-3 pt-1">
-                    {ans.map(renderAnswer)}
-                  </div>
-                )}
+                <GroupHeader
+                  label={group}
+                  count={items.length}
+                  isExpanded={isExpanded}
+                  onToggle={() => setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] !== false ? true : false }))}
+                />
+                {isExpanded && <div className="space-y-3 pt-1">{renderCards(items)}</div>}
               </div>
             );
           })

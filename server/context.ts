@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { RepoAnalysis } from '../shared/schemas/repoContext';
+import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
 
 export type SuggestionDisposition = 'pending' | 'accepted' | 'rejected';
 
@@ -34,6 +34,9 @@ export interface RequirementFullContext {
   }[];
   suggestionHistory: PriorSuggestion[];
   repoContext?: RepoAnalysis;
+  repoFileTree?: FileTreeEntry[];
+  repoKeyFiles?: Record<string, string>;
+  repoRecentCommits?: CommitEntry[];
 }
 
 export async function fetchRequirementContext(db: SupabaseClient, requirementId: string): Promise<RequirementFullContext | null> {
@@ -48,6 +51,9 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
   let projectName: string | undefined;
   let siblingRequirements: string[] = [];
   let repoContext: RepoAnalysis | undefined;
+  let repoFileTree: FileTreeEntry[] | undefined;
+  let repoKeyFiles: Record<string, string> | undefined;
+  let repoRecentCommits: CommitEntry[] | undefined;
 
   if (requirement.project_id) {
     const { data: project } = await db
@@ -69,7 +75,7 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
 
     const { data: repoCtx, error: repoErr } = await db
       .from('repo_contexts')
-      .select('analysis')
+      .select('analysis, file_tree, key_files, recent_commits')
       .eq('project_id', requirement.project_id)
       .eq('status', 'ready')
       .single();
@@ -81,11 +87,28 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
       );
     }
 
-    if (repoCtx?.analysis) {
-      repoContext = repoCtx.analysis as RepoAnalysis;
+    if (repoCtx) {
+      if (repoCtx.analysis) {
+        repoContext = repoCtx.analysis as RepoAnalysis;
+      }
+      if (repoCtx.file_tree) {
+        repoFileTree = repoCtx.file_tree as FileTreeEntry[];
+      }
+      if (repoCtx.key_files) {
+        repoKeyFiles = repoCtx.key_files as Record<string, string>;
+      }
+      if (repoCtx.recent_commits) {
+        repoRecentCommits = repoCtx.recent_commits as CommitEntry[];
+      }
       console.info(
         `[INFO] [context:repoContext] Repo context loaded`,
-        JSON.stringify({ projectId: requirement.project_id, languages: (repoContext as RepoAnalysis).languages?.length }),
+        JSON.stringify({
+          projectId: requirement.project_id,
+          languages: repoContext?.languages?.length,
+          fileTreeSize: repoFileTree?.length,
+          keyFilesCount: repoKeyFiles ? Object.keys(repoKeyFiles).length : 0,
+          commitsCount: repoRecentCommits?.length,
+        }),
       );
     }
   }
@@ -156,5 +179,8 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     questions,
     suggestionHistory,
     repoContext,
+    repoFileTree,
+    repoKeyFiles,
+    repoRecentCommits,
   };
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowLeft, LoaderPinwheel, GitBranch } from 'lucide-react';
+import { ArrowLeft, LoaderPinwheel } from 'lucide-react';
 import { FormField } from '../ui/FormField';
 import { TextInput } from '../ui/TextInput';
 import { TextArea } from '../ui/TextArea';
@@ -40,15 +40,6 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
 
   return (
     <div className="flex flex-col gap-5">
-      {hasRepoContext && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-surface-frost-02 border border-border-default rounded-comfortable">
-          <GitBranch size={13} className="shrink-0 text-status-success" />
-          <span className="text-caption text-text-secondary">
-            Enhanced with codebase context from your linked repository
-          </span>
-        </div>
-      )}
-
       <FormField label="Title">
         <TextInput
           value={title}
@@ -63,6 +54,14 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
           onChange={onDescriptionChange}
           textareaRef={descriptionRef}
         />
+        {hasRepoContext && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-surface-frost-02 border border-border-default rounded-comfortable mt-2">
+            <img src="/github.svg" alt="" className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-caption text-text-secondary">
+              Enhanced with codebase context from your linked repository
+            </span>
+          </div>
+        )}
       </FormField>
 
       <div className="flex justify-between items-center pt-6">
