@@ -183,6 +183,17 @@ export default function App() {
       );
     }
 
+    if (requirements.length === 0 && !selectedReqId) {
+      return (
+        <EmptyStateSuggestions
+          onCreateRequirement={() => setIsModalOpen(true)}
+          onCreateSubProject={() => requestModal('createProject')}
+          onInviteMembers={() => requestModal('inviteMember', { scope: 'project' })}
+          onOpenCommandPalette={openCommandPalette}
+        />
+      );
+    }
+
     return (
       <>
         <RequirementColumn 
