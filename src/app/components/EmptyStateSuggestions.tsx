@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, Users, Command, Layers, MousePointerClick } from 'lucide-react';
+import { Plus, Users, Command, LoaderPinwheel, MousePointerClick } from 'lucide-react';
 import { SuggestionAction } from './SuggestionAction';
 import { useStore, selectRequirements, selectGitHubConnection, selectLinearConnection, selectSlackConnection, selectSupabaseConnection } from '../store';
 import { api } from '../api';
@@ -106,7 +106,7 @@ export function EmptyStateSuggestions({
 
   return (
     <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
-      <Layers size={48} className="mb-8 opacity-10" />
+      <LoaderPinwheel size={48} className="mb-8 opacity-10" />
 
       <div className="w-[320px] space-y-1">
         <SuggestionAction

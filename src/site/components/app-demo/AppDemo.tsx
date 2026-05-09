@@ -27,11 +27,12 @@ const BREADCRUMBS = [
 export function AppDemo() {
   const containerRef = useRef<HTMLDivElement>(null);
   const reqColumnRef = useRef<HTMLDivElement>(null);
+  const qColumnRef = useRef<HTMLDivElement>(null);
   const s = useSequence(SEQUENCE, containerRef);
 
   const showShell = s.has('show_shell');
   const showReqs = s.has('show_requirements');
-  const scrolled = s.has('scroll_requirements');
+  const scrolledReqs = s.has('scroll_requirements');
 
   const showImportModal = s.has('show_import_modal') && !s.has('close_modal');
   const extractingSlack = s.has('extracting_slack') && !s.has('show_slack_options');
@@ -42,11 +43,20 @@ export function AppDemo() {
   const reqSelected = s.has('select_requirement');
   const showSummary = s.has('show_summary');
 
-  const suggestQ1 = s.has('suggest_q1');
-  const suggestQ2 = s.has('suggest_q2');
+  const visibleQuestions = [
+    s.has('suggest_q1'),
+    s.has('suggest_q2'),
+    s.has('suggest_q3'),
+    s.has('suggest_q4'),
+    s.has('suggest_q5'),
+    s.has('suggest_q6'),
+  ];
+  const scrolledQ = s.has('scroll_questions');
   const acceptQ1 = s.has('accept_q1');
+  const acceptQ2 = s.has('accept_q2');
   const selectQuestion = s.has('select_question');
-  const showAnswer = s.has('show_answer');
+  const showAnswer1 = s.has('show_answer_1');
+  const showAnswer2 = s.has('show_answer_2');
 
   const animComp = s.has('animate_completeness');
   const showLinear = s.has('show_linear_confirmation');
@@ -55,26 +65,31 @@ export function AppDemo() {
   const summaryGenerating = showSummary && !animComp;
   const completeness = animComp ? SUMMARY_R13.targetCompleteness : 0;
 
-  const q1Visible = suggestQ1;
-  const q1Suggested = suggestQ1 && !acceptQ1;
-  const q2Visible = suggestQ2;
-
   const allReqs = modalClosed ? [...REQUIREMENTS, IMPORTED_REQUIREMENT] : REQUIREMENTS;
   const selectedReqIdx = reqSelected ? allReqs.length - 1 : -1;
 
   useEffect(() => {
-    if (scrolled && reqColumnRef.current) {
+    if (scrolledReqs && reqColumnRef.current) {
       reqColumnRef.current.scrollTo({ top: 200, behavior: 'smooth' });
     }
-    if (!scrolled && reqColumnRef.current) {
+    if (!scrolledReqs && reqColumnRef.current) {
       reqColumnRef.current.scrollTop = 0;
     }
-  }, [scrolled]);
+  }, [scrolledReqs]);
+
+  useEffect(() => {
+    if (scrolledQ && qColumnRef.current) {
+      qColumnRef.current.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+    if (!scrolledQ && qColumnRef.current) {
+      qColumnRef.current.scrollTop = 0;
+    }
+  }, [scrolledQ]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
     <MiniShell visible={showShell} className="min-w-[900px] w-full h-full max-w-[1180px]">
-      <ProjectSidebar expanded={s.has('show_requirements')} />
+      <ProjectSidebar expanded={showReqs} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <MiniTopbar segments={BREADCRUMBS} />
@@ -98,26 +113,44 @@ export function AppDemo() {
             </div>
           </div>
 
-          <MiniColumn
-            title="Questions"
-            controls={reqSelected ? <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" /> : undefined}
-          >
-            {reqSelected ? (
-              <>
-                <QuestionCard q={QUESTIONS_R13[0]} visible={q1Visible} suggested={q1Suggested} selected={selectQuestion && !q1Suggested} />
-                <QuestionCard q={QUESTIONS_R13[1]} visible={q2Visible} suggested />
-              </>
-            ) : (
-              <MiniColumnEmpty icon={null} message="Select a requirement" />
-            )}
-          </MiniColumn>
+          <div className="w-1/4 shrink-0 flex flex-col bg-surface-panel border-r border-border-subtle">
+            <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
+              <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">Questions</span>
+              {reqSelected && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
+            </div>
+            <div ref={qColumnRef} className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
+              {reqSelected ? (
+                QUESTIONS_R13.map((q, i) => {
+                  const isVisible = visibleQuestions[i] ?? (i < 6 && visibleQuestions[5]);
+                  const isSuggested = isVisible && !(
+                    (i === 0 && acceptQ1) || (i === 1 && acceptQ2)
+                  );
+                  const isSelected = i === 0 && selectQuestion && acceptQ1;
+                  return (
+                    <QuestionCard
+                      key={q.id}
+                      q={q}
+                      visible={isVisible}
+                      suggested={isSuggested}
+                      selected={isSelected}
+                    />
+                  );
+                })
+              ) : (
+                <MiniColumnEmpty icon={null} message="Select a requirement" />
+              )}
+            </div>
+          </div>
 
           <MiniColumn
             title="Answers"
             controls={selectQuestion ? <Plus size={8} className="text-text-quaternary" /> : undefined}
           >
             {selectQuestion ? (
-              <AnswerCard answer={ANSWERS_R13[0]} visible={showAnswer} />
+              <>
+                <AnswerCard answer={ANSWERS_R13[0]} visible={showAnswer1} />
+                <AnswerCard answer={ANSWERS_R13[1]} visible={showAnswer2} />
+              </>
             ) : (
               <MiniColumnEmpty
                 icon={<MessageSquare size={12} className="text-text-quaternary opacity-20 mb-1" />}
