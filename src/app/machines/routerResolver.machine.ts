@@ -144,7 +144,7 @@ export function createRouterResolverMachine(actions: ResolverActions) {
         always: [
           {
             guard: ({ context }) => {
-              if (context.workspaces.length === 0) return false;
+              if (context.workspaces.length === 0 || !context.wsShortId) return false;
               const ws = findWorkspace(context.workspaces, context.wsShortId);
               if (!ws) return false;
               return context.projects.length > 0 && context.projects[0]?.workspaceId === ws.id;
@@ -152,11 +152,11 @@ export function createRouterResolverMachine(actions: ResolverActions) {
             target: 'resolvingProject',
           },
           {
-            guard: ({ context }) => context.workspaces.length > 0 && !!findWorkspace(context.workspaces, context.wsShortId),
+            guard: ({ context }) => context.workspaces.length > 0 && !!context.wsShortId && !!findWorkspace(context.workspaces, context.wsShortId),
             target: 'loadingData',
           },
           {
-            guard: ({ context }) => context.workspaces.length > 0 && !findWorkspace(context.workspaces, context.wsShortId),
+            guard: ({ context }) => context.workspaces.length > 0 && !!context.wsShortId && !findWorkspace(context.workspaces, context.wsShortId),
             target: 'redirecting',
             actions: () => {
               log.warn('sync', 'Workspace not found, redirecting to root');
