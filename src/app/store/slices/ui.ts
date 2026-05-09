@@ -28,17 +28,20 @@ export interface PendingModal {
 export interface UISlice {
   commandPaletteOpen: boolean;
   pendingModal: PendingModal | null;
+  hintRequirementCards: boolean;
 
   openCommandPalette: () => void;
   closeCommandPalette: () => void;
   toggleCommandPalette: () => void;
   requestModal: (intent: ModalIntent, data?: unknown) => void;
   clearPendingModal: () => void;
+  flashRequirementHint: () => void;
 }
 
 export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) => ({
   commandPaletteOpen: false,
   pendingModal: null,
+  hintRequirementCards: false,
 
   openCommandPalette: () => {
     set({ commandPaletteOpen: true });
@@ -63,5 +66,11 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
 
   clearPendingModal: () => {
     set({ pendingModal: null });
+  },
+
+  flashRequirementHint: () => {
+    set({ hintRequirementCards: true });
+    setTimeout(() => set({ hintRequirementCards: false }), 1600);
+    log.debug('flashRequirementHint', 'Hint animation triggered');
   },
 });

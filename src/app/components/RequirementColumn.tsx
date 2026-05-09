@@ -8,7 +8,7 @@ import { GroupHeader } from './GroupHeader';
 import { ImplDetailsModal } from './ImplDetailsModal';
 import { ColumnShell, ColumnBody } from './ColumnShell';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useStore, selectRequirements, selectQuestions, selectSelectedReqId } from '../store';
+import { useStore, selectRequirements, selectQuestions, selectSelectedReqId, selectHintRequirementCards } from '../store';
 import { buildProjectPath, buildRequirementPath } from '../domain/paths';
 import { effectiveCompleteness } from '../domain/completeness';
 import { RISK_SCORE, CLARITY_SCORE, scoreFor } from '../domain/sorting';
@@ -44,6 +44,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
   const allQuestions = useStore(selectQuestions);
   const selectedId = useStore(selectSelectedReqId);
   const checkImplementation = useStore(s => s.checkImplementation);
+  const hintCards = useStore(selectHintRequirementCards);
 
   const [groupBy, setGroupBy] = useState('none');
   const [sortBy, setSortBy] = useState('default');
@@ -91,6 +92,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
         completeness={effectiveCompleteness(req, allQuestions)}
         isSelected={req.id === selectedId}
         isDimmed={selectedId !== null && req.id !== selectedId}
+        hint={hintCards}
         onClick={() => handleClick(req)}
         onOpenDetails={onOpenDetails ?? (() => {})}
         onEdit={onEdit ?? (() => {})}

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, Users, Command, Layers } from 'lucide-react';
+import { Plus, Users, Command, Layers, MousePointerClick } from 'lucide-react';
 import { SuggestionAction } from './SuggestionAction';
 import { useStore, selectRequirements, selectGitHubConnection, selectLinearConnection, selectSlackConnection, selectSupabaseConnection } from '../store';
 import { api } from '../api';
@@ -31,6 +31,7 @@ export function EmptyStateSuggestions({
   const linearConnection = useStore(selectLinearConnection);
   const slackConnection = useStore(selectSlackConnection);
   const supabaseConnection = useStore(selectSupabaseConnection);
+  const flashRequirementHint = useStore(s => s.flashRequirementHint);
 
   const hasRequirements = requirements.length > 0;
 
@@ -105,13 +106,7 @@ export function EmptyStateSuggestions({
 
   return (
     <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
-      <Layers size={48} className="mb-6 opacity-10" />
-      <p className="text-[14px] text-text-quaternary mb-1">
-        {hasRequirements
-          ? 'Select a requirement to view its knowledge flow.'
-          : 'No requirements yet. Start building your knowledge base.'}
-      </p>
-      <p className="text-label-upper text-text-empty mt-8 mb-3">Arvid suggests</p>
+      <Layers size={48} className="mb-8 opacity-10" />
 
       <div className="w-[320px] space-y-1">
         <SuggestionAction
@@ -145,6 +140,18 @@ export function EmptyStateSuggestions({
                 onClick={integration.connect}
               />
             ))}
+          </>
+        )}
+
+        {hasRequirements && (
+          <>
+            <div className="border-t border-border-subtle my-2" />
+            <SuggestionAction
+              icon={<MousePointerClick size={16} />}
+              label="Select a requirement"
+              description="View its knowledge flow and questions"
+              onClick={flashRequirementHint}
+            />
           </>
         )}
       </div>

@@ -16,6 +16,7 @@ interface RequirementCardProps {
   completeness: number;
   isSelected: boolean;
   isDimmed: boolean;
+  hint?: boolean;
   onClick: () => void;
   onOpenDetails: (id: string) => void;
   onEdit: (id: string) => void;
@@ -30,6 +31,7 @@ export function RequirementCard({
   completeness,
   isSelected,
   isDimmed,
+  hint = false,
   onClick,
   onOpenDetails,
   onEdit,
@@ -53,6 +55,7 @@ export function RequirementCard({
       dimmed={isDimmed}
       interactive
       connectorRight={isSelected}
+      hint={hint}
       onClick={onClick}
     >
       <CardHeader

@@ -62,11 +62,22 @@ export const IMPORTED_REQUIREMENT: Requirement = {
 
 export const QUESTIONS_R13: Question[] = [
   { id: 'q1', shortId: 'Q01', text: 'What rate limit strategy — token bucket or sliding window?', status: 'Answered', importance: 'Critical', category: 'Architecture', author: 'Arvid', createdAt: 'Today' },
-  { id: 'q2', shortId: 'Q02', text: 'Should rate limits differ per API key tier or be uniform?', status: 'Unanswered', importance: 'Important', category: 'Policy', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q2', shortId: 'Q02', text: 'Should rate limits differ per API key tier or be uniform?', status: 'Answered', importance: 'Important', category: 'Policy', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q3', shortId: 'Q03', text: 'How should the system handle burst traffic above the limit?', status: 'Unanswered', importance: 'Critical', category: 'Architecture', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q4', shortId: 'Q04', text: 'What response code and body for rate-limited requests?', status: 'Unanswered', importance: 'Important', category: 'API Design', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q5', shortId: 'Q05', text: 'Should rate limit headers be included in every response?', status: 'Unanswered', importance: 'Important', category: 'API Design', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q6', shortId: 'Q06', text: 'Where should rate limit state be stored — Redis or in-memory?', status: 'Unanswered', importance: 'Critical', category: 'Infrastructure', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q7', shortId: 'Q07', text: 'Should webhooks and internal APIs be exempt from rate limits?', status: 'Unanswered', importance: 'Important', category: 'Policy', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q8', shortId: 'Q08', text: 'How should rate limits apply to batch endpoints?', status: 'Unanswered', importance: 'Important', category: 'API Design', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q9', shortId: 'Q09', text: 'What monitoring and alerting should be in place for limit breaches?', status: 'Unanswered', importance: 'Important', category: 'Observability', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q10', shortId: 'Q10', text: 'Should clients be able to request temporary limit increases?', status: 'Unanswered', importance: 'Low', category: 'Policy', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q11', shortId: 'Q11', text: 'How does rate limiting interact with authentication middleware?', status: 'Unanswered', importance: 'Important', category: 'Architecture', author: 'Arvid', createdAt: 'Today' },
+  { id: 'q12', shortId: 'Q12', text: 'What is the expected request volume at launch per endpoint?', status: 'Unanswered', importance: 'Critical', category: 'Scale', author: 'Arvid', createdAt: 'Today' },
 ];
 
 export const ANSWERS_R13: Answer[] = [
   { id: 'a1', shortId: 'A01', author: 'David M.', date: 'Today', text: 'Token bucket with configurable burst. Start at 100 req/min for free tier, 1000 for paid.', isCurrent: true },
+  { id: 'a2', shortId: 'A02', author: 'Sarah K.', date: 'Today', text: 'Yes, tier-based. Free, Pro, and Enterprise each get separate limits defined in the plan config.', isCurrent: true },
 ];
 
 export const SUMMARY_R13: Summary = {
@@ -78,77 +89,74 @@ export const SUMMARY_R13: Summary = {
 };
 
 export const SEQUENCE: Step[] = [
-  // ── Settle (~3s / 10%) ─────────────────────────────────────────
-  // Beat 1: Shell appears with 12 requirements
+  // ── Settle (~2.6s) ─────────────────────────────────────────────
   { action: 'show_shell', delay: 0 },
   { action: 'show_requirements', delay: 800 },
-
-  // Beat 2: Sarah scrolls the requirements column
   { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '22%', y: '30%' }] },
   { action: 'scroll_requirements', delay: 1000 },
 
-  // ── Flow — Import (~7s) ────────────────────────────────────────
-  // Beat 3: Sarah moves to "+" button
+  // ── Flow — Import (~6s) ────────────────────────────────────────
   { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '33%', y: '7%' }] },
-
-  // Step 1: Modal opens with big "Import from Slack" button
   { action: 'show_import_modal', delay: 600 },
-
-  // Sarah clicks the import button
   { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '48%', y: '46%' }] },
-
-  // Step 2: Arvid extracts — Sarah steps back, Arvid takes over
   { action: 'extracting_slack', delay: 600, cursors: [{ id: 'sarah', x: '22%', y: '30%' }] },
   { action: 'noop', delay: 1200, cursors: [{ id: 'arvid', x: '48%', y: '42%' }] },
-
-  // Step 3: Suggestions appear, Arvid selects the first one
   { action: 'show_slack_options', delay: 600 },
   { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '46%', y: '40%' }] },
   { action: 'select_slack_item', delay: 600 },
-
-  // Modal closes, new req appears
   { action: 'close_modal', delay: 800 },
 
-  // ── Flow — Knowledge Tree (~8s) ───────────────────────────────
-  // Beat 9: Sarah clicks the new requirement
+  // ── Flow — Knowledge Tree + Questions (~10s) ──────────────────
+  // Sarah selects the imported requirement
   { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '22%', y: '16%' }] },
   { action: 'select_requirement', delay: 600 },
   { action: 'show_summary', delay: 600 },
 
-  // Beat 11: Arvid generates Q01
+  // Arvid generates questions (shown progressively)
   { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '42%', y: '14%' }] },
-  { action: 'suggest_q1', delay: 600 },
+  { action: 'suggest_q1', delay: 400 },
+  { action: 'suggest_q2', delay: 400 },
+  { action: 'suggest_q3', delay: 400 },
+  { action: 'suggest_q4', delay: 400 },
+  { action: 'suggest_q5', delay: 400 },
+  { action: 'suggest_q6', delay: 400 },
 
-  // Beat 12: Arvid generates Q02
-  { action: 'noop', delay: 600, cursors: [{ id: 'arvid', x: '42%', y: '30%' }] },
-  { action: 'suggest_q2', delay: 600 },
+  // David scrolls through the questions
+  { action: 'noop', delay: 800, cursors: [{ id: 'david', x: '44%', y: '30%' }] },
+  { action: 'scroll_questions', delay: 800 },
 
-  // Beat 13: Sarah accepts Q01
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '44%', y: '16%' }] },
+  // David accepts Q01
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '44%', y: '16%' }] },
   { action: 'accept_q1', delay: 600 },
 
-  // Beat 14: David appears, selects Q01
-  { action: 'noop', delay: 800, cursors: [{ id: 'david', x: '46%', y: '18%' }] },
+  // David accepts Q02
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '44%', y: '28%' }] },
+  { action: 'accept_q2', delay: 600 },
+
+  // David selects Q01, moves to Answers
   { action: 'select_question', delay: 600 },
-
-  // Beat 15: David answers
   { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '66%', y: '14%' }] },
-  { action: 'show_answer', delay: 600 },
+  { action: 'show_answer_1', delay: 600 },
 
-  // ── Resolve (~6s / 20%) ───────────────────────────────────────
-  // Beat 16: Arvid at Summary, completeness rises
+  // Sarah answers Q02
+  { action: 'noop', delay: 600, cursors: [{ id: 'sarah', x: '66%', y: '28%' }] },
+  { action: 'show_answer_2', delay: 600 },
+
+  // ── Resolve (~4s) ─────────────────────────────────────────────
   { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '86%', y: '16%' }] },
   { action: 'animate_completeness', delay: 600 },
 
-  // Beat 17: David sends to Linear
-  { action: 'noop', delay: 800, cursors: [{ id: 'david', x: '84%', y: '62%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '84%', y: '62%' }] },
   { action: 'show_linear_confirmation', delay: 600 },
 
-  // Beat 18: David sends to Cursor
-  { action: 'noop', delay: 800, cursors: [{ id: 'david', x: '88%', y: '62%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '88%', y: '62%' }] },
   { action: 'show_cursor_confirmation', delay: 600 },
 
-  // ── Drift (~2.6s / 9%) ────────────────────────────────────────
-  // Beat 19: Hold, fade, loop
-  { action: 'reset', delay: 2600 },
+  // ── Drift — fade cursors, hold, then seamless reset ───────────
+  { action: 'noop', delay: 1000, cursors: [
+    { id: 'sarah', x: '22%', y: '30%', visible: false },
+    { id: 'david', x: '88%', y: '62%', visible: false },
+    { id: 'arvid', x: '86%', y: '16%', visible: false },
+  ]},
+  { action: 'reset', delay: 2000 },
 ];

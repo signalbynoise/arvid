@@ -9,6 +9,7 @@ interface CardShellProps {
   interactive?: boolean;
   connectorLeft?: boolean;
   connectorRight?: boolean;
+  hint?: boolean;
   onClick?: () => void;
   children: React.ReactNode;
 }
@@ -31,6 +32,7 @@ export function CardShell({
   interactive = false,
   connectorLeft = false,
   connectorRight = false,
+  hint = false,
   onClick,
   children,
 }: CardShellProps) {
@@ -38,7 +40,7 @@ export function CardShell({
     <div
       id={id}
       onClick={onClick}
-      className={`${interactive ? 'group cursor-pointer' : ''} ${BASE} ${VARIANT_CLASSES[variant]} ${dimmed ? DIMMED : ''}`}
+      className={`${interactive ? 'group cursor-pointer' : ''} ${BASE} ${VARIANT_CLASSES[variant]} ${dimmed ? DIMMED : ''} ${hint ? 'card-hint' : ''}`}
     >
       {connectorLeft && (
         <div className="absolute top-1/2 -left-4 w-4 h-[1px] bg-border-focus z-10" />

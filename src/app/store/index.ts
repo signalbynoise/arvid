@@ -60,4 +60,5 @@ export {
   selectGitHubConnection,
   selectLinearConnection,
   selectSupabaseConnection,
+  selectHintRequirementCards,
 } from './selectors';

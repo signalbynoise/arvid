@@ -24,6 +24,7 @@ export const selectSummaryDataState = (state: AppState) => state.summaryDataStat
 
 export const selectCommandPaletteOpen = (state: AppState) => state.commandPaletteOpen;
 export const selectPendingModal = (state: AppState) => state.pendingModal;
+export const selectHintRequirementCards = (state: AppState) => state.hintRequirementCards;
 
 export const selectSlackConnection = (state: AppState) => state.slackConnection;
 export const selectSlackChannels = (state: AppState) => state.slackChannels;
