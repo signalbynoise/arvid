@@ -54,13 +54,13 @@ describe('buildProjectPathFromEntities', () => {
     expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T02/P-X3KM');
   });
 
-  it('falls back to T00 when team is not found', () => {
+  it('returns null when team is not found', () => {
     const project = { id: 'p3', name: 'Test3', shortId: 'P-7MVL', teamId: 'unknown' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T00/P-7MVL');
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBeNull();
   });
 
-  it('falls back to project id when shortId is missing', () => {
+  it('returns null when project has no team', () => {
     const project = { id: 'p-legacy', name: 'Legacy' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T00/p-legacy');
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBeNull();
   });
 });

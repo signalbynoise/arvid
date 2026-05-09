@@ -126,7 +126,8 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const handleSelectProject = useCallback((nodeId: string) => {
     const project = projects.find(p => p.id === nodeId);
     if (project && activeWorkspace) {
-      navigate(buildProjectPathFromEntities(activeWorkspace, teams, project));
+      const path = buildProjectPathFromEntities(activeWorkspace, teams, project);
+      if (path) navigate(path);
     }
   }, [projects, activeWorkspace, teams, navigate]);
 

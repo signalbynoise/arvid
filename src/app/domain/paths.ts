@@ -24,12 +24,12 @@ export function buildProjectPathFromEntities(
   workspace: Workspace,
   teams: Team[],
   project: Project,
-): string {
+): string | null {
   const team = teams.find(t => t.id === project.teamId);
-  const teamShortId = team?.shortId ?? 'T00';
+  if (!team) return null;
   return buildProjectPath(
     workspace.slug,
-    teamShortId,
+    team.shortId!,
     project.shortId ?? project.id,
   );
 }

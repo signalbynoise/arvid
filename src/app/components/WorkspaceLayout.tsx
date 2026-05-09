@@ -23,6 +23,7 @@ export function WorkspaceLayout() {
   const questions = useStore(selectQuestions);
   const workspacesDataState = useStore(s => s.workspacesDataState);
   const projectsDataState = useStore(s => s.projectsDataState);
+  const teamsDataState = useStore(s => s.teamsDataState);
   const dataState = useStore(s => s.dataState);
 
   const setActiveWorkspace = useStore(s => s.setActiveWorkspace);
@@ -76,7 +77,8 @@ export function WorkspaceLayout() {
   }, [wsShortId, workspaces, workspacesDataState.status, setActiveWorkspace, loadProjects, loadTeams, navigate]);
 
   useEffect(() => {
-    if (projectsDataState.status !== 'ready' || projects.length === 0 || workspaces.length === 0) return;
+    if (projectsDataState.status !== 'ready' || teamsDataState.status !== 'ready') return;
+    if (projects.length === 0 || workspaces.length === 0) return;
 
     const workspace = workspaces.find(w => w.slug === wsShortId || w.shortId === wsShortId);
     if (!workspace) return;
@@ -98,11 +100,15 @@ export function WorkspaceLayout() {
     const firstProject = projects.find(p => !p.parentId);
     if (firstProject) {
       const path = buildProjectPathFromEntities(workspace, teams, firstProject);
+      if (!path) {
+        log.warn('sync', 'Cannot build project path — team not found', { projectId: firstProject.id, teamId: firstProject.teamId });
+        return;
+      }
       log.debug('sync', 'Auto-selecting first project', { path });
       syncedProjectRef.current = firstProject.shortId ?? null;
       navigate(path, { replace: true });
     }
-  }, [projectShortId, projectsDataState.status, projects, workspaces, teams, wsShortId, setSelectedProjectId, navigate]);
+  }, [projectShortId, projectsDataState.status, teamsDataState.status, projects, workspaces, teams, wsShortId, setSelectedProjectId, navigate]);
 
   useEffect(() => {
     if (!reqShortId) {

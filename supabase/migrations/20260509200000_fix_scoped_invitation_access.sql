@@ -72,6 +72,11 @@ CREATE POLICY "Members can view teams"
   USING (
     workspace_id IN (SELECT private.user_full_workspace_ids())
     OR id IN (SELECT private.user_team_ids())
+    OR id IN (
+      SELECT p.team_id FROM public.projects p
+      WHERE p.id IN (SELECT private.user_project_ids())
+      AND p.team_id IS NOT NULL
+    )
   );
 
 -- ============================================================
