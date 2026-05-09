@@ -34,6 +34,34 @@ AS $$
 $$;
 
 -- ============================================================
+-- 2b. Fix user_project_ids: return text to match projects.id type
+-- ============================================================
+
+DROP FUNCTION IF EXISTS private.user_project_ids() CASCADE;
+
+CREATE FUNCTION private.user_project_ids()
+RETURNS SETOF text
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = ''
+AS $$
+  SELECT project_id FROM public.project_memberships WHERE user_id = auth.uid();
+$$;
+
+-- Recreate project_memberships SELECT policy (dropped by CASCADE)
+DROP POLICY IF EXISTS "Members can view project members" ON public.project_memberships;
+CREATE POLICY "Members can view project members"
+  ON public.project_memberships FOR SELECT
+  USING (
+    project_id IN (SELECT private.user_project_ids())
+    OR project_id IN (
+      SELECT p.id FROM public.projects p
+      WHERE p.workspace_id IN (SELECT private.user_full_workspace_ids())
+    )
+  );
+
+-- ============================================================
 -- 3. Update RLS on teams: full workspace members see all teams,
 --    guests only see teams they have explicit membership in
 -- ============================================================
@@ -57,7 +85,7 @@ CREATE POLICY "Authorized users can view projects"
   USING (
     workspace_id IN (SELECT private.user_full_workspace_ids())
     OR team_id IN (SELECT private.user_team_ids())
-    OR id::uuid IN (SELECT private.user_project_ids())
+    OR id IN (SELECT private.user_project_ids())
     OR user_id = auth.uid()
   );
 
@@ -67,13 +95,13 @@ CREATE POLICY "Authorized users can manage projects"
   USING (
     workspace_id IN (SELECT private.user_full_workspace_ids())
     OR team_id IN (SELECT private.user_team_ids())
-    OR id::uuid IN (SELECT private.user_project_ids())
+    OR id IN (SELECT private.user_project_ids())
     OR user_id = auth.uid()
   )
   WITH CHECK (
     workspace_id IN (SELECT private.user_full_workspace_ids())
     OR team_id IN (SELECT private.user_team_ids())
-    OR id::uuid IN (SELECT private.user_project_ids())
+    OR id IN (SELECT private.user_project_ids())
     OR user_id = auth.uid()
   );
 
@@ -87,7 +115,7 @@ CREATE POLICY "Authorized users can manage requirements" ON public.requirements 
     SELECT 1 FROM projects p WHERE p.id = requirements.project_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ))
@@ -95,7 +123,7 @@ CREATE POLICY "Authorized users can manage requirements" ON public.requirements 
     SELECT 1 FROM projects p WHERE p.id = requirements.project_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ));
@@ -111,7 +139,7 @@ CREATE POLICY "Authorized users can manage questions" ON public.questions FOR AL
     WHERE r.id = questions.requirement_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ))
@@ -120,7 +148,7 @@ CREATE POLICY "Authorized users can manage questions" ON public.questions FOR AL
     WHERE r.id = questions.requirement_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ));
@@ -136,7 +164,7 @@ CREATE POLICY "Authorized users can manage answers" ON public.answers FOR ALL
     WHERE q.id = answers.question_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ))
@@ -145,7 +173,7 @@ CREATE POLICY "Authorized users can manage answers" ON public.answers FOR ALL
     WHERE q.id = answers.question_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ));
@@ -161,7 +189,7 @@ CREATE POLICY "Authorized users can manage summaries" ON public.summaries FOR AL
     WHERE r.id = summaries.requirement_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ))
@@ -170,7 +198,7 @@ CREATE POLICY "Authorized users can manage summaries" ON public.summaries FOR AL
     WHERE r.id = summaries.requirement_id AND (
       p.workspace_id IN (SELECT private.user_full_workspace_ids())
       OR p.team_id IN (SELECT private.user_team_ids())
-      OR p.id::uuid IN (SELECT private.user_project_ids())
+      OR p.id IN (SELECT private.user_project_ids())
       OR p.user_id = auth.uid()
     )
   ));
@@ -188,7 +216,7 @@ CREATE POLICY "Authorized users can view card_assignees" ON public.card_assignee
         WHERE r.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -197,7 +225,7 @@ CREATE POLICY "Authorized users can view card_assignees" ON public.card_assignee
         WHERE q.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -206,7 +234,7 @@ CREATE POLICY "Authorized users can view card_assignees" ON public.card_assignee
         WHERE a.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -223,7 +251,7 @@ CREATE POLICY "Authorized users can manage card_assignees" ON public.card_assign
         WHERE r.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -232,7 +260,7 @@ CREATE POLICY "Authorized users can manage card_assignees" ON public.card_assign
         WHERE q.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -241,7 +269,7 @@ CREATE POLICY "Authorized users can manage card_assignees" ON public.card_assign
         WHERE a.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -258,7 +286,7 @@ CREATE POLICY "Authorized users can delete card_assignees" ON public.card_assign
         WHERE r.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -267,7 +295,7 @@ CREATE POLICY "Authorized users can delete card_assignees" ON public.card_assign
         WHERE q.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -276,7 +304,7 @@ CREATE POLICY "Authorized users can delete card_assignees" ON public.card_assign
         WHERE a.id = card_assignees.entity_id AND (
           p.workspace_id IN (SELECT private.user_full_workspace_ids())
           OR p.team_id IN (SELECT private.user_team_ids())
-          OR p.id::uuid IN (SELECT private.user_project_ids())
+          OR p.id IN (SELECT private.user_project_ids())
           OR p.user_id = auth.uid()
         )
       )
@@ -311,7 +339,7 @@ BEGIN
               p.user_id = auth.uid()
               OR p.workspace_id IN (SELECT private.user_full_workspace_ids())
               OR p.team_id IN (SELECT private.user_team_ids())
-              OR p.id::uuid IN (SELECT private.user_project_ids())
+              OR p.id IN (SELECT private.user_project_ids())
             )
         ))';
   END IF;
