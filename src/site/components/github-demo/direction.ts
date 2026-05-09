@@ -56,4 +56,8 @@ export const githubDirection: Direction = {
   ],
 
   contentPool,
+
+  initialState: {
+    browsed: true,
+  },
 };

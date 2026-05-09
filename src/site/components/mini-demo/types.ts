@@ -92,3 +92,34 @@ export interface EngineOutput {
   currentTransition: Transition | null;
   activeActor: string | null;
 }
+
+export interface DemoColumn {
+  key: string;
+  title: string;
+  width?: string;
+  borderRight?: boolean;
+}
+
+export interface DemoLayoutConfig {
+  boundaryId: string;
+  workspace: string;
+  breadcrumbs: Array<{ label: string; icon?: React.ComponentType<{ size?: number; className?: string }> }>;
+  sidebar: {
+    teams: Array<{ id: string; name: string; projects: Array<{ id: string; name: string; isActive?: boolean; children: { id: string; name: string }[] }> }>;
+    expandedProjectId?: string;
+    footer?: 'github';
+  };
+  columns: DemoColumn[];
+  shell: {
+    className: string;
+    shadow?: boolean;
+    roundedRight?: boolean;
+  };
+  modal?: {
+    title: string;
+    extractingMessage: string;
+    importOptions?: Array<{ icon: string; label: string; primary?: boolean }>;
+  };
+  showAnswers?: boolean;
+  showSummary?: boolean;
+}

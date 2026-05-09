@@ -25,23 +25,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const slackChannels = useStore(s => s.slackChannels);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
-  const integrationFocus = useStore(s => s.integrationFocus);
-  const clearIntegrationFocus = useStore(s => s.clearIntegrationFocus);
 
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
   const [unlocked, setUnlocked] = useState<Set<IntegrationKey>>(new Set());
-
-  const footerRef = useRef<Record<string, HTMLDivElement | null>>({});
-
-  useEffect(() => {
-    if (integrationFocus) {
-      setUnlocked(prev => new Set(prev).add(integrationFocus));
-      clearIntegrationFocus();
-      requestAnimationFrame(() => {
-        footerRef.current[integrationFocus]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    }
-  }, [integrationFocus, clearIntegrationFocus]);
 
   const prevProjectRef = useRef({ repo: project.githubRepo, linear: project.linearProjectName, slack: project.slackNotificationChannelId, supabase: project.supabaseProjectRef });
   useEffect(() => {
@@ -107,7 +93,6 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
     <>
       <div className="border-t border-border-subtle shrink-0 py-4 space-y-4">
         {showGithub && (
-          <div ref={el => { footerRef.current['repository'] = el; }}>
           <SidebarFooterItem
             icon={
               <>
@@ -128,13 +113,11 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
             )}
           </SidebarFooterItem>
-          </div>
         )}
 
         {showLinear && (
           <>
             {showGithub && <div className="border-t border-border-subtle" />}
-            <div ref={el => { footerRef.current['project'] = el; }}>
             <SidebarFooterItem
               icon={<img src="/linear.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
               label="Project"
@@ -148,14 +131,12 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                 <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
               )}
             </SidebarFooterItem>
-            </div>
           </>
         )}
 
         {showSlack && (
           <>
             {(showGithub || showLinear) && <div className="border-t border-border-subtle" />}
-            <div ref={el => { footerRef.current['alerts'] = el; }}>
             <SidebarFooterItem
               icon={<img src="/slack.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
               label="Alerts"
@@ -169,14 +150,12 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                 <SlackNotifySelector projectId={project.id} />
               )}
             </SidebarFooterItem>
-            </div>
           </>
         )}
 
         {showSupabase && (
           <>
             {(showGithub || showLinear || showSlack) && <div className="border-t border-border-subtle" />}
-            <div ref={el => { footerRef.current['database'] = el; }}>
             <SidebarFooterItem
               icon={
                 <>
@@ -197,7 +176,6 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                 <SupabaseProjectSelector projectId={project.id} onLinked={onProjectsReload} />
               )}
             </SidebarFooterItem>
-            </div>
           </>
         )}
       </div>

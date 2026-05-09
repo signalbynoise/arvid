@@ -13,10 +13,14 @@ import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { LoaderPinwheel, AlertTriangle, RotateCw, Folder } from 'lucide-react';
 import { Requirement, Question, Answer, EntityType } from './types';
-import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectAnswers, selectSelectedProjectId, selectPendingModal, selectCardAssignees } from './store';
+import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectAnswers, selectSelectedProjectId, selectPendingModal, selectCardAssignees, selectActiveWorkspaceId } from './store';
 import { COLUMN_CLASSES } from './components/ColumnShell';
 import { SlackChannelPicker } from './components/SlackChannelPicker';
 import { EmptyStateSuggestions } from './components/EmptyStateSuggestions';
+import { LinkRepoModal } from './components/LinkRepoModal';
+import { LinkLinearModal } from './components/LinkLinearModal';
+import { LinkSlackChannelModal } from './components/LinkSlackChannelModal';
+import { LinkDatabaseModal } from './components/LinkDatabaseModal';
 import { supabase } from './lib/supabase';
 
 export default function App() {
@@ -43,6 +47,8 @@ export default function App() {
   const clearPendingModal = useStore(s => s.clearPendingModal);
   const openCommandPalette = useStore(s => s.openCommandPalette);
   const requestModal = useStore(s => s.requestModal);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const loadProjects = useStore(s => s.loadProjects);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -106,6 +112,10 @@ export default function App() {
   const [detailsModalType, setDetailsModalType] = useState<'requirement' | 'question' | 'answer' | null>(null);
   const [detailsModalData, setDetailsModalData] = useState<Requirement | Question | Answer | null>(null);
   const [isSlackPickerOpen, setIsSlackPickerOpen] = useState(false);
+  const [linkRepoOpen, setLinkRepoOpen] = useState(false);
+  const [linkLinearOpen, setLinkLinearOpen] = useState(false);
+  const [linkSlackOpen, setLinkSlackOpen] = useState(false);
+  const [linkDatabaseOpen, setLinkDatabaseOpen] = useState(false);
   const [addUserTarget, setAddUserTarget] = useState<{ entityType: EntityType; entityId: string } | null>(null);
 
   useEffect(() => {
@@ -117,14 +127,18 @@ export default function App() {
   }, [selectedProjectId, loadEntities, fetchCardAssignees, cancelLoad]);
 
   useEffect(() => {
-    if (pendingModal?.type === 'createRequirement') {
-      setIsModalOpen(true);
-      clearPendingModal();
+    if (!pendingModal) return;
+
+    switch (pendingModal.type) {
+      case 'createRequirement': setIsModalOpen(true); break;
+      case 'slackChannelPicker': setIsSlackPickerOpen(true); break;
+      case 'linkRepository': setLinkRepoOpen(true); break;
+      case 'linkLinearProject': setLinkLinearOpen(true); break;
+      case 'linkSlackChannel': setLinkSlackOpen(true); break;
+      case 'linkDatabase': setLinkDatabaseOpen(true); break;
+      default: return;
     }
-    if (pendingModal?.type === 'slackChannelPicker') {
-      setIsSlackPickerOpen(true);
-      clearPendingModal();
-    }
+    clearPendingModal();
   }, [pendingModal, clearPendingModal]);
 
 
@@ -291,6 +305,33 @@ export default function App() {
         isOpen={isSlackPickerOpen}
         onClose={() => setIsSlackPickerOpen(false)}
       />
+      {selectedProjectId && (
+        <>
+          <LinkRepoModal
+            isOpen={linkRepoOpen}
+            onClose={() => setLinkRepoOpen(false)}
+            projectId={selectedProjectId}
+            onLinked={() => loadProjects(activeWorkspaceId ?? undefined)}
+          />
+          <LinkLinearModal
+            isOpen={linkLinearOpen}
+            onClose={() => setLinkLinearOpen(false)}
+            projectId={selectedProjectId}
+            onLinked={() => loadProjects(activeWorkspaceId ?? undefined)}
+          />
+          <LinkSlackChannelModal
+            isOpen={linkSlackOpen}
+            onClose={() => setLinkSlackOpen(false)}
+            projectId={selectedProjectId}
+          />
+          <LinkDatabaseModal
+            isOpen={linkDatabaseOpen}
+            onClose={() => setLinkDatabaseOpen(false)}
+            projectId={selectedProjectId}
+            onLinked={() => loadProjects(activeWorkspaceId ?? undefined)}
+          />
+        </>
+      )}
       <CommandPalette />
       <Toaster
         theme="dark"

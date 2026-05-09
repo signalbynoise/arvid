@@ -28,7 +28,7 @@ export function FeatureSection({ title, description, imagePosition, children }: 
 
           <div className="flex-1 min-w-0">
             {children ? (
-              <div data-cursor-boundary="feature" className="h-[680px] w-full bg-surface-frost-05 overflow-hidden relative">
+              <div className="h-[680px] w-full bg-surface-frost-05 overflow-hidden relative">
                 {children}
               </div>
             ) : (

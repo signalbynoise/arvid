@@ -4,6 +4,7 @@ import { HeroSection } from '../components/HeroSection';
 import { IntegrationsSection } from '../components/IntegrationsSection';
 import { FeatureSection } from '../components/FeatureSection';
 import { GitHubDemo } from '../components/github-demo';
+import { ConnectorDemo } from '../components/connector-demo';
 
 import { RequirementGridSection } from '../components/RequirementGridSection';
 import { ProductFeaturesSection } from '../components/ProductFeaturesSection';
@@ -50,6 +51,7 @@ export function LandingPage() {
             imagePosition={feature.imagePosition}
           >
             {index === 0 && <GitHubDemo />}
+            {index === 1 && <ConnectorDemo />}
           </FeatureSection>
         ))}
       </div>

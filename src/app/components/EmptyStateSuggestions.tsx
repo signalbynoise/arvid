@@ -13,7 +13,6 @@ import {
   selectSlackConnection,
   selectSupabaseConnection,
 } from '../store';
-import type { IntegrationFocus } from '../store/slices/ui';
 import { api } from '../api';
 import { logger } from '../logger';
 
@@ -48,7 +47,7 @@ export function EmptyStateSuggestions({
   const slackConnection = useStore(selectSlackConnection);
   const supabaseConnection = useStore(selectSupabaseConnection);
   const flashRequirementHint = useStore(s => s.flashRequirementHint);
-  const focusIntegration = useStore(s => s.focusIntegration);
+  const requestModal = useStore(s => s.requestModal);
 
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId),
@@ -103,7 +102,7 @@ export function EmptyStateSuggestions({
         icon: <img src="/github.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a repository',
         description: 'Connect a GitHub repo to this project',
-        action: () => focusIntegration('repository'),
+        action: () => requestModal('linkRepository'),
       });
     } else if (!ghConnected) {
       items.push({
@@ -125,7 +124,7 @@ export function EmptyStateSuggestions({
         icon: <img src="/linear.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a Linear project',
         description: 'Sync issues and track implementation',
-        action: () => focusIntegration('project'),
+        action: () => requestModal('linkLinearProject'),
       });
     } else if (!linearConnected) {
       items.push({
@@ -147,7 +146,7 @@ export function EmptyStateSuggestions({
         icon: <img src="/slack.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Set an alert channel',
         description: 'Get notified in Slack about changes',
-        action: () => focusIntegration('alerts'),
+        action: () => requestModal('linkSlackChannel'),
       });
     } else if (!slackConnected) {
       items.push({
@@ -169,7 +168,7 @@ export function EmptyStateSuggestions({
         icon: <img src="/supabase.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a database',
         description: 'Import schema as project context',
-        action: () => focusIntegration('database'),
+        action: () => requestModal('linkDatabase'),
       });
     } else if (!supabaseConnected) {
       items.push({
@@ -192,7 +191,7 @@ export function EmptyStateSuggestions({
     slackConnection.status,
     supabaseConnection.status,
     selectedProject,
-    focusIntegration,
+    requestModal,
   ]);
 
   const hasIntegrationSuggestions = integrationSuggestions.length > 0;
