@@ -31,5 +31,6 @@ export { MiniSidebarFooter } from './MiniSidebarFooter';
 export { MiniCursor } from './MiniCursor';
 export { MiniModal } from './MiniModal';
 export { MiniConfirmation } from './MiniConfirmation';
+export { DemoShellView } from './DemoShell';
 
 export type { MiniTeam, MiniProject, MiniSidebarFooterItemData, BreadcrumbSegment, Step, CursorPosition, DemoState, Transition, Actor, Rule, ContentPool, Direction, EngineOutput } from './types';

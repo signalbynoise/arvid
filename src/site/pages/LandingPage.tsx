@@ -5,6 +5,7 @@ import { IntegrationsSection } from '../components/IntegrationsSection';
 import { FeatureSection } from '../components/FeatureSection';
 import { GitHubDemo } from '../components/github-demo';
 import { ConnectorDemo } from '../components/connector-demo';
+import { AgentsDemo } from '../components/agents-demo';
 
 import { RequirementGridSection } from '../components/RequirementGridSection';
 import { ProductFeaturesSection } from '../components/ProductFeaturesSection';
@@ -52,6 +53,7 @@ export function LandingPage() {
           >
             {index === 0 && <GitHubDemo />}
             {index === 1 && <ConnectorDemo />}
+            {index === 2 && <AgentsDemo />}
           </FeatureSection>
         ))}
       </div>

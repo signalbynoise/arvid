@@ -80,13 +80,12 @@ export function useSidebarModals(
       case 'createProject': {
         const currentProjectId = useStore.getState().selectedProjectId;
         const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) : undefined;
-        const isRootProject = currentProject && !currentProject.parentId;
         const projectTeamId = currentProject?.teamId;
         const team = projectTeamId ? teams.find(t => t.id === projectTeamId) : teams[0];
         if (team) {
           setCreateProjectContext({
-            parentId: isRootProject ? currentProject.id : undefined,
-            parentName: isRootProject ? currentProject.name : undefined,
+            parentId: currentProject?.id,
+            parentName: currentProject?.name,
             teamId: team.id,
             teamName: team.name,
           });
