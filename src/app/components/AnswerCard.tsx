@@ -1,9 +1,7 @@
 import React from 'react';
 import { LoaderPinwheel } from 'lucide-react';
-import { CardShell } from './CardShell';
-import { CardHeader } from './ui/CardHeader';
-import { CardBody } from './ui/CardBody';
-import { CardFooter } from './ui/CardFooter';
+import { ICON_SIZE } from '../../constants/icons';
+import { Card } from './ui/Card';
 import { Chip } from './Chip';
 import { CardItemMenu } from './CardItemMenu';
 import { formatCardDate } from '../lib/formatDate';
@@ -36,12 +34,12 @@ export function AnswerCard({
     : ans.author;
 
   return (
-    <CardShell
+    <Card
       id={`answer-${ans.id}`}
       variant={ans.isCurrent ? 'selected' : 'inactive'}
       connectorLeft
     >
-      <CardHeader
+      <Card.Header
         shortId={ans.shortId}
         actions={
           <CardItemMenu
@@ -53,23 +51,23 @@ export function AnswerCard({
         }
       />
 
-      <CardBody>
+      <Card.Body>
         <p>{ans.text}</p>
-      </CardBody>
+      </Card.Body>
 
       <Chip border="dashed" onClick={(e) => { e.stopPropagation(); onToggleActive(ans.id); }}>
-        <LoaderPinwheel size={14} className={ans.isCurrent ? 'text-text-primary' : 'text-text-quaternary'} />
+        <LoaderPinwheel size={ICON_SIZE.sm} className={ans.isCurrent ? 'text-text-primary' : 'text-text-quaternary'} />
         <span className={ans.isCurrent ? 'text-text-primary' : 'text-text-tertiary'}>
           {ans.isCurrent ? 'Active Answer' : 'Mark Active'}
         </span>
       </Chip>
 
-      <CardFooter
+      <Card.Footer
         meta={`${ans.author} - ${formatCardDate(ans.date)}`}
         authorName={authorName}
         assigneeCount={assignees.length}
         indicators={<div className="w-2 h-2 rounded-full bg-indicator-high" />}
       />
-    </CardShell>
+    </Card>
   );
 }

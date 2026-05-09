@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Hash, Lock, MessageSquare, Loader2, Check } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -15,9 +16,9 @@ interface SlackChannelSelectorProps {
 }
 
 const channelIcon = (ch: { isPrivate: boolean; isIm: boolean }) => {
-  if (ch.isIm) return <MessageSquare size={16} />;
-  if (ch.isPrivate) return <Lock size={16} />;
-  return <Hash size={16} />;
+  if (ch.isIm) return <MessageSquare size={ICON_SIZE.md} />;
+  if (ch.isPrivate) return <Lock size={ICON_SIZE.md} />;
+  return <Hash size={ICON_SIZE.md} />;
 };
 
 export function SlackChannelSelector({ projectId, onLinked }: SlackChannelSelectorProps) {
@@ -82,7 +83,7 @@ export function SlackChannelSelector({ projectId, onLinked }: SlackChannelSelect
       <DropdownPanel isOpen={isOpen} variant="attached" position="above">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : slackChannels.length === 0 ? (
           <div className="px-3 py-4 text-center text-text-quaternary">
@@ -97,7 +98,7 @@ export function SlackChannelSelector({ projectId, onLinked }: SlackChannelSelect
                     key={ch.id}
                     icon={channelIcon(ch)}
                     label={ch.name}
-                    right={selectedIds.has(ch.id) ? <Check size={14} className="text-status-success" /> : undefined}
+                    right={selectedIds.has(ch.id) ? <Check size={ICON_SIZE.sm} className="text-status-success" /> : undefined}
                     onClick={() => toggleChannel(ch.id)}
                   />
                 ))}

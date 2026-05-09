@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Check, Search } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
 import type { CardAssignee } from '../types';
@@ -50,7 +51,7 @@ export function AddUserPopover({
     <BaseModal isOpen={isOpen} onClose={onClose} title="Assign users" size="sm">
       <div className="space-y-4">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary" />
+          <Search size={ICON_SIZE.sm} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary" />
           <input
             type="text"
             placeholder="Search members..."
@@ -74,7 +75,7 @@ export function AddUserPopover({
                 className="w-full flex items-center justify-between px-3 py-2 rounded-standard text-caption-lg text-text-primary hover:bg-surface-frost-05 transition-all"
               >
                 <span className="truncate">{member.email || member.userId}</span>
-                {isAssigned && <Check size={14} className="text-status-success shrink-0" />}
+                {isAssigned && <Check size={ICON_SIZE.sm} className="text-status-success shrink-0" />}
               </button>
             );
           })}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, Trash2, Pencil, Users, Layers, Settings as SettingsIcon, Upload, LoaderPinwheel, Loader2, X } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectTeams, selectMembers, selectInvitations } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { getRoleLabel, canManageTeams, canManageMembers, canChangeRoles, canDeleteWorkspace } from '../domain/workspaces';
@@ -14,9 +15,9 @@ const settingsLog = logger.create('WorkspaceSettings');
 type SettingsTab = 'general' | 'teams' | 'members';
 
 const TAB_CONFIG: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <SettingsIcon size={14} /> },
-  { id: 'teams', label: 'Teams', icon: <Layers size={14} /> },
-  { id: 'members', label: 'Members', icon: <Users size={14} /> },
+  { id: 'general', label: 'General', icon: <SettingsIcon size={ICON_SIZE.sm} /> },
+  { id: 'teams', label: 'Teams', icon: <Layers size={ICON_SIZE.sm} /> },
+  { id: 'members', label: 'Members', icon: <Users size={ICON_SIZE.sm} /> },
 ];
 
 interface Props {
@@ -170,7 +171,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
             {workspace.logoUrl ? (
               <img src={workspace.logoUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <LoaderPinwheel size={24} className="text-text-quaternary" />
+              <LoaderPinwheel size={ICON_SIZE.xl} className="text-text-quaternary" />
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -187,7 +188,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                 disabled={logoUploading}
                 className="btn-ghost flex items-center gap-1.5"
               >
-                {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {logoUploading ? <Loader2 size={ICON_SIZE.sm} className="animate-spin" /> : <Upload size={ICON_SIZE.sm} />}
                 <span>{logoUploading ? 'Uploading...' : 'Upload'}</span>
               </button>
             )}
@@ -197,7 +198,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                 className="p-1.5 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
                 title="Remove logo"
               >
-                <X size={14} />
+                <X size={ICON_SIZE.sm} />
               </button>
             )}
           </div>
@@ -236,7 +237,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
             <span className="text-[14px] text-text-primary">{workspace.name}</span>
             {canManageTeams(userRole) && (
               <button onClick={() => setEditingName(true)} className="text-text-quaternary hover:text-text-secondary transition-colors">
-                <Pencil size={14} />
+                <Pencil size={ICON_SIZE.sm} />
               </button>
             )}
           </div>
@@ -317,7 +318,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
         </span>
         {canManageTeams(userRole) && (
           <button onClick={onCreateTeam} className="flex items-center gap-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors">
-            <Plus size={14} />
+            <Plus size={ICON_SIZE.sm} />
             <span>Add team</span>
           </button>
         )}
@@ -357,14 +358,14 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                   className="p-1 text-text-quaternary hover:text-text-secondary transition-colors rounded-standard"
                   title="Rename team"
                 >
-                  <Pencil size={12} />
+                  <Pencil size={ICON_SIZE.xs} />
                 </button>
                 <button
                   onClick={() => deleteTeam(team.id)}
                   className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
                   title="Delete team"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={ICON_SIZE.xs} />
                 </button>
               </div>
             )}
@@ -386,7 +387,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
         </span>
         {canManageMembers(userRole) && (
           <button onClick={onInviteMember} className="flex items-center gap-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors">
-            <Plus size={14} />
+            <Plus size={ICON_SIZE.sm} />
             <span>Invite</span>
           </button>
         )}
@@ -432,7 +433,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                   className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
                   title="Remove member"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={ICON_SIZE.xs} />
                 </button>
               )}
             </div>

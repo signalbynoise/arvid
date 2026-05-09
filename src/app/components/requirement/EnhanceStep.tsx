@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ArrowLeft, LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextInput } from '../ui/TextInput';
 import { TextArea } from '../ui/TextArea';
@@ -66,7 +67,7 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
 
       <div className="flex justify-between items-center pt-6">
         <button onClick={onBack} className="btn-ghost flex items-center gap-1.5 -ml-2">
-          <ArrowLeft size={14} />
+          <ArrowLeft size={ICON_SIZE.sm} />
           <span>Back</span>
         </button>
         <button onClick={onCreate} disabled={!description.trim()} className="btn-primary">

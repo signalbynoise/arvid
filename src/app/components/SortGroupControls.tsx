@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowUpDown, ListFilter, ToggleRight, ToggleLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -53,7 +54,7 @@ export function SortGroupControls({
     <>
       <div className="relative" ref={groupRef}>
         <IconButton title="Group by" onClick={() => setGroupOpen(prev => !prev)}>
-          <ListFilter size={14} />
+          <ListFilter size={ICON_SIZE.sm} />
         </IconButton>
 
         <DropdownPanel isOpen={groupOpen} position="below" align="end">
@@ -61,12 +62,12 @@ export function SortGroupControls({
             {groupByOptions.map(opt => (
               <DropdownItem
                 key={opt.value}
-                icon={<ListFilter size={16} />}
+                icon={<ListFilter size={ICON_SIZE.md} />}
                 label={opt.label}
                 right={
                   currentGroup === opt.value
-                    ? <ToggleRight size={16} className="text-status-success" />
-                    : <ToggleLeft size={16} className="text-text-quaternary" />
+                    ? <ToggleRight size={ICON_SIZE.md} className="text-status-success" />
+                    : <ToggleLeft size={ICON_SIZE.md} className="text-text-quaternary" />
                 }
                 onClick={() => { onGroupChange(opt.value); setGroupOpen(false); }}
               />
@@ -77,7 +78,7 @@ export function SortGroupControls({
 
       <div className="relative" ref={sortRef}>
         <IconButton title="Sort by" onClick={() => setSortOpen(prev => !prev)}>
-          <ArrowUpDown size={14} />
+          <ArrowUpDown size={ICON_SIZE.sm} />
         </IconButton>
 
         <DropdownPanel isOpen={sortOpen} position="below" align="end">
@@ -85,12 +86,12 @@ export function SortGroupControls({
             {sortByOptions.map(opt => (
               <DropdownItem
                 key={opt.value}
-                icon={<ArrowUpDown size={16} />}
+                icon={<ArrowUpDown size={ICON_SIZE.md} />}
                 label={opt.label}
                 right={
                   currentSort === opt.value
-                    ? <ToggleRight size={16} className="text-status-success" />
-                    : <ToggleLeft size={16} className="text-text-quaternary" />
+                    ? <ToggleRight size={ICON_SIZE.md} className="text-status-success" />
+                    : <ToggleLeft size={ICON_SIZE.md} className="text-text-quaternary" />
                 }
                 onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
               />

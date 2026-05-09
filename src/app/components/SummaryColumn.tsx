@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { FileText, LoaderPinwheel, MoreHorizontal, BarChart3 } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
 import { buildCursorPrompt, openInCursor } from '../lib/cursorDeeplink';
 import { api } from '../api';
 import { ColumnShell, ColumnBody, ColumnEmptyState } from './ColumnShell';
 import { IconButton } from './IconButton';
-import { CardShell } from './CardShell';
+import { Card } from './ui/Card';
 import { Button } from './Button';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
@@ -106,7 +107,7 @@ export function SummaryColumn() {
     return (
       <ColumnShell title="Summary" borderRight={false}>
         <ColumnEmptyState
-          icon={<FileText size={32} className="mb-3 opacity-20" />}
+          icon={<FileText size={ICON_SIZE['2xl']} className="mb-3 opacity-20" />}
           message="Select a requirement to view its live summary."
         />
       </ColumnShell>
@@ -135,23 +136,21 @@ export function SummaryColumn() {
       headerControls={
         <>
           {(isGenerating || isLoading) && (
-            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-1" />
+            <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-tertiary animate-spin mr-1" />
           )}
           <IconButton title="Analytics" onClick={() => {}}>
-            <BarChart3 size={14} />
+            <BarChart3 size={ICON_SIZE.sm} />
           </IconButton>
         </>
       }
     >
       <ColumnBody>
-        <CardShell variant="default">
+        <Card variant="default">
           <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-tiny font-mono text-text-quaternary">
-                {summary?.shortId || requirement.shortId?.replace('R', 'S') || 'S01'}
-              </span>
-              <MoreHorizontal size={14} className="text-text-quaternary" />
-            </div>
+            <Card.Header
+              shortId={summary?.shortId || requirement.shortId?.replace('R', 'S') || 'S01'}
+              actions={<MoreHorizontal size={ICON_SIZE.sm} className="text-text-quaternary" />}
+            />
             <h3 className="text-text-primary">{requirement.title}</h3>
           </div>
 
@@ -213,7 +212,7 @@ export function SummaryColumn() {
               <span>Send to Cursor</span>
             </Button>
           </div>
-        </CardShell>
+        </Card>
       </ColumnBody>
     </ColumnShell>
   );

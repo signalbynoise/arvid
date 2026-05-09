@@ -274,9 +274,6 @@
   --max-width-modal-xl: var(--modal-width-xl);
   --min-height-textarea: var(--textarea-min-h);
 
-  /* Icon Sizes */
-  --size-icon-3xl: var(--icon-3xl);
-
   /* Sidebar */
   --width-sidebar: var(--sidebar-width);
 

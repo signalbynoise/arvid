@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Hash, Lock, Loader2 } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -69,7 +70,7 @@ export function SlackNotifySelector({ projectId }: Props) {
       <DropdownPanel isOpen={isOpen} variant="attached" position="above">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : nonImChannels.length === 0 ? (
           <div className="px-3 py-4 text-center text-text-quaternary">
@@ -85,7 +86,7 @@ export function SlackNotifySelector({ projectId }: Props) {
             {nonImChannels.map(ch => (
               <DropdownItem
                 key={ch.id}
-                icon={ch.isPrivate ? <Lock size={16} /> : <Hash size={16} />}
+                icon={ch.isPrivate ? <Lock size={ICON_SIZE.md} /> : <Hash size={ICON_SIZE.md} />}
                 label={ch.name}
                 onClick={() => handleSelect(ch.id)}
               />

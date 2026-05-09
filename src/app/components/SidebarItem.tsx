@@ -8,6 +8,7 @@ interface SidebarItemProps {
   label: string;
   icon: React.ReactNode;
   isSelected?: boolean;
+  hoverable?: boolean;
   indent?: number;
   chevron?: { open: boolean; onToggle: (e: React.MouseEvent) => void };
   actions?: React.ReactNode;
@@ -19,6 +20,7 @@ export function SidebarItem({
   label,
   icon,
   isSelected = false,
+  hoverable = true,
   indent = 0,
   chevron,
   actions,
@@ -46,7 +48,9 @@ export function SidebarItem({
         )}
       </AnimatePresence>
 
-      <span className="absolute inset-x-2 inset-y-0 rounded-standard bg-surface-frost-05 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+      {hoverable && (
+        <span className="absolute inset-x-2 inset-y-0 rounded-standard bg-surface-frost-05 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+      )}
 
       <div className="relative flex items-center gap-1 overflow-hidden">
         {icon}

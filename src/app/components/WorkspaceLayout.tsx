@@ -43,10 +43,13 @@ export function WorkspaceLayout() {
   useEffect(() => {
     if (!initializedRef.current) {
       initializedRef.current = true;
-      acceptPendingInvitations();
-      if (workspacesDataState.status === 'idle') {
-        loadWorkspaces();
+      async function init() {
+        await acceptPendingInvitations();
+        if (workspacesDataState.status === 'idle') {
+          loadWorkspaces();
+        }
       }
+      init();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

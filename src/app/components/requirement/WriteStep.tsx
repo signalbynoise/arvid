@@ -1,5 +1,6 @@
 import React from 'react';
 import { File, Mail, MessageSquare, LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextArea } from '../ui/TextArea';
 import { ActionRow } from '../ui/ActionRow';
@@ -28,9 +29,9 @@ export function WriteStep({ text, validationError, onTextChange, onNext, onClose
 
       <FormField label="External Sources">
         <div className="flex flex-col gap-2">
-          <ActionRow icon={<File size={16} />} label="Process from documents" onClick={() => onNavigate('FILE_UPLOAD')} />
-          <ActionRow icon={<Mail size={16} />} label="Process from Gmail" onClick={() => onNavigate('EMAIL_IMPORT')} />
-          <ActionRow icon={<MessageSquare size={16} />} label="Process from Slack" onClick={() => onNavigate('SLACK_IMPORT')} />
+          <ActionRow icon={<File size={ICON_SIZE.md} />} label="Process from documents" onClick={() => onNavigate('FILE_UPLOAD')} />
+          <ActionRow icon={<Mail size={ICON_SIZE.md} />} label="Process from Gmail" onClick={() => onNavigate('EMAIL_IMPORT')} />
+          <ActionRow icon={<MessageSquare size={ICON_SIZE.md} />} label="Process from Slack" onClick={() => onNavigate('SLACK_IMPORT')} />
         </div>
       </FormField>
 
@@ -39,7 +40,7 @@ export function WriteStep({ text, validationError, onTextChange, onNext, onClose
           Cancel
         </button>
         <button onClick={onNext} disabled={!text.trim()} className="btn-primary flex items-center gap-2">
-          <LoaderPinwheel size={16} />
+          <LoaderPinwheel size={ICON_SIZE.md} />
           <span>Check with Arvid</span>
         </button>
       </div>

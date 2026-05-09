@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Hash, Lock, Loader2, MessageSquare, Check, Sparkles, Search } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore } from '../store';
 import { api } from '../api';
 import { toast } from 'sonner';
@@ -177,7 +178,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
     return (
       <div className="space-y-5">
         <div className="bg-surface-frost-02 border border-border-default rounded-card p-5 text-center">
-          <MessageSquare size={24} className="mx-auto text-text-tertiary mb-3" />
+          <MessageSquare size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3" />
           <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">Connect Slack Workspace</h3>
           <p className="text-[13px] text-text-tertiary mb-4">Connect your workspace to extract knowledge from channels.</p>
           <button onClick={handleConnect} className="btn-primary w-full">
@@ -186,7 +187,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
         </div>
         <div className="flex pt-3">
           <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
-            <ArrowLeft size={14} />
+            <ArrowLeft size={ICON_SIZE.sm} />
             <span>Back</span>
           </button>
         </div>
@@ -199,7 +200,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
     return (
       <div className="space-y-5">
         <div className="bg-surface-frost-02 border border-border-default rounded-card p-8 text-center">
-          <Loader2 size={24} className="mx-auto text-text-tertiary mb-3 animate-spin" />
+          <Loader2 size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3 animate-spin" />
           <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">
             {step === 'extracting' ? 'Loading Messages' : 'Analyzing Messages'}
           </h3>
@@ -219,7 +220,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
       <div className="flex flex-col min-h-[500px]">
         <div className="px-4 pt-4 pb-3 border-b border-border-subtle shrink-0">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary" />
+            <Search size={ICON_SIZE.sm} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary" />
             <input
               ref={searchInputRef}
               type="text"
@@ -285,7 +286,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
             onClick={() => { setStep('select-channel'); onWideChange?.(false); }}
             className="btn-ghost flex items-center space-x-1.5"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={ICON_SIZE.sm} />
             <span>Back</span>
           </button>
           <button onClick={handleAnalyzeSelected} disabled={selectedMessageTs.size === 0} className="btn-primary flex items-center space-x-2">
@@ -388,7 +389,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
         {/* Footer */}
         <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
           <button onClick={() => setStep('browse')} className="btn-ghost flex items-center space-x-1.5">
-            <ArrowLeft size={14} />
+            <ArrowLeft size={ICON_SIZE.sm} />
             <span>Back to messages</span>
           </button>
           <button onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} className="btn-primary">
@@ -409,7 +410,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
       <div className="max-h-[220px] overflow-y-auto border border-border-default rounded-comfortable">
         {isLoadingChannels ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : nonImChannels.length === 0 ? (
           <div className="px-3 py-6 text-center text-[12px] text-text-quaternary">
@@ -435,7 +436,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
                 )}
                 <span className="font-[var(--fw-medium)] truncate">{ch.name}</span>
                 {selectedChannelId === ch.id && (
-                  <Check size={14} className="text-status-success ml-auto shrink-0" />
+                  <Check size={ICON_SIZE.sm} className="text-status-success ml-auto shrink-0" />
                 )}
               </button>
             ))}
@@ -445,7 +446,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
 
       <div className="flex justify-between items-center pt-2">
         <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
-          <ArrowLeft size={14} />
+          <ArrowLeft size={ICON_SIZE.sm} />
           <span>Back</span>
         </button>
         <button onClick={handleExtract} disabled={!selectedChannelId} className="btn-primary">

@@ -1,8 +1,5 @@
 import React from 'react';
-import { CardShell } from './CardShell';
-import { CardHeader } from './ui/CardHeader';
-import { CardBody } from './ui/CardBody';
-import { CardFooter } from './ui/CardFooter';
+import { Card } from './ui/Card';
 import { CompletenessChip } from './CompletenessChip';
 import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
@@ -49,7 +46,7 @@ export function RequirementCard({
     : req.owner;
 
   return (
-    <CardShell
+    <Card
       id={`req-${req.id}`}
       variant={isSelected ? 'selected' : 'default'}
       dimmed={isDimmed}
@@ -58,7 +55,7 @@ export function RequirementCard({
       hint={hint}
       onClick={onClick}
     >
-      <CardHeader
+      <Card.Header
         shortId={req.shortId}
         actions={
           <CardItemMenu
@@ -70,9 +67,9 @@ export function RequirementCard({
         }
       />
 
-      <CardBody>
+      <Card.Body>
         <h3>{req.title}</h3>
-      </CardBody>
+      </Card.Body>
 
       <div className="flex items-center gap-2 flex-wrap">
         <CompletenessChip value={completeness} />
@@ -86,7 +83,7 @@ export function RequirementCard({
         />
       </div>
 
-      <CardFooter
+      <Card.Footer
         meta={`${req.owner} - ${formatCardDate(req.createdAt)}`}
         authorName={authorName}
         assigneeCount={assignees.length}
@@ -107,6 +104,6 @@ export function RequirementCard({
           </>
         }
       />
-    </CardShell>
+    </Card>
   );
 }

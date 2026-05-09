@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LoaderPinwheel, Database } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
 import { logger } from '../logger';
@@ -51,7 +52,7 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
     <BaseModal isOpen={isOpen} onClose={onClose} title="Link Database" size="sm">
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <LoaderPinwheel size={20} className="animate-spin text-text-quaternary" />
+          <LoaderPinwheel size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : supabaseProjects.length === 0 ? (
         <p className="text-[13px] text-text-quaternary text-center py-8">No active projects found.</p>
@@ -66,7 +67,7 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
             >
               <span className="shrink-0 text-text-quaternary">
-                <Database size={16} />
+                <Database size={ICON_SIZE.md} />
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] text-text-secondary truncate">{proj.name}</p>

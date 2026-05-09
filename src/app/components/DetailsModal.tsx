@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Requirement, Question, Answer } from '../types';
 import { Calendar, User, Users, Briefcase, Plus, Pencil, Info } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectMembers, selectCardAssignees } from '../store';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
@@ -10,9 +11,9 @@ import { TextArea } from './ui/TextArea';
 type DetailsTab = 'general' | 'users' | 'details';
 
 const TAB_CONFIG: { id: DetailsTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <Pencil size={14} /> },
-  { id: 'users', label: 'Users', icon: <Users size={14} /> },
-  { id: 'details', label: 'Details', icon: <Info size={14} /> },
+  { id: 'general', label: 'General', icon: <Pencil size={ICON_SIZE.sm} /> },
+  { id: 'users', label: 'Users', icon: <Users size={ICON_SIZE.sm} /> },
+  { id: 'details', label: 'Details', icon: <Info size={ICON_SIZE.sm} /> },
 ];
 
 interface Props {
@@ -213,7 +214,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
             onClick={onAddUser}
             className="flex items-center gap-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors"
           >
-            <Plus size={14} />
+            <Plus size={ICON_SIZE.sm} />
             <span>Assign</span>
           </button>
         )}
@@ -242,7 +243,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
                   className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard shrink-0"
                   title="Remove"
                 >
-                  <User size={12} />
+                  <User size={ICON_SIZE.xs} />
                 </button>
               </div>
             );
@@ -310,7 +311,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
       <div className="space-y-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-full bg-surface-frost-05 flex items-center justify-center text-text-tertiary">
-            <User size={14} />
+            <User size={ICON_SIZE.sm} />
           </div>
           <div>
             <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Author</span>
@@ -320,7 +321,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
 
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-full bg-surface-frost-05 flex items-center justify-center text-text-tertiary">
-            <Calendar size={14} />
+            <Calendar size={ICON_SIZE.sm} />
           </div>
           <div>
             <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Date</span>
@@ -331,7 +332,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
         {(authorTeam || !isAnswer) && (
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-surface-frost-05 flex items-center justify-center text-text-tertiary">
-              <Users size={14} />
+              <Users size={ICON_SIZE.sm} />
             </div>
             <div>
               <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Team</span>
@@ -343,7 +344,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
         {(authorRole || !isAnswer) && (
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-surface-frost-05 flex items-center justify-center text-text-tertiary">
-              <Briefcase size={14} />
+              <Briefcase size={ICON_SIZE.sm} />
             </div>
             <div>
               <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Role</span>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Answer } from '../types';
 import { Plus, MessageSquare, LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { AnswerCard } from './AnswerCard';
@@ -112,7 +113,7 @@ export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }:
     return (
       <ColumnShell title="Answers">
         <ColumnEmptyState
-          icon={<MessageSquare size={32} className="mb-3 opacity-20" />}
+          icon={<MessageSquare size={ICON_SIZE['2xl']} className="mb-3 opacity-20" />}
           message="Select a question to view or add answers."
         />
       </ColumnShell>
@@ -125,7 +126,7 @@ export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }:
       headerControls={
         <>
           {isSuggestingAnswer && (
-            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-2" />
+            <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-tertiary animate-spin mr-2" />
           )}
           {answers.length > 0 && (
             <SortGroupControls
@@ -138,7 +139,7 @@ export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }:
             />
           )}
           <IconButton title="New Answer" onClick={() => setIsNewAnswerOpen(true)}>
-            <Plus size={14} />
+            <Plus size={ICON_SIZE.sm} />
           </IconButton>
         </>
       }
@@ -156,7 +157,7 @@ export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }:
         {answers.length === 0 && suggestedAnswers.length === 0 ? (
           !isSuggestingAnswer && (
             <ColumnEmptyState
-              icon={<MessageSquare size={32} className="mb-3 opacity-20" />}
+              icon={<MessageSquare size={ICON_SIZE['2xl']} className="mb-3 opacity-20" />}
               message="No answers yet. Add one to clarify this question."
             />
           )

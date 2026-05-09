@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { PageGrid } from './PageGrid';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
@@ -46,7 +47,7 @@ export function TopNav() {
           className="md:hidden p-1.5 text-text-tertiary hover:text-text-primary transition-colors"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileOpen ? <X size={ICON_SIZE.lg} /> : <Menu size={ICON_SIZE.lg} />}
         </button>
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Database } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -58,7 +59,7 @@ export function SupabaseProjectSelector({ projectId, onLinked }: SupabaseProject
       <DropdownPanel isOpen={isOpen} variant="attached" position="above">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : supabaseProjects.length === 0 ? (
           <div className="px-3 py-4 text-center text-text-quaternary">
@@ -69,7 +70,7 @@ export function SupabaseProjectSelector({ projectId, onLinked }: SupabaseProject
             {supabaseProjects.map(proj => (
               <DropdownItem
                 key={proj.id}
-                icon={<Database size={16} />}
+                icon={<Database size={ICON_SIZE.md} />}
                 label={proj.name}
                 sublabel={proj.region}
                 onClick={() => handleSelect(proj.id)}

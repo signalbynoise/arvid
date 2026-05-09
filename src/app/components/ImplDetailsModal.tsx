@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileCode, BarChart3, Clock, CheckCircle2, XCircle, Target } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { ACCORDANCE_WEIGHTS } from '../../../shared/schemas';
 import type { Requirement } from '../types';
@@ -70,7 +71,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
 
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <BarChart3 size={14} className="text-text-tertiary" />
+            <BarChart3 size={ICON_SIZE.sm} className="text-text-tertiary" />
             <h3 className="text-label text-text-tertiary">Confidence</h3>
           </div>
           <div className="flex items-center gap-3">
@@ -89,7 +90,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
         {analysis && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Target size={14} className="text-text-tertiary" />
+              <Target size={ICON_SIZE.sm} className="text-text-tertiary" />
               <h3 className="text-label text-text-tertiary">Accordance Score</h3>
             </div>
             <div className="flex items-center gap-3 mb-3">
@@ -110,9 +111,9 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
                   <div key={key} className="flex items-center justify-between py-1">
                     <div className="flex items-center gap-2">
                       {met ? (
-                        <CheckCircle2 size={14} className="text-status-success" />
+                        <CheckCircle2 size={ICON_SIZE.sm} className="text-status-success" />
                       ) : (
-                        <XCircle size={14} className="text-status-error" />
+                        <XCircle size={ICON_SIZE.sm} className="text-status-error" />
                       )}
                       <span className="text-caption text-text-secondary">{label}</span>
                     </div>
@@ -127,7 +128,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
         {evidence && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <FileCode size={14} className="text-text-tertiary" />
+              <FileCode size={ICON_SIZE.sm} className="text-text-tertiary" />
               <h3 className="text-label text-text-tertiary">Evidence</h3>
             </div>
             <div className="rounded-card border border-border-subtle bg-surface-frost-02 p-3">

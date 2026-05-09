@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { LoaderPinwheel, Globe, Lock } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
 import { logger } from '../logger';
@@ -59,7 +60,7 @@ export function LinkRepoModal({ isOpen, onClose, projectId, onLinked }: LinkRepo
       className="flex items-center gap-3 w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
     >
       <span className="shrink-0 text-text-quaternary">
-        {repo.isPrivate ? <Lock size={16} /> : <Globe size={16} />}
+        {repo.isPrivate ? <Lock size={ICON_SIZE.md} /> : <Globe size={ICON_SIZE.md} />}
       </span>
       <span className="text-[13px] text-text-secondary truncate">{repo.fullName}</span>
     </button>
@@ -69,7 +70,7 @@ export function LinkRepoModal({ isOpen, onClose, projectId, onLinked }: LinkRepo
     <BaseModal isOpen={isOpen} onClose={onClose} title="Link Repository" size="sm">
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <LoaderPinwheel size={20} className="animate-spin text-text-quaternary" />
+          <LoaderPinwheel size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : githubRepos.length === 0 ? (
         <p className="text-[13px] text-text-quaternary text-center py-8">No repositories found.</p>

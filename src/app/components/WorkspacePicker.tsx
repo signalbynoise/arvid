@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Settings, Trash2, GitCompare, LoaderPinwheel, ToggleRight, ToggleLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { Chevron } from './Chevron';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
 import { buildWorkspacePath } from '../domain/paths';
@@ -60,7 +61,7 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
             className="w-3.5 h-3.5 rounded-micro object-cover shrink-0"
           />
         ) : (
-          <LoaderPinwheel size={14} className="text-text-primary shrink-0" />
+          <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-primary shrink-0" />
         )}
         <span className="text-caption-lg text-text-primary truncate">
           {activeWorkspace?.name ?? 'No workspace'}
@@ -75,12 +76,12 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
           {workspaces.map(ws => (
             <DropdownItem
               key={ws.id}
-              icon={<GitCompare size={16} />}
+              icon={<GitCompare size={ICON_SIZE.md} />}
               label={ws.name}
               right={
                 ws.id === activeWorkspaceId
-                  ? <ToggleRight size={16} className="text-status-success" />
-                  : <ToggleLeft size={16} className="text-text-quaternary" />
+                  ? <ToggleRight size={ICON_SIZE.md} className="text-status-success" />
+                  : <ToggleLeft size={ICON_SIZE.md} className="text-text-quaternary" />
               }
               onClick={() => handleSelect(ws)}
               variant={ws.id === activeWorkspaceId ? 'default' : 'muted'}
@@ -92,22 +93,22 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
 
         <DropdownSection label="ACTIONS">
           <DropdownItem
-            icon={<Plus size={16} />}
+            icon={<Plus size={ICON_SIZE.md} />}
             label="Add user to workspace"
             onClick={() => { setIsOpen(false); onInviteClick(); }}
           />
           <DropdownItem
-            icon={<Pencil size={16} />}
+            icon={<Pencil size={ICON_SIZE.md} />}
             label="Rename workspace"
             onClick={() => { setIsOpen(false); onRenameClick(); }}
           />
           <DropdownItem
-            icon={<Plus size={16} />}
+            icon={<Plus size={ICON_SIZE.md} />}
             label="Create new team"
             onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
           />
           <DropdownItem
-            icon={<Plus size={16} />}
+            icon={<Plus size={ICON_SIZE.md} />}
             label="Create new workspace"
             onClick={() => { setIsOpen(false); onCreateClick(); }}
           />
@@ -117,7 +118,7 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
 
         <DropdownSection label="GENERAL">
           <DropdownItem
-            icon={<Settings size={16} />}
+            icon={<Settings size={ICON_SIZE.md} />}
             label="Workspace settings"
             onClick={() => { setIsOpen(false); onSettingsClick(); }}
           />
@@ -128,10 +129,10 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
             <DropdownDivider />
             <DropdownSection label="AVOID">
               <DropdownItem
-                icon={<Trash2 size={16} />}
+                icon={<Trash2 size={ICON_SIZE.md} />}
                 label="Deactivate workspace"
                 variant="muted"
-                right={<ToggleRight size={16} className="text-status-success" />}
+                right={<ToggleRight size={ICON_SIZE.md} className="text-status-success" />}
                 onClick={() => { setIsOpen(false); onDeactivateClick(); }}
               />
             </DropdownSection>

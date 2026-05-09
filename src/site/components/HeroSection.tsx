@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDown } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import Grainient from '@/components/Grainient';
 import { AppDemo } from './app-demo';
 import { PageGrid } from './PageGrid';
@@ -21,14 +22,14 @@ export function HeroSection() {
           className="flex items-center gap-1 rounded-pill bg-btn-primary px-5 py-2.5 text-[14px] font-[var(--fw-medium)] text-text-on-primary transition-colors hover:bg-btn-primary-hover"
         >
           Launch Arvid
-          <ArrowUpRight size={16} />
+          <ArrowUpRight size={ICON_SIZE.md} />
         </a>
         <a
           href="#product"
           className="flex items-center gap-1 rounded-pill bg-surface-frost-10 px-5 py-2.5 text-[14px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
         >
           Explore Features
-          <ArrowDown size={16} />
+          <ArrowDown size={ICON_SIZE.md} />
         </a>
       </div>
 

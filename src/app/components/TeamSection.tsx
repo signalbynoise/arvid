@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Network } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { SidebarItem } from './SidebarItem';
 import { TeamItemMenu } from './TeamItemMenu';
 import { ProjectTreeItem } from './ProjectTreeItem';
@@ -87,7 +88,7 @@ export function TeamSection({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       {teams.map(team => {
         const teamProjects = projectsByTeam.get(team.id) ?? [];
         const teamProjectTree = buildProjectTree(teamProjects);
@@ -98,7 +99,8 @@ export function TeamSection({
             <SidebarItem
               itemId={`team-${team.id}`}
               label={team.name}
-              icon={<Network size={14} className="text-text-quaternary shrink-0" />}
+              icon={<Network size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />}
+              hoverable={false}
               chevron={teamProjectTree.length > 0 ? { open: isTeamExpanded, onToggle: (e) => onToggleTeamExpand(e, team.id) } : undefined}
               actions={
                 <TeamItemMenu
@@ -122,7 +124,7 @@ export function TeamSection({
                   exit="collapsed"
                   variants={EXPAND_VARIANTS}
                   transition={EXPAND_TRANSITION}
-                  className="space-y-0.5"
+                  className="mt-1 space-y-0.5"
                 >
                   {teamProjectTree.map(node => (
                     <ProjectTreeItem

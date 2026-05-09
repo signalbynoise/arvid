@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChevronRight, Network, Folder } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectProjects, selectSelectedProjectId, selectTeams } from '../store';
 
 interface Segment {
@@ -21,8 +22,8 @@ export function Breadcrumbs() {
     const team = project?.teamId ? teams.find(t => t.id === project.teamId) : null;
 
     if (workspace) result.push({ label: workspace.name });
-    if (team) result.push({ icon: <Network size={14} className="text-text-quaternary shrink-0" />, label: team.name });
-    if (project) result.push({ icon: <Folder size={14} className="text-text-quaternary shrink-0" />, label: project.name });
+    if (team) result.push({ icon: <Network size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />, label: team.name });
+    if (project) result.push({ icon: <Folder size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />, label: project.name });
 
     return result;
   }, [workspaces, activeWorkspaceId, projects, selectedProjectId, teams]);
@@ -33,7 +34,7 @@ export function Breadcrumbs() {
     <div className="flex items-center gap-2 text-caption-lg text-text-tertiary min-w-0">
       {segments.map((segment, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <ChevronRight size={14} className="text-text-quaternary shrink-0" />}
+          {i > 0 && <ChevronRight size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />}
           <div className={`flex items-center gap-1 ${i === segments.length - 1 ? 'min-w-0' : 'shrink-0'}`}>
             {segment.icon}
             <span className={i === segments.length - 1 ? 'truncate' : ''}>{segment.label}</span>

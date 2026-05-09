@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Loader2, Lock, Globe } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -62,7 +63,7 @@ export function RepoSelector({ projectId, onLinked }: RepoSelectorProps) {
       <DropdownPanel isOpen={isOpen} variant="attached" position="above">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : githubRepos.length === 0 ? (
           <div className="px-3 py-4 text-center text-text-quaternary">
@@ -75,7 +76,7 @@ export function RepoSelector({ projectId, onLinked }: RepoSelectorProps) {
                 {publicRepos.map(repo => (
                   <DropdownItem
                     key={repo.id}
-                    icon={<Globe size={16} />}
+                    icon={<Globe size={ICON_SIZE.md} />}
                     label={repo.fullName}
                     onClick={() => handleSelect(repo.fullName, repo.defaultBranch)}
                   />
@@ -90,7 +91,7 @@ export function RepoSelector({ projectId, onLinked }: RepoSelectorProps) {
                 {privateRepos.map(repo => (
                   <DropdownItem
                     key={repo.id}
-                    icon={<Lock size={16} />}
+                    icon={<Lock size={ICON_SIZE.md} />}
                     label={repo.fullName}
                     onClick={() => handleSelect(repo.fullName, repo.defaultBranch)}
                   />

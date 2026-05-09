@@ -1,9 +1,7 @@
 import React from 'react';
 import { LoaderPinwheel } from 'lucide-react';
-import { CardShell } from './CardShell';
-import { CardHeader } from './ui/CardHeader';
-import { CardBody } from './ui/CardBody';
-import { CardFooter } from './ui/CardFooter';
+import { ICON_SIZE } from '../../constants/icons';
+import { Card } from './ui/Card';
 import { Chip } from './Chip';
 import { Button } from './Button';
 import { CardItemMenu } from './CardItemMenu';
@@ -46,7 +44,7 @@ export function QuestionCard({
     : (q.author || 'Unknown');
 
   return (
-    <CardShell
+    <Card
       id={`question-${q.id}`}
       variant={isSuggested ? 'suggested' : isSelected ? 'selected' : 'default'}
       dimmed={isDimmed && !isSuggested}
@@ -55,7 +53,7 @@ export function QuestionCard({
       connectorRight={isSelected && !isSuggested}
       onClick={!isSuggested ? () => onSelect(q.id) : undefined}
     >
-      <CardHeader
+      <Card.Header
         shortId={q.shortId}
         labels={
           !isSuggested && q.category ? (
@@ -74,9 +72,9 @@ export function QuestionCard({
         }
       />
 
-      <CardBody muted={isSuggested}>
+      <Card.Body muted={isSuggested}>
         <h3>{q.text}</h3>
-      </CardBody>
+      </Card.Body>
 
       {isSuggested ? (
         <div className="flex items-center gap-2">
@@ -93,11 +91,11 @@ export function QuestionCard({
             border="dashed"
             accent={q.status === 'Answered' ? 'success' : q.status === 'Conflicting' ? 'warning' : 'default'}
           >
-            <LoaderPinwheel size={12} className={q.status === 'Answered' ? 'text-status-success' : 'text-text-quaternary'} />
+            <LoaderPinwheel size={ICON_SIZE.xs} className={q.status === 'Answered' ? 'text-status-success' : 'text-text-quaternary'} />
             <span className={q.status === 'Answered' ? 'text-status-success' : 'text-text-tertiary'}>{q.status}</span>
           </Chip>
 
-          <CardFooter
+          <Card.Footer
             meta={`${q.author || 'Unknown'} - ${formatCardDate(q.createdAt)}`}
             authorName={authorName}
             assigneeCount={assignees.length}
@@ -112,6 +110,6 @@ export function QuestionCard({
           />
         </>
       )}
-    </CardShell>
+    </Card>
   );
 }

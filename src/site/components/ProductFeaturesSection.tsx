@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { PageGrid } from './PageGrid';
 
 const FEATURES = [
@@ -44,7 +45,7 @@ export function ProductFeaturesSection() {
         className="col-span-full flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
       >
         <span>Browse all product features</span>
-        <ArrowUpRight size={12} />
+        <ArrowUpRight size={ICON_SIZE.xs} />
       </a>
     </PageGrid>
   );

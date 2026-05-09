@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Plus, Users, Command, LoaderPinwheel, MousePointerClick, FolderPlus,
 } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { SuggestionAction } from './SuggestionAction';
 import {
   useStore,
@@ -63,7 +64,7 @@ export function EmptyStateSuggestions({
     if (!hasRequirements) {
       items.push({
         id: 'create-req',
-        icon: <Plus size={16} />,
+        icon: <Plus size={ICON_SIZE.md} />,
         label: 'Create a requirement',
         description: 'Define what your project needs to deliver',
         shortcut: 'C R',
@@ -73,7 +74,7 @@ export function EmptyStateSuggestions({
 
     items.push({
       id: 'invite',
-      icon: <Users size={16} />,
+      icon: <Users size={ICON_SIZE.md} />,
       label: 'Invite members to project',
       description: 'Collaborate on requirements and answers',
       shortcut: 'C U P',
@@ -82,7 +83,7 @@ export function EmptyStateSuggestions({
 
     items.push({
       id: 'sub-project',
-      icon: <FolderPlus size={16} />,
+      icon: <FolderPlus size={ICON_SIZE.md} />,
       label: 'Create a sub-project',
       description: 'Organize work into smaller scopes',
       shortcut: 'C P',
@@ -202,7 +203,7 @@ export function EmptyStateSuggestions({
 
   return (
     <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
-      <LoaderPinwheel size={48} className="mb-8 opacity-10" />
+      <LoaderPinwheel size={ICON_SIZE['3xl']} className="mb-8 opacity-10" />
 
       <div className="w-[320px] space-y-1">
         {suggestions.map((s) => (
@@ -234,7 +235,7 @@ export function EmptyStateSuggestions({
 
         <div className="border-t border-border-subtle my-2" />
         <SuggestionAction
-          icon={<Command size={16} />}
+          icon={<Command size={ICON_SIZE.md} />}
           label="Open Command Central"
           description="Quick actions, search, and navigation"
           shortcut="⌘K"
@@ -243,7 +244,7 @@ export function EmptyStateSuggestions({
 
         {hasRequirements && (
           <SuggestionAction
-            icon={<MousePointerClick size={16} />}
+            icon={<MousePointerClick size={ICON_SIZE.md} />}
             label="Select a requirement"
             description="View its knowledge flow and questions"
             onClick={flashRequirementHint}

@@ -84,6 +84,13 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
   },
 
   loadWorkspaces: async () => {
+    const { acceptInvitationsState, workspacesDataState: currentState } = get();
+
+    if (acceptInvitationsState.status === 'resolved' && currentState.status === 'ready') {
+      log.debug('loadWorkspaces', 'Skipping fetch — workspaces already loaded by invitation acceptance');
+      return;
+    }
+
     set({ workspacesDataState: { status: 'loading' } });
     log.info('loadWorkspaces', 'Fetching workspaces');
 
@@ -394,17 +401,19 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
 
     try {
       const accepted = await api.acceptInvitations();
-      set({ acceptInvitationsState: { status: 'resolved' } });
 
       if (accepted.length > 0) {
-        log.info('acceptPendingInvitations', 'Invitations accepted, switching to invited workspace', { count: accepted.length });
+        log.info('acceptPendingInvitations', 'Invitations accepted, pre-loading workspaces', { count: accepted.length });
         const workspaces = await api.getWorkspaces();
         set({
           workspaces,
+          workspacesDataState: { status: 'ready' },
           activeWorkspaceId: accepted[0].workspaceId,
+          acceptInvitationsState: { status: 'resolved' },
         });
       } else {
         log.debug('acceptPendingInvitations', 'No pending invitations found');
+        set({ acceptInvitationsState: { status: 'resolved' } });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PanelLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { Breadcrumbs } from './Breadcrumbs';
 import { UserMenu } from './UserMenu';
@@ -17,7 +18,7 @@ export function Topbar({ isSidebarOpen, onToggleSidebar }: TopbarProps) {
           onClick={onToggleSidebar}
           title={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
         >
-          <PanelLeft size={14} />
+          <PanelLeft size={ICON_SIZE.sm} />
         </IconButton>
         <Breadcrumbs />
       </div>

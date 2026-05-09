@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Command } from 'cmdk';
 import Fuse from 'fuse.js';
 import { Search } from 'lucide-react';
+import { ICON_SIZE } from '../../../constants/icons';
 import { toast } from 'sonner';
 import { useStore, selectCommandPaletteOpen } from '../../store';
 import { useCommands } from './useCommands';
@@ -117,7 +118,7 @@ export function CommandPalette() {
         }}
       >
         <div className="flex items-center gap-3 px-4 border-b border-border-subtle">
-          <Search size={16} className="shrink-0 text-text-quaternary" />
+          <Search size={ICON_SIZE.md} className="shrink-0 text-text-quaternary" />
           <Command.Input
             ref={inputRef}
             value={search}

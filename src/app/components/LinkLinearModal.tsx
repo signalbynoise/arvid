@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LoaderPinwheel, ChevronLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
 import { logger } from '../logger';
@@ -63,7 +64,7 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
     <BaseModal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <LoaderPinwheel size={20} className="animate-spin text-text-quaternary" />
+          <LoaderPinwheel size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : selectedTeamId === null ? (
         linearTeams.length === 0 ? (
@@ -90,7 +91,7 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
             onClick={() => setSelectedTeamId(null)}
             className="flex items-center gap-2 w-full px-3 py-2 text-[13px] text-text-quaternary hover:text-text-secondary transition-colors"
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft size={ICON_SIZE.sm} />
             <span>Back to teams</span>
           </button>
           <div className="space-y-0.5 mt-1">

@@ -178,12 +178,18 @@ invitationsRouter.post('/accept', async (req, res) => {
         continue;
       }
     } else if (scope === 'team' && invite.team_id) {
-      await supabaseAdmin
+      const { data: existing } = await supabaseAdmin
         .from('workspace_memberships')
-        .upsert(
-          { workspace_id: invite.workspace_id, user_id: userId, role: 'member' },
-          { onConflict: 'workspace_id,user_id' },
-        );
+        .select('role')
+        .eq('workspace_id', invite.workspace_id)
+        .eq('user_id', userId)
+        .single();
+
+      if (!existing) {
+        await supabaseAdmin
+          .from('workspace_memberships')
+          .insert({ workspace_id: invite.workspace_id, user_id: userId, role: 'guest' });
+      }
 
       const { error: teamError } = await supabaseAdmin
         .from('team_memberships')
@@ -197,12 +203,18 @@ invitationsRouter.post('/accept', async (req, res) => {
         continue;
       }
     } else if (scope === 'project' && invite.project_id) {
-      await supabaseAdmin
+      const { data: existing } = await supabaseAdmin
         .from('workspace_memberships')
-        .upsert(
-          { workspace_id: invite.workspace_id, user_id: userId, role: 'member' },
-          { onConflict: 'workspace_id,user_id' },
-        );
+        .select('role')
+        .eq('workspace_id', invite.workspace_id)
+        .eq('user_id', userId)
+        .single();
+
+      if (!existing) {
+        await supabaseAdmin
+          .from('workspace_memberships')
+          .insert({ workspace_id: invite.workspace_id, user_id: userId, role: 'guest' });
+      }
 
       const { error: projError } = await supabaseAdmin
         .from('project_memberships')
@@ -223,7 +235,7 @@ invitationsRouter.post('/accept', async (req, res) => {
       .eq('id', invite.id);
 
     accepted.push(invite);
-    console.info('[INFO] [invitations:accept] Invitation accepted', JSON.stringify({ inviteId: invite.id, workspaceId: invite.workspace_id }));
+    console.info('[INFO] [invitations:accept] Invitation accepted', JSON.stringify({ inviteId: invite.id, workspaceId: invite.workspace_id, scope }));
   }
 
   res.json(accepted);

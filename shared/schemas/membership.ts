@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const WorkspaceRoleEnum = z.enum(['owner', 'admin', 'member']);
+export const WorkspaceRoleEnum = z.enum(['owner', 'admin', 'member', 'guest']);
 export type WorkspaceRole = z.infer<typeof WorkspaceRoleEnum>;
 
 export const MembershipRowSchema = z.object({

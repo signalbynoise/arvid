@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSelectedReqId } from '../store';
 import { QuestionInputSchema } from '../../../shared/schemas';
 import { BaseModal } from './BaseModal';
@@ -71,7 +72,7 @@ export function NewQuestionModal({ isOpen, onClose }: Props) {
             disabled={!text.trim() || isCreating}
             className="btn-primary flex items-center gap-2"
           >
-            <LoaderPinwheel size={16} />
+            <LoaderPinwheel size={ICON_SIZE.md} />
             <span>{isCreating ? 'Checking...' : 'Check with Arvid'}</span>
           </button>
         </div>

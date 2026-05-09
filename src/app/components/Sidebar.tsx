@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Folder, LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { SidebarFooter } from './SidebarFooter';
 import { WorkspacePicker } from './WorkspacePicker';
 import { TeamSection } from './TeamSection';
@@ -160,7 +161,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
       <div className="flex-1 overflow-y-auto hide-scrollbar py-3">
         {(projectsDataState.status === 'loading' || workspacesDataState.status === 'loading') && projects.length === 0 ? (
           <div className="flex justify-center py-4">
-            <LoaderPinwheel size={16} className="text-text-quaternary animate-spin" />
+            <LoaderPinwheel size={ICON_SIZE.md} className="text-text-quaternary animate-spin" />
           </div>
         ) : hasTeams || tree.length > 0 ? (
           <TeamSection
@@ -186,13 +187,13 @@ export function Sidebar({ isOpen }: SidebarProps) {
           />
         ) : (
           <div className="px-4 py-6 text-center">
-            <Folder size={24} className="mx-auto mb-2 text-text-quaternary opacity-60" />
+            <Folder size={ICON_SIZE.xl} className="mx-auto mb-2 text-text-quaternary opacity-60" />
             <p className="text-caption-lg text-text-empty mb-3">No projects yet.</p>
             <button
               onClick={() => modals.openCreate()}
               className="btn-ghost inline-flex items-center gap-1.5"
             >
-              <Plus size={12} />
+              <Plus size={ICON_SIZE.xs} />
               <span>Create Project</span>
             </button>
           </div>

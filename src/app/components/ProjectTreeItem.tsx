@@ -5,7 +5,7 @@ import { ProjectIcon } from './ProjectIcon';
 import { ProjectItemMenu } from './ProjectItemMenu';
 import type { ProjectTreeNode } from '../domain/projects';
 
-const DEPTH_INDENT_PX = 24;
+const DEPTH_INDENT_PX = 16;
 
 const EXPAND_VARIANTS = {
   collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },

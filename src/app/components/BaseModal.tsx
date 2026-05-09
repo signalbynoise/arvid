@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectCommandPaletteOpen } from '../store';
 
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -64,7 +65,7 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
                 aria-label="Close"
                 className="text-text-quaternary hover:text-text-primary transition-colors p-1 rounded-standard hover:bg-surface-frost-05"
               >
-                <X size={16} />
+                <X size={ICON_SIZE.md} />
               </button>
             </div>
 

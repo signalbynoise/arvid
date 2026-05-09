@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Question } from '../types';
 import { Plus, MessageCircleQuestion, LoaderPinwheel } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { QuestionCard } from './QuestionCard';
@@ -105,7 +106,7 @@ export function QuestionColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate 
   const headerControls = (
     <div className="flex items-center">
       {isSuggestingQuestions && (
-        <LoaderPinwheel size={14} className="text-text-tertiary animate-spin mr-2" />
+        <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-tertiary animate-spin mr-2" />
       )}
       <SortGroupControls
         groupByOptions={GROUP_OPTIONS}
@@ -116,7 +117,7 @@ export function QuestionColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate 
         onSortChange={setSortBy}
       />
       <IconButton title="New Question" onClick={() => setIsNewQuestionOpen(true)}>
-        <Plus size={14} />
+        <Plus size={ICON_SIZE.sm} />
       </IconButton>
     </div>
   );
@@ -143,8 +144,8 @@ export function QuestionColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate 
       <ColumnShell title="Questions" headerControls={headerControls}>
         <ColumnEmptyState
           icon={isSuggestingQuestions
-            ? <LoaderPinwheel size={32} className="mb-3 opacity-20" />
-            : <MessageCircleQuestion size={32} className="mb-3 opacity-20" />
+            ? <LoaderPinwheel size={ICON_SIZE['2xl']} className="mb-3 opacity-20" />
+            : <MessageCircleQuestion size={ICON_SIZE['2xl']} className="mb-3 opacity-20" />
           }
           message={isSuggestingQuestions ? "Arvid is analyzing the requirement..." : "No questions yet. Add one to start the flow."}
         />

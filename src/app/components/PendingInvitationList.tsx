@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Clock } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import type { Invitation, Team } from '../types';
 import { getRoleLabel } from '../domain/workspaces';
 import { getScopeLabel } from '../domain/access';
@@ -32,7 +33,7 @@ export function PendingInvitationList({ invitations, teams, canManage, onCancel 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1.5">
-        <Clock size={12} className="text-text-quaternary" />
+        <Clock size={ICON_SIZE.xs} className="text-text-quaternary" />
         <span className="text-[12px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
           Pending Invitations ({invitations.length})
         </span>
@@ -81,7 +82,7 @@ export function PendingInvitationList({ invitations, teams, canManage, onCancel 
                   className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
                   title="Cancel invitation"
                 >
-                  <X size={12} />
+                  <X size={ICON_SIZE.xs} />
                 </button>
               )}
             </div>

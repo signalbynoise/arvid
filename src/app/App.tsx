@@ -12,6 +12,7 @@ import { CommandPalette } from './components/command-palette/CommandPalette';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { LoaderPinwheel, AlertTriangle, RotateCw, Folder } from 'lucide-react';
+import { ICON_SIZE } from '../constants/icons';
 import { Requirement, Question, Answer, EntityType } from './types';
 import { useStore, selectSelectedReqId, selectSelectedQuestionId, selectDataState, selectRequirements, selectQuestions, selectAnswers, selectSelectedProjectId, selectPendingModal, selectCardAssignees, selectActiveWorkspaceId } from './store';
 import { COLUMN_CLASSES } from './components/ColumnShell';
@@ -176,14 +177,14 @@ export default function App() {
       if (projectsNotReady || autoNavPending) {
         return (
           <div className="flex-1 flex items-center justify-center bg-surface-panel">
-            <LoaderPinwheel className="animate-spin" size={24} />
+            <LoaderPinwheel className="animate-spin" size={ICON_SIZE.xl} />
           </div>
         );
       }
 
       return (
         <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
-          <Folder size={48} className="mb-4 opacity-10" />
+          <Folder size={ICON_SIZE['3xl']} className="mb-4 opacity-10" />
           <p className="text-[14px] mb-1">No project selected.</p>
           <p className="text-[13px] text-text-empty">Create your first project from the sidebar to get started.</p>
         </div>
@@ -193,7 +194,7 @@ export default function App() {
     if (dataState.status === 'idle' || dataState.status === 'loading') {
       return (
         <div className="flex-1 flex items-center justify-center bg-surface-panel">
-          <LoaderPinwheel className="animate-spin" size={24} />
+          <LoaderPinwheel className="animate-spin" size={ICON_SIZE.xl} />
         </div>
       );
     }
@@ -201,10 +202,10 @@ export default function App() {
     if (dataState.status === 'error') {
       return (
         <div className="flex-1 flex flex-col items-center justify-center bg-surface-panel space-y-4">
-          <AlertTriangle size={32} className="text-status-error" />
+          <AlertTriangle size={ICON_SIZE['2xl']} className="text-status-error" />
           <p className="text-[14px] text-text-tertiary">{dataState.error}</p>
           <button onClick={() => loadEntities(selectedProjectId)} className="btn-ghost flex items-center space-x-2">
-            <RotateCw size={14} />
+            <RotateCw size={ICON_SIZE.sm} />
             <span>Retry</span>
           </button>
         </div>

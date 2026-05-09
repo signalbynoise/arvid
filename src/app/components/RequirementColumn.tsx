@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Requirement } from '../types';
 import { Plus } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { SortGroupControls } from './SortGroupControls';
 import { RequirementCard } from './RequirementCard';
@@ -117,7 +118,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
             onSortChange={setSortBy}
           />
           <IconButton title="New Requirement" onClick={onNewReqClick}>
-            <Plus size={14} />
+            <Plus size={ICON_SIZE.sm} />
           </IconButton>
         </>
       }

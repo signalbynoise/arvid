@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Folder, FolderOpen } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 
 interface ProjectIconProps {
   depth: number;
@@ -23,7 +24,7 @@ export function ProjectIcon({ depth: _depth, isSelected, isOpen = false }: Proje
           transition={{ duration: 0.15 }}
           className="absolute inset-0 inline-flex items-center justify-center"
         >
-          <Icon size={14} />
+          <Icon size={ICON_SIZE.sm} />
         </motion.span>
       </AnimatePresence>
     </span>

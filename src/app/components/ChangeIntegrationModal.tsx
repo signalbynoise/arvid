@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 
 interface ChangeIntegrationModalProps {
@@ -26,7 +27,7 @@ export function ChangeIntegrationModal({
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Change ${integrationName}`} size="sm">
       <div className="space-y-4">
         <div className="flex items-start gap-3">
-          <AlertTriangle size={20} className="text-status-warning shrink-0 mt-0.5" />
+          <AlertTriangle size={ICON_SIZE.lg} className="text-status-warning shrink-0 mt-0.5" />
           <div className="space-y-2">
             <p className="text-caption-lg text-text-primary">
               This project is currently linked to <span className="text-text-primary font-[var(--fw-semibold)]">{currentValue}</span>.

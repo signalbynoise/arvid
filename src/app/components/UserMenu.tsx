@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { LogOut, Settings, UserRound, ToggleRight, ToggleLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -101,8 +102,8 @@ export function UserMenu() {
 
   const toggleIndicator = (connected: boolean) =>
     connected
-      ? <ToggleRight size={16} className="text-status-success" />
-      : <ToggleLeft size={16} className="text-text-quaternary" />;
+      ? <ToggleRight size={ICON_SIZE.md} className="text-status-success" />
+      : <ToggleLeft size={ICON_SIZE.md} className="text-text-quaternary" />;
 
   return (
     <div className="relative" ref={menuRef}>
@@ -110,13 +111,13 @@ export function UserMenu() {
         onClick={() => setIsOpen(prev => !prev)}
         title={fullName || email}
       >
-        <Settings size={14} />
+        <Settings size={ICON_SIZE.sm} />
       </IconButton>
 
       <DropdownPanel isOpen={isOpen} position="below" align="end">
         <DropdownSection label="Profile">
           <DropdownItem
-            icon={<UserRound size={16} />}
+            icon={<UserRound size={ICON_SIZE.md} />}
             label={fullName || email}
           />
         </DropdownSection>
@@ -154,7 +155,7 @@ export function UserMenu() {
 
         <DropdownSection label="Avoid">
           <DropdownItem
-            icon={<LogOut size={16} />}
+            icon={<LogOut size={ICON_SIZE.md} />}
             label="Leave Arvid"
             variant="muted"
             onClick={handleSignOut}

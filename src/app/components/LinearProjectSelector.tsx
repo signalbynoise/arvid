@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, ChevronLeft } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { FooterDropdownTrigger } from './FooterDropdownTrigger';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -72,7 +73,7 @@ export function LinearProjectSelector({ projectId, onLinked }: LinearProjectSele
       <DropdownPanel isOpen={isOpen} variant="attached" position="above">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+            <Loader2 size={ICON_SIZE.md} className="animate-spin text-text-quaternary" />
           </div>
         ) : selectedTeamId === null ? (
           linearTeams.length === 0 ? (
@@ -94,7 +95,7 @@ export function LinearProjectSelector({ projectId, onLinked }: LinearProjectSele
         ) : (
           <>
             <DropdownItem
-              icon={<ChevronLeft size={16} />}
+              icon={<ChevronLeft size={ICON_SIZE.md} />}
               label="Back to teams"
               variant="muted"
               onClick={handleBack}

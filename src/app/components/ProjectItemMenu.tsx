@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Network, Settings2, Trash2, MoreHorizontal, ToggleRight } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
@@ -40,23 +41,23 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
   return (
     <div className="relative" ref={menuRef} data-menu-open={isOpen || undefined}>
       <IconButton onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }}>
-        <MoreHorizontal size={14} />
+        <MoreHorizontal size={ICON_SIZE.sm} />
       </IconButton>
 
       <DropdownPanel isOpen={isOpen} position="right" anchorRef={menuRef} panelRef={panelRef}>
         <DropdownSection label="ACTIONS">
-          <DropdownItem icon={<Plus size={16} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
-          <DropdownItem icon={<Pencil size={16} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
-          <DropdownItem icon={<Network size={16} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
+          <DropdownItem icon={<Plus size={ICON_SIZE.sm} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
+          <DropdownItem icon={<Pencil size={ICON_SIZE.sm} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
+          <DropdownItem icon={<Network size={ICON_SIZE.sm} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
           {onCreateSubProject && (
-            <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
+            <DropdownItem icon={<Plus size={ICON_SIZE.sm} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
           )}
         </DropdownSection>
 
         <DropdownDivider />
 
         <DropdownSection label="GENERAL">
-          <DropdownItem icon={<Settings2 size={16} />} label="All project settings" onClick={() => { setIsOpen(false); onSettings(); }} />
+          <DropdownItem icon={<Settings2 size={ICON_SIZE.sm} />} label="All project settings" onClick={() => { setIsOpen(false); onSettings(); }} />
         </DropdownSection>
 
         {canDeactivate && (
@@ -64,10 +65,10 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
             <DropdownDivider />
             <DropdownSection label="AVOID">
               <DropdownItem
-                icon={<Trash2 size={16} />}
+                icon={<Trash2 size={ICON_SIZE.sm} />}
                 label="Deactivate project"
                 variant="muted"
-                right={<ToggleRight size={16} className="text-status-success" />}
+                right={<ToggleRight size={ICON_SIZE.sm} className="text-status-success" />}
                 onClick={() => { setIsOpen(false); onDeactivate(); }}
               />
             </DropdownSection>

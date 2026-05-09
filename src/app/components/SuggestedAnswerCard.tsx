@@ -1,6 +1,6 @@
 import React from 'react';
 import { Answer } from '../types';
-import { CardShell } from './CardShell';
+import { Card } from './ui/Card';
 import { Button } from './Button';
 
 interface Props {
@@ -11,10 +11,8 @@ interface Props {
 
 export function SuggestedAnswerCard({ answer, onUse, onHide }: Props) {
   return (
-    <CardShell id={`answer-${answer.id}`} variant="suggested">
-      <div className="flex items-center justify-between">
-        <span className="text-tiny font-mono text-text-quaternary">{answer.shortId || 'A01'}</span>
-      </div>
+    <Card id={`answer-${answer.id}`} variant="suggested">
+      <Card.Header shortId={answer.shortId || 'A01'} />
 
       <p className="text-text-quaternary">{answer.text}</p>
 
@@ -22,6 +20,6 @@ export function SuggestedAnswerCard({ answer, onUse, onHide }: Props) {
         <Button onClick={() => onUse(answer.id)}>Use</Button>
         <Button onClick={() => onHide(answer.id)}>Hide</Button>
       </div>
-    </CardShell>
+    </Card>
   );
 }

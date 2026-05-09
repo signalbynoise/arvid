@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { useStore } from '../store';
 import { BaseModal } from './BaseModal';
 
@@ -27,7 +28,7 @@ export function DeleteProjectModal({ isOpen, onClose, projectId, projectName, ha
       <div className="space-y-5">
         <div className="flex items-start space-x-3">
           <div className="w-10 h-10 rounded-full bg-status-error-surface flex items-center justify-center shrink-0 mt-0.5">
-            <AlertTriangle size={20} className="text-status-error" />
+            <AlertTriangle size={ICON_SIZE.lg} className="text-status-error" />
           </div>
           <div>
             <p className="text-caption-lg text-text-primary">

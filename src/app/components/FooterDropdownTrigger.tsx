@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 
 interface FooterDropdownTriggerProps {
   onClick: () => void;
@@ -21,7 +22,7 @@ export function FooterDropdownTrigger({ onClick, disabled = false, isOpen = fals
       className={`flex items-center justify-between w-full p-3 bg-surface-panel border border-border-default ${radiusClass} text-label hover:border-border-hover transition-colors disabled:opacity-50`}
     >
       <span className="truncate">{children}</span>
-      <ChevronDown size={14} className="text-text-quaternary shrink-0 ml-2" />
+      <ChevronDown size={ICON_SIZE.sm} className="text-text-quaternary shrink-0 ml-2" />
     </button>
   );
 }

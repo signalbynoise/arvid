@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Plus, LoaderPinwheel, MessageSquare, FileText, BarChart3, Slack, Mail, FileText as FileDoc } from 'lucide-react';
+import { ICON_SIZE } from '../../../constants/icons';
 import { MiniShell } from './MiniShell';
 import { MiniTopbar } from './MiniTopbar';
 import { MiniColumn, MiniColumnEmpty, MINI_DEMO_COLUMN_LAYOUT_CLASS } from './MiniColumn';
@@ -202,7 +203,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
                 ))
               ) : (
                 <MiniColumnEmpty
-                  icon={<MessageSquare size={12} className="text-text-quaternary opacity-20 mb-1" />}
+                  icon={<MessageSquare size={ICON_SIZE.xs} className="text-text-quaternary opacity-20 mb-1" />}
                   message="Select a question"
                 />
               )}
@@ -236,7 +237,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
                 </>
               ) : (
                 <MiniColumnEmpty
-                  icon={<FileText size={12} className="text-text-quaternary opacity-20 mb-1" />}
+                  icon={<FileText size={ICON_SIZE.xs} className="text-text-quaternary opacity-20 mb-1" />}
                   message="Select a requirement"
                 />
               )}
@@ -263,7 +264,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
 
             {isExtracting && (
               <div className="flex flex-col items-center py-4 space-y-2">
-                <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+                <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-tertiary animate-spin" />
                 <p className="text-[7px] text-text-tertiary">{layout.modal.extractingMessage}</p>
               </div>
             )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Hash, Lock, MessageSquare, Bell, Loader2, Check } from 'lucide-react';
+import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore, selectSlackChannels, selectSelectedProjectId } from '../store';
 import { toast } from 'sonner';
@@ -73,16 +74,16 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
   };
 
   const channelIcon = (ch: { isPrivate: boolean; isIm: boolean }) => {
-    if (ch.isIm) return <MessageSquare size={14} className="text-text-quaternary shrink-0" />;
-    if (ch.isPrivate) return <Lock size={14} className="text-text-quaternary shrink-0" />;
-    return <Hash size={14} className="text-text-quaternary shrink-0" />;
+    if (ch.isIm) return <MessageSquare size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />;
+    if (ch.isPrivate) return <Lock size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />;
+    return <Hash size={ICON_SIZE.sm} className="text-text-quaternary shrink-0" />;
   };
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Slack Channels" size="lg">
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 size={20} className="animate-spin text-text-quaternary" />
+          <Loader2 size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : (
         <div className="space-y-4">
@@ -104,7 +105,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
                   {channelIcon(ch)}
                   <span className="truncate flex-1">{ch.name}</span>
                   {selectedIds.has(ch.id) && (
-                    <Check size={14} className="text-status-success shrink-0" />
+                    <Check size={ICON_SIZE.sm} className="text-status-success shrink-0" />
                   )}
                 </button>
               ))}
@@ -116,7 +117,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
 
           <div>
             <p className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest mb-2 flex items-center gap-1.5">
-              <Bell size={12} />
+              <Bell size={ICON_SIZE.xs} />
               Notification channel
             </p>
             <div className="max-h-[120px] overflow-y-auto space-y-0.5 border border-border-default rounded-comfortable p-1">
@@ -130,7 +131,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
               >
                 <span className="text-text-quaternary">None</span>
                 {notifyChannelId === null && (
-                  <Check size={14} className="text-status-success ml-auto shrink-0" />
+                  <Check size={ICON_SIZE.sm} className="text-status-success ml-auto shrink-0" />
                 )}
               </button>
               {channels.filter(ch => !ch.isIm).map(ch => (
@@ -146,7 +147,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
                   {channelIcon(ch)}
                   <span className="truncate flex-1">{ch.name}</span>
                   {notifyChannelId === ch.id && (
-                    <Check size={14} className="text-status-success shrink-0" />
+                    <Check size={ICON_SIZE.sm} className="text-status-success shrink-0" />
                   )}
                 </button>
               ))}
@@ -157,7 +158,7 @@ export function SlackChannelPicker({ isOpen, onClose }: Props) {
             <button onClick={handleSave} disabled={isSaving} className="btn-primary flex items-center space-x-2">
               {isSaving ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={ICON_SIZE.sm} className="animate-spin" />
                   <span>Saving...</span>
                 </>
               ) : (
