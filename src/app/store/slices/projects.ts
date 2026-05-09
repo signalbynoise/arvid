@@ -40,7 +40,16 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
     log.info('loadProjects', 'Fetching projects', { workspaceId });
 
     try {
-      const projects = await api.getProjects(workspaceId);
+      let projects = await api.getProjects(workspaceId);
+
+      if (projects.length === 0 && workspaceId) {
+        log.info('loadProjects', 'No projects found, creating default project');
+        const teams = await api.getTeams(workspaceId);
+        const teamId = teams[0]?.id;
+        const created = await api.createProject('My Project', undefined, workspaceId, teamId);
+        projects = [created];
+      }
+
       set({ projects, projectsDataState: { status: 'ready' } });
       log.info('loadProjects', 'Projects loaded', { count: projects.length });
     } catch (err) {
