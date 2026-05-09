@@ -22,10 +22,18 @@ export function useRouterResolver() {
   const loadProjects = useStore(s => s.loadProjects);
   const loadTeams = useStore(s => s.loadTeams);
   const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
-  const selectRequirement = useStore(s => s.selectRequirement);
-  const selectQuestion = useStore(s => s.selectQuestion);
   const acceptPendingInvitations = useStore(s => s.acceptPendingInvitations);
   const loadWorkspaces = useStore(s => s.loadWorkspaces);
+
+  const setReqId = (id: string | null) => {
+    useStore.setState({
+      selectedReqId: id,
+      ...(id === null ? { selectedQuestionId: null } : {}),
+    });
+  };
+  const setQuestionId = (id: string | null) => {
+    useStore.setState({ selectedQuestionId: id });
+  };
 
   const actionsRef = useRef({
     navigate: (path: string) => navigateRef.current(path, { replace: true }),
@@ -33,8 +41,8 @@ export function useRouterResolver() {
     loadProjects,
     loadTeams,
     setSelectedProjectId,
-    selectRequirement,
-    selectQuestion,
+    selectRequirement: setReqId,
+    selectQuestion: setQuestionId,
     buildProjectPath: buildProjectPathFromEntities,
   });
   actionsRef.current = {
@@ -43,8 +51,8 @@ export function useRouterResolver() {
     loadProjects,
     loadTeams,
     setSelectedProjectId,
-    selectRequirement,
-    selectQuestion,
+    selectRequirement: setReqId,
+    selectQuestion: setQuestionId,
     buildProjectPath: buildProjectPathFromEntities,
   };
 
