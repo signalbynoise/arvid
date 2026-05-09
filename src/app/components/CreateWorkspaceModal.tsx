@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { generateSlug } from '../domain/workspaces';
+import { buildWorkspacePath } from '../domain/paths';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
+  const navigate = useNavigate();
   const createWorkspace = useStore(s => s.createWorkspace);
 
   const [name, setName] = useState('');
@@ -36,6 +39,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
 
     if (result) {
       handleClose();
+      navigate(buildWorkspacePath(result.slug));
     } else {
       setError('Failed to create workspace. The name may already be taken.');
     }
