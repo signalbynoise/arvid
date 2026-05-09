@@ -44,23 +44,23 @@ describe('buildProjectPathFromEntities', () => {
     { id: 'tm-2', workspaceId: 'ws-1', name: 'Norway', slug: 'norway', shortId: 'T02', createdBy: 'u-1', createdAt: '2026-01-01', isDeleted: false },
   ];
 
-  it('resolves the team short ID from the project teamId', () => {
-    const project = { id: 'p1', name: 'Test', shortId: 'P01', teamId: 'tm-1' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/W01/T01/P01');
+  it('uses workspace slug for the URL segment', () => {
+    const project = { id: 'p1', name: 'Test', shortId: 'P-4NRQ', teamId: 'tm-1' } as Project;
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T01/P-4NRQ');
   });
 
   it('resolves second team correctly', () => {
-    const project = { id: 'p2', name: 'Test2', shortId: 'P02', teamId: 'tm-2' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/W01/T02/P02');
+    const project = { id: 'p2', name: 'Test2', shortId: 'P-X3KM', teamId: 'tm-2' } as Project;
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T02/P-X3KM');
   });
 
   it('falls back to T00 when team is not found', () => {
-    const project = { id: 'p3', name: 'Test3', shortId: 'P03', teamId: 'unknown' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/W01/T00/P03');
+    const project = { id: 'p3', name: 'Test3', shortId: 'P-7MVL', teamId: 'unknown' } as Project;
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T00/P-7MVL');
   });
 
   it('falls back to project id when shortId is missing', () => {
     const project = { id: 'p-legacy', name: 'Legacy' } as Project;
-    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/W01/T00/p-legacy');
+    expect(buildProjectPathFromEntities(workspace, teams, project)).toBe('/arvid/T00/p-legacy');
   });
 });

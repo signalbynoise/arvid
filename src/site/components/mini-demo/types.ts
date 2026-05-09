@@ -49,6 +49,7 @@ export interface DemoState {
   modalPhase: null | 'open' | 'importing' | 'extracting' | 'suggestions' | 'selected';
   exports: string[];
   browsed: boolean;
+  imported: boolean;
   cycleCount: number;
 }
 
@@ -66,6 +67,7 @@ export interface Actor {
 
 export interface Rule {
   actor: string;
+  weight?: number;
   canExecute: (state: DemoState) => boolean;
   execute: (state: DemoState, pool: ContentPool) => Transition;
 }

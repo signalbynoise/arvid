@@ -43,7 +43,7 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
   }, [isOpen, handleClickOutside]);
 
   const handleSelect = (ws: typeof workspaces[number]) => {
-    navigate(buildWorkspacePath(ws.shortId ?? ws.slug));
+    navigate(buildWorkspacePath(ws.slug));
     setIsOpen(false);
   };
 

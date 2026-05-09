@@ -4,7 +4,7 @@ import { validateBody } from '../middleware/validateBody';
 import { CreateQuestionBodySchema, UpdateQuestionBodySchema } from '../../shared/schemas';
 import { suggestQuestions, classifyQuestion } from '../openrouter';
 import { fetchRequirementContext } from '../context';
-import { nextShortId, formatShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const questionsRouter = Router();
@@ -43,7 +43,7 @@ questionsRouter.get('/:id', async (req, res) => {
 
 questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
-  const shortId = await nextShortId(db, 'questions', 'Q', 'requirement_id', req.body.requirement_id);
+  const shortId = await generateShortId(db, 'questions', 'Q');
   const { data, error } = await db
     .from('questions')
     .insert({ ...req.body, short_id: shortId, created_by: req.user!.id })
@@ -174,17 +174,14 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       return res.status(200).json([]);
     }
 
-    const { count: existingCount } = await db
-      .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('requirement_id', requirementId);
-
-    const baseCount = existingCount ?? 0;
+    const shortIds = await Promise.all(
+      dedupedSuggestions.map(() => generateShortId(db, 'questions', 'Q')),
+    );
 
     const rows = dedupedSuggestions.map((s, i) => ({
       id: `qs-${requirementId}-${Date.now()}-${i}`,
       requirement_id: requirementId,
-      short_id: formatShortId('Q', baseCount + i),
+      short_id: shortIds[i],
       text: s.text,
       importance: s.importance,
       category: s.category,

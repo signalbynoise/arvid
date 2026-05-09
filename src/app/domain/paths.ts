@@ -28,7 +28,7 @@ export function buildProjectPathFromEntities(
   const team = teams.find(t => t.id === project.teamId);
   const teamShortId = team?.shortId ?? 'T00';
   return buildProjectPath(
-    workspace.shortId ?? 'W00',
+    workspace.slug,
     teamShortId,
     project.shortId ?? project.id,
   );

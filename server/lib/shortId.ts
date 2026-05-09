@@ -1,29 +1,29 @@
+import { randomBytes } from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function formatShortId(prefix: string, num: number): string {
-  return `${prefix}${String(num).padStart(2, '0')}`;
+const CHARSET = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const ID_LENGTH = 4;
+const MAX_ATTEMPTS = 5;
+
+function randomChars(length: number): string {
+  const bytes = randomBytes(length);
+  return Array.from(bytes, b => CHARSET[b % CHARSET.length]).join('');
 }
 
-export async function nextShortId(
+export async function generateShortId(
   db: SupabaseClient,
   table: string,
   prefix: string,
-  scopeColumn: string,
-  scopeValue: string,
 ): Promise<string> {
-  const { data } = await db
-    .from(table)
-    .select('short_id')
-    .eq(scopeColumn, scopeValue)
-    .not('short_id', 'is', null)
-    .order('short_id', { ascending: false })
-    .limit(1);
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const id = `${prefix}-${randomChars(ID_LENGTH)}`;
+    const { data } = await db
+      .from(table)
+      .select('id')
+      .eq('short_id', id)
+      .limit(1);
 
-  if (!data || data.length === 0) {
-    return formatShortId(prefix, 1);
+    if (!data || data.length === 0) return id;
   }
-
-  const lastShortId = data[0].short_id as string;
-  const numPart = parseInt(lastShortId.replace(prefix, ''), 10);
-  return formatShortId(prefix, (isNaN(numPart) ? 0 : numPart) + 1);
+  return `${prefix}-${randomChars(ID_LENGTH + 2)}`;
 }

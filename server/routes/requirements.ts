@@ -6,7 +6,7 @@ import { enhanceRequirement, classifyImplementation } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 import type { DbAnalysis } from '../../shared/schemas/dbContext';
-import { nextShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const requirementsRouter = Router();
@@ -67,9 +67,7 @@ requirementsRouter.get('/:id', async (req, res) => {
 requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const projectId = req.body.project_id;
-  const shortId = projectId
-    ? await nextShortId(db, 'requirements', 'R', 'project_id', projectId)
-    : `R${String(Date.now()).slice(-2)}`;
+  const shortId = await generateShortId(db, 'requirements', 'R');
   const { data, error } = await db
     .from('requirements')
     .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString(), created_by: req.user!.id })

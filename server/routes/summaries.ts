@@ -3,6 +3,7 @@ import { createUserClient } from '../supabase';
 import { generateSummary, SummaryGenerationInput } from '../openrouter';
 import { fetchRequirementContext } from '../context';
 import { sendSlackNotification } from '../lib/slackNotifier';
+import { generateShortId } from '../lib/shortId';
 
 export const summariesRouter = Router();
 
@@ -79,9 +80,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
       .select('short_id')
       .eq('id', requirementId)
       .single();
-    const summaryShortId = reqRow?.short_id
-      ? reqRow.short_id.replace(/^R/, 'S')
-      : null;
+    const summaryShortId = await generateShortId(db, 'summaries', 'S');
 
     const { data: upserted, error: upsertError } = await db
       .from('summaries')

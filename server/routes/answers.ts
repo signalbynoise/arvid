@@ -4,7 +4,7 @@ import { validateBody } from '../middleware/validateBody';
 import { CreateAnswerBodySchema, UpdateAnswerBodySchema } from '../../shared/schemas';
 import { suggestAnswer } from '../openrouter';
 import { fetchRequirementContext } from '../context';
-import { nextShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
 export const answersRouter = Router();
@@ -43,7 +43,7 @@ answersRouter.get('/:id', async (req, res) => {
 
 answersRouter.post('/', validateBody(CreateAnswerBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
-  const shortId = await nextShortId(db, 'answers', 'A', 'question_id', req.body.question_id);
+  const shortId = await generateShortId(db, 'answers', 'A');
   const { data, error } = await db
     .from('answers')
     .insert({ ...req.body, short_id: shortId, created_by: req.user!.id })
@@ -142,7 +142,7 @@ answersRouter.post('/suggest/:questionId', async (req, res) => {
     }
 
     const answerId = `as-${questionId}-${Date.now()}`;
-    const shortId = await nextShortId(db, 'answers', 'A', 'question_id', questionId);
+    const shortId = await generateShortId(db, 'answers', 'A');
     const { data: inserted, error: insertError } = await db
       .from('answers')
       .insert({

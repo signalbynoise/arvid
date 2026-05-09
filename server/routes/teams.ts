@@ -3,7 +3,7 @@ import { createUserClient } from '../supabase';
 import { supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateTeamBodySchema, UpdateTeamBodySchema } from '../../shared/schemas';
-import { nextShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 
 export const teamsRouter = Router();
 
@@ -55,7 +55,7 @@ teamsRouter.post('/', validateBody(CreateTeamBodySchema), async (req, res) => {
   const userId = req.user!.id;
   const { name, workspace_id } = req.body;
   const slug = generateSlug(name);
-  const shortId = await nextShortId(supabaseAdmin, 'teams', 'T', 'workspace_id', workspace_id);
+  const shortId = await generateShortId(supabaseAdmin, 'teams', 'T');
 
   const { data: team, error } = await db
     .from('teams')

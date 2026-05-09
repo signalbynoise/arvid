@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { createUserClient, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateProjectBodySchema, UpdateProjectBodySchema } from '../../shared/schemas';
-import { nextShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 
 export const projectsRouter = Router();
 
@@ -43,7 +43,7 @@ projectsRouter.get('/:id', async (req, res) => {
 projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const userId = req.user!.id;
-  const shortId = await nextShortId(db, 'projects', 'P', 'user_id', userId);
+  const shortId = await generateShortId(db, 'projects', 'P');
   const body: Record<string, unknown> = {
     ...req.body,
     id: randomUUID(),

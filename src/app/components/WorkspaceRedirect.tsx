@@ -22,8 +22,8 @@ export function WorkspaceRedirect() {
   useEffect(() => {
     if (workspacesDataState.status === 'ready' && workspaces.length > 0) {
       const target = workspaces[0];
-      const path = buildWorkspacePath(target.shortId ?? target.slug);
-      log.info('redirect', 'Redirecting to default workspace', { shortId: target.shortId, path });
+      const path = buildWorkspacePath(target.slug);
+      log.info('redirect', 'Redirecting to default workspace', { slug: target.slug, path });
       navigate(path, { replace: true });
     }
   }, [workspacesDataState.status, workspaces, navigate]);

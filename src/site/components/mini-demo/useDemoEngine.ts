@@ -13,18 +13,27 @@ const DEFAULT_STATE: DemoState = {
   modalPhase: null,
   exports: [],
   browsed: false,
+  imported: false,
   cycleCount: 0,
 };
 
 const TICK_DELAY = 1000;
 
-function pickNextTransition(direction: Direction, state: DemoState): Transition | null {
-  for (const rule of direction.rules) {
-    if (rule.canExecute(state)) {
-      return rule.execute(state, direction.contentPool);
-    }
+function weightedPick<T extends { weight?: number }>(items: T[]): T {
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 1), 0);
+  let rand = Math.random() * totalWeight;
+  for (const item of items) {
+    rand -= item.weight ?? 1;
+    if (rand <= 0) return item;
   }
-  return null;
+  return items[items.length - 1];
+}
+
+function pickNextTransition(direction: Direction, state: DemoState): Transition | null {
+  const eligible = direction.rules.filter(rule => rule.canExecute(state));
+  if (eligible.length === 0) return null;
+  const picked = weightedPick(eligible);
+  return picked.execute(state, direction.contentPool);
 }
 
 function startNewCycle(state: DemoState): DemoState {
@@ -39,7 +48,8 @@ function startNewCycle(state: DemoState): DemoState {
     completeness: 0,
     modalPhase: null,
     exports: [],
-    browsed: false,
+    browsed: true,
+    imported: true,
     cycleCount: state.cycleCount + 1,
   };
 }

@@ -55,9 +55,9 @@ export function WorkspaceLayout() {
     if (workspacesDataState.status !== 'ready' || workspaces.length === 0 || !wsShortId) return;
     if (syncedWsRef.current === wsShortId) return;
 
-    const workspace = workspaces.find(w => w.shortId === wsShortId);
+    const workspace = workspaces.find(w => w.slug === wsShortId || w.shortId === wsShortId);
     if (!workspace) {
-      log.warn('sync', 'Unknown workspace short ID, redirecting', { wsShortId });
+      log.warn('sync', 'Unknown workspace slug, redirecting', { wsShortId });
       navigate('/', { replace: true });
       return;
     }

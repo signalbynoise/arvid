@@ -4,7 +4,7 @@ import { createUserClient } from '../supabase';
 import { supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateWorkspaceBodySchema, UpdateWorkspaceBodySchema } from '../../shared/schemas';
-import { nextShortId } from '../lib/shortId';
+import { generateShortId } from '../lib/shortId';
 
 export const workspacesRouter = Router();
 
@@ -48,7 +48,7 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
   const { name } = req.body;
   const slug = generateSlug(name);
 
-  const shortId = await nextShortId(supabaseAdmin, 'workspaces', 'W', 'created_by', userId);
+  const shortId = await generateShortId(supabaseAdmin, 'workspaces', 'W');
 
   console.info('[INFO] [workspaces:create] Creating workspace', JSON.stringify({ name, slug, shortId, userId }));
 
@@ -77,7 +77,7 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
   }
 
   const teamSlug = 'general';
-  const teamShortId = await nextShortId(supabaseAdmin, 'teams', 'T', 'workspace_id', workspace.id);
+  const teamShortId = await generateShortId(supabaseAdmin, 'teams', 'T');
   const { data: team, error: teamError } = await supabaseAdmin
     .from('teams')
     .insert({ workspace_id: workspace.id, name: 'General', slug: teamSlug, short_id: teamShortId, created_by: userId })
@@ -89,12 +89,13 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
   }
 
   if (team) {
+    const projectShortId = await generateShortId(supabaseAdmin, 'projects', 'P');
     const { error: projectError } = await supabaseAdmin
       .from('projects')
       .insert({
         id: randomUUID(),
         name: 'My Project',
-        short_id: 'P01',
+        short_id: projectShortId,
         workspace_id: workspace.id,
         team_id: team.id,
         user_id: userId,

@@ -13,11 +13,21 @@ Read `docs/mini_demos.md` for the engineering spec and `docs/mda_director.md` fo
 
 Creating or redesigning an MDA **must** follow this pipeline in order:
 
-1. **Director** — invoke the `mda-director` skill. Produce a Director's Treatment (mood, cast, beats, phase breakdown). No code is written at this stage.
-2. **Script Writer** — invoke the `mda-scriptwriter` skill. Translate the treatment into `data.ts` (SEQUENCE, collaborators, cursor positions, static content). No components are written at this stage.
-3. **Implementation** — build the orchestrator and any new sub-components using shared primitives from `mini-demo/`.
+1. **Director** — invoke the `mda-director` skill. Produce a Direction Spec (mood, goal, cast, capabilities, content pool requirements). No code.
+2. **Script Writer** — invoke the `mda-scriptwriter` skill. Write `direction.ts` with Direction object (goal, rules, actors, content pool). No components.
+3. **Implementation** — build the orchestrator that maps engine state to UI using shared primitives from `mini-demo/`.
 
-Skipping steps is forbidden. If the narrative changes, go back to the Director — never patch code on top of a stale script.
+Skipping steps is forbidden. If the direction changes, go back to the Director.
+
+## Engine Architecture
+
+Demos use the **headless rule-based engine** (`useDemoEngine`). The engine:
+- Evaluates rules against abstract `DemoState` each tick
+- Emits `Transition` objects (actor + verb + subject + state update)
+- Knows nothing about UI, DOM, cursors, or components
+- Loops endlessly — when the goal is reached, a new cycle begins from the living state
+
+The **orchestrator** (AppDemo.tsx, GitHubDemo.tsx) is the only layer that maps engine transitions to cursor targets and component props. The engine is testable without React.
 
 ## Architecture (enforced)
 
