@@ -25,9 +25,18 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const slackChannels = useStore(s => s.slackChannels);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
+  const integrationFocus = useStore(s => s.integrationFocus);
+  const clearIntegrationFocus = useStore(s => s.clearIntegrationFocus);
 
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
   const [unlocked, setUnlocked] = useState<Set<IntegrationKey>>(new Set());
+
+  useEffect(() => {
+    if (integrationFocus) {
+      setUnlocked(prev => new Set(prev).add(integrationFocus));
+      clearIntegrationFocus();
+    }
+  }, [integrationFocus, clearIntegrationFocus]);
 
   const prevProjectRef = useRef({ repo: project.githubRepo, linear: project.linearProjectName, slack: project.slackNotificationChannelId, supabase: project.supabaseProjectRef });
   useEffect(() => {

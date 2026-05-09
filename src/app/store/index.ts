@@ -25,7 +25,7 @@ export const useStore = create<AppState>()((...args) => ({
   ...createSupabaseConnectSlice(...args),
 }));
 
-export type { UISlice, ModalIntent, PendingModal } from './slices/ui';
+export type { UISlice, ModalIntent, PendingModal, IntegrationFocus } from './slices/ui';
 export type { DataState, DataStatus } from './slices/entities';
 export type { SummaryDataState, SummaryDataStatus } from './slices/summaries';
 export type { GitHubConnectionState, GitHubRepo, RepoFetchStatus } from './slices/github';

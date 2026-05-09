@@ -25,10 +25,13 @@ export interface PendingModal {
   data?: unknown;
 }
 
+export type IntegrationFocus = 'repository' | 'project' | 'alerts' | 'database';
+
 export interface UISlice {
   commandPaletteOpen: boolean;
   pendingModal: PendingModal | null;
   hintRequirementCards: boolean;
+  integrationFocus: IntegrationFocus | null;
 
   openCommandPalette: () => void;
   closeCommandPalette: () => void;
@@ -36,12 +39,15 @@ export interface UISlice {
   requestModal: (intent: ModalIntent, data?: unknown) => void;
   clearPendingModal: () => void;
   flashRequirementHint: () => void;
+  focusIntegration: (key: IntegrationFocus) => void;
+  clearIntegrationFocus: () => void;
 }
 
 export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) => ({
   commandPaletteOpen: false,
   pendingModal: null,
   hintRequirementCards: false,
+  integrationFocus: null,
 
   openCommandPalette: () => {
     set({ commandPaletteOpen: true });
@@ -72,5 +78,14 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
     set({ hintRequirementCards: true });
     setTimeout(() => set({ hintRequirementCards: false }), 800);
     log.debug('flashRequirementHint', 'Hint animation triggered');
+  },
+
+  focusIntegration: (key: IntegrationFocus) => {
+    set({ integrationFocus: key });
+    log.debug('focusIntegration', 'Integration focus set', { key });
+  },
+
+  clearIntegrationFocus: () => {
+    set({ integrationFocus: null });
   },
 });
