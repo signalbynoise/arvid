@@ -68,3 +68,4 @@ export default defineConfig(({ mode }) => {
   assetsInclude: ['**/*.svg', '**/*.csv'],
 }
 })
+

@@ -97,13 +97,13 @@ export const SEQUENCE: Step[] = [
   // Sarah clicks the import button
   { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '48%', y: '46%' }] },
 
-  // Step 2: Arvid is extracting — loading state
-  { action: 'extracting_slack', delay: 600 },
+  // Step 2: Arvid extracts — Sarah steps back, Arvid takes over
+  { action: 'extracting_slack', delay: 600, cursors: [{ id: 'sarah', x: '22%', y: '30%' }] },
   { action: 'noop', delay: 1200, cursors: [{ id: 'arvid', x: '48%', y: '42%' }] },
 
-  // Step 3: Suggestions appear, Sarah selects
+  // Step 3: Suggestions appear, Arvid selects the first one
   { action: 'show_slack_options', delay: 600 },
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '46%', y: '40%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '46%', y: '40%' }] },
   { action: 'select_slack_item', delay: 600 },
 
   // Modal closes, new req appears
