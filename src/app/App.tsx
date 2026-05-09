@@ -155,8 +155,11 @@ export default function App() {
 
   const renderMainContent = () => {
     if (!selectedProjectId) {
-      const projectsStillResolving = projectsDataState.status === 'idle' || projectsDataState.status === 'loading';
-      if (projectsStillResolving) {
+      const projects = useStore.getState().projects;
+      const projectsNotReady = projectsDataState.status === 'idle' || projectsDataState.status === 'loading';
+      const autoNavPending = projectsDataState.status === 'ready' && projects.length > 0;
+
+      if (projectsNotReady || autoNavPending) {
         return (
           <div className="flex-1 flex items-center justify-center bg-surface-panel">
             <LoaderPinwheel className="animate-spin" size={24} />
