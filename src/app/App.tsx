@@ -151,8 +151,19 @@ export default function App() {
     deactivateEntity(entityType, entityId);
   };
 
+  const projectsDataState = useStore(s => s.projectsDataState);
+
   const renderMainContent = () => {
     if (!selectedProjectId) {
+      const projectsStillResolving = projectsDataState.status === 'idle' || projectsDataState.status === 'loading';
+      if (projectsStillResolving) {
+        return (
+          <div className="flex-1 flex items-center justify-center bg-surface-panel">
+            <LoaderPinwheel className="animate-spin" size={24} />
+          </div>
+        );
+      }
+
       return (
         <div className="flex-1 bg-surface-panel flex flex-col items-center justify-center text-text-quaternary">
           <Folder size={48} className="mb-4 opacity-10" />
