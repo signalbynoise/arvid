@@ -155,6 +155,50 @@ Since demos render at miniature scale inside feature sections, text sizes are sc
 
 ---
 
+## MiniShell Positioning — CRITICAL ARCHITECTURE RULE
+
+`MiniShell` (`src/site/components/mini-demo/MiniShell.tsx`) uses a **two-div structure** that must not be modified without understanding the constraint:
+
+### The Problem
+
+Each demo's `layout.shell.className` sets `position: absolute` to anchor the demo shell within its container (e.g. `absolute w-[800px] h-[600px] top-[40px] right-0`). Meanwhile, `MiniModal` uses `absolute inset-0` to scope its dark overlay scrim to the app shell frame.
+
+For modal scoping to work, `MiniModal` needs a parent with `position: relative`. The intuitive fix is adding `relative` to the `MiniShell` div. **This is wrong and breaks everything.**
+
+### Why `relative` on the outer div breaks positioning
+
+In Tailwind v4 (and CSS generally), when two utility classes set the same property (`position`) on the same element, the winner is determined by **stylesheet generation order**, not by the order in the `class` attribute. When `relative` and `absolute` coexist on the same element:
+
+```
+className={`relative flex ... ${className}`}
+//          ^^^^^^^^              ^^^^^^^^
+//          sets position:relative  sets position:absolute
+```
+
+Tailwind may generate `position: relative` **after** `position: absolute` in the stylesheet, causing `relative` to silently win. The shell stops being absolutely positioned. The hero demo floats instead of anchoring to the bottom. Side demos ignore `right-0` and `left-0`. No amount of `!important` hacks or class reordering fixes it because the conflict is at the stylesheet level.
+
+### The Solution: Two-Div Structure
+
+```
+Outer div — receives className (with `absolute`, sizing, positioning)
+  └── Inner div — `relative flex flex-1 min-w-0 min-h-0`
+        └── children (sidebar, columns, MiniModal)
+```
+
+- **Outer div**: positioned by the demo config. MUST NOT have `relative`.
+- **Inner div**: provides `position: relative` for modal scoping. MUST NOT be removed.
+
+### Rules
+
+- **NEVER** add `relative`, `fixed`, or `sticky` to `MiniShell`'s outer div
+- **NEVER** remove the inner `relative` wrapper div
+- **NEVER** put two conflicting position utilities on the same element in any shared primitive
+- If you need a new positioning context, add it **inside** the inner div
+
+This was a multi-hour debugging incident. The root cause was invisible in DevTools because the class attribute showed both `relative` and `absolute` — but CSS resolved the conflict silently based on stylesheet order.
+
+---
+
 ## Shared Primitives
 
 All demos should use the shared primitives from `src/site/components/mini-demo/`:
@@ -203,6 +247,7 @@ Before shipping any new mini demo, verify:
 - [ ] Component names describe their role in the feature narrative
 - [ ] Total cycle is 20–30 seconds
 - [ ] Passes the Director Rulebook checklist ([docs/mda_director.md](mda_director.md))
+- [ ] `MiniShell` outer div has NO `relative`/`fixed`/`sticky` — only the inner wrapper has `relative` (see § "MiniShell Positioning")
 
 ---
 

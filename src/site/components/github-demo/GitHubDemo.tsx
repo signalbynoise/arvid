@@ -24,11 +24,11 @@ const layout: DemoLayoutConfig = {
     ],
   },
   columns: [
-    { key: 'requirements', title: 'Requirements', width: 'w-1/2' },
-    { key: 'questions', title: 'Questions', width: 'w-1/2', borderRight: false },
+    { key: 'requirements', title: 'Requirements' },
+    { key: 'questions', title: 'Questions' },
   ],
   shell: {
-    className: 'absolute w-[800px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0',
+    className: 'absolute w-[800px] h-[600px] top-[40px] left-[40px] lg:left-auto lg:right-0 lg:rounded-r-none lg:border-r-0',
     shadow: false,
     roundedRight: false,
   },
@@ -36,6 +36,8 @@ const layout: DemoLayoutConfig = {
     title: 'Connect Repository',
     extractingMessage: 'Arvid is analyzing your codebase...',
   },
+  showAnswers: true,
+  showSummary: false,
 };
 
 export function GitHubDemo() {

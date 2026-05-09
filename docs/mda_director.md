@@ -215,6 +215,12 @@ If a demo feels "about right" during development, it is too fast. Slow it down b
 
 ---
 
+## Shell Positioning Constraint
+
+All demos anchor their shell using `position: absolute` via `layout.shell.className` in the demo config. The `MiniShell` component uses a two-div structure to avoid a CSS position conflict — see `docs/mini_demos.md` § "MiniShell Positioning" for the full explanation. The short version: **never add `position: relative` to MiniShell's outer div**. It silently overrides `absolute` due to Tailwind v4 stylesheet ordering and breaks all demo anchoring.
+
+---
+
 ## Checklist for New MDAs (Director Review)
 
 Before shipping, verify the demo passes both the engineering checklist (`docs/mini_demos.md`) and this creative review:
@@ -234,3 +240,4 @@ Before shipping, verify the demo passes both the engineering checklist (`docs/mi
 - [ ] Demo starts only when visible (IntersectionObserver)
 - [ ] `prefers-reduced-motion` shows a static populated frame
 - [ ] Watching the demo for 2 minutes does not feel repetitive or intrusive
+- [ ] `MiniShell` outer div has NO `relative`/`fixed`/`sticky` (see § "Shell Positioning Constraint" above and `docs/mini_demos.md` § "MiniShell Positioning")

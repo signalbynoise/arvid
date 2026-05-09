@@ -62,8 +62,22 @@ The **orchestrator** (AppDemo.tsx, GitHubDemo.tsx) is the only layer that maps e
 
 Demos are **ambient and continuous**, not presentations. They cycle through phases: Settle (10-15%) -> Flow (55-65%) -> Resolve (15-20%) -> Drift (10-15%). Loops must be seamless — no visible reset. See `docs/mda_director.md` for the full creative direction spec.
 
+## MiniShell Positioning — CRITICAL
+
+`MiniShell` uses a **two-div structure** to avoid a CSS position conflict:
+
+- **Outer div** receives `className` from the demo layout config (e.g. `absolute w-[800px] h-[600px] top-[40px] right-0`). This div sets `position: absolute` for demo anchoring (hero bottom, github right, connector left, agents right).
+- **Inner div** (`relative flex flex-1`) provides the positioning context for `MiniModal`'s `absolute inset-0` overlay scrim, scoping the dark backdrop to the app shell only.
+
+**NEVER add `position: relative` to the outer div.** In Tailwind v4, when two utilities target the same CSS property (`position`) on the same element, the one generated later in the **stylesheet** wins — not the one later in the **class attribute**. If `relative` and `absolute` coexist on the outer div, `relative` can silently win and break all demo positioning. This was a multi-hour debugging incident — the hero stopped anchoring to the bottom, side demos stopped anchoring left/right, and no class-attribute changes fixed it because the conflict was at the stylesheet level.
+
+**NEVER remove the inner div.** It is required for modal scoping — without it, the modal scrim covers the full page container instead of just the app shell.
+
+If you need a new positioning context inside MiniShell, add it **inside** the inner div.
+
 ## Forbidden
 
+- Adding `relative`, `fixed`, or `sticky` to MiniShell's outer div
 - Writing demo code without a Director's Treatment and a reviewed script
 - Generic component names (`DemoSidebar`, `DemoCard`, `DemoPanel`)
 - `className` or `style` attributes in demo sub-components — compose shared primitives only

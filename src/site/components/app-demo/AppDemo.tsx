@@ -29,8 +29,8 @@ const layout: DemoLayoutConfig = {
     ],
   },
   columns: [
-    { key: 'requirements', title: 'Requirements', width: 'w-1/4' },
-    { key: 'questions', title: 'Questions', width: 'w-1/4' },
+    { key: 'requirements', title: 'Requirements' },
+    { key: 'questions', title: 'Questions' },
   ],
   shell: {
     className: 'absolute bottom-0 right-0 h-[90%] w-[calc(100%-20px)] max-w-[1180px] md:left-1/2 md:right-auto md:w-[95%] md:-translate-x-1/2 lg:min-w-[900px]',

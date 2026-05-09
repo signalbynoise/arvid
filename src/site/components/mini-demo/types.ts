@@ -96,7 +96,6 @@ export interface EngineOutput {
 export interface DemoColumn {
   key: string;
   title: string;
-  width?: string;
   borderRight?: boolean;
 }
 

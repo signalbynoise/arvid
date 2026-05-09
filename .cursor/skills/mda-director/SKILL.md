@@ -93,3 +93,7 @@ Validate against `docs/mda_director.md`:
 - Do NOT describe UI components, cursor targets, or visual layout
 - Capabilities are abstract state transitions, not UI actions
 - The Direction is headless — it could drive any UI
+
+## Shell Positioning Warning
+
+If implementation work touches `MiniShell.tsx` or any wrapper around demo content: **never add `position: relative` to the same element that receives the demo's positioning `className` (which sets `position: absolute`).** Tailwind v4 resolves conflicting position utilities by stylesheet generation order, not class attribute order — `relative` can silently override `absolute` and break all demo anchoring. See `docs/mini_demos.md` § "MiniShell Positioning" for the full incident writeup and the required two-div structure.

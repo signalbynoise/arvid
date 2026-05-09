@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import { Plus, LoaderPinwheel, MessageSquare, FileText, BarChart3, Slack, Mail, FileText as FileDoc } from 'lucide-react';
 import { MiniShell } from './MiniShell';
 import { MiniTopbar } from './MiniTopbar';
-import { MiniColumn, MiniColumnEmpty, MINI_DEMO_COLUMN_MIN_WIDTH_CLASS } from './MiniColumn';
+import { MiniColumn, MiniColumnEmpty, MINI_DEMO_COLUMN_LAYOUT_CLASS } from './MiniColumn';
 import { MiniSidebar } from './MiniSidebar';
 import { MiniSidebarFooterItem } from './MiniSidebarFooterItem';
 import { MiniDivider } from './MiniDivider';
@@ -136,7 +136,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasReqColumn && (() => {
             const col = layout.columns.find(c => c.key === 'requirements')!;
             return (
-              <div className={`${col.width ?? 'flex-1'} ${MINI_DEMO_COLUMN_MIN_WIDTH_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${MINI_DEMO_COLUMN_LAYOUT_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   <div data-cursor-target="ds-add-btn"><Plus size={8} className="text-text-quaternary" /></div>
@@ -164,7 +164,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasQColumn && (() => {
             const col = layout.columns.find(c => c.key === 'questions')!;
             return (
-              <div className={`${col.width ?? 'flex-1'} ${MINI_DEMO_COLUMN_MIN_WIDTH_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${MINI_DEMO_COLUMN_LAYOUT_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   {state.selectedRequirement && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
@@ -192,7 +192,6 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasAColumn && (
             <MiniColumn
               title="Answers"
-              width="flex-1"
               controls={state.selectedQuestion ? <Plus size={8} className="text-text-quaternary" /> : undefined}
             >
               {state.selectedQuestion ? (
@@ -213,7 +212,6 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasSummary && (
             <MiniColumn
               title="Summary"
-              width="flex-1"
               borderRight={false}
               controls={state.summaryGenerated ? <BarChart3 size={8} className="text-text-quaternary" /> : undefined}
             >
@@ -246,51 +244,50 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           )}
         </div>
       </div>
-    </MiniShell>
-
-    {layout.modal && (
-      <MiniModal visible={showImportModal} title={layout.modal.title}>
-        <div className="space-y-2">
-          {state.modalPhase === 'open' && (
-            <div data-cursor-target="ds-modal-action" className="space-y-1.5">
-              {(layout.modal.importOptions ?? [{ icon: 'slack', label: 'Import from Slack', primary: true }]).map((opt, i) => {
-                const Icon = ICON_MAP[opt.icon] ?? Slack;
-                return (
-                  <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-standard border ${opt.primary !== false ? 'bg-surface-frost-08 border-border-default' : 'bg-surface-frost-05 border-border-subtle'}`}>
-                    <Icon size={10} className={opt.primary !== false ? 'text-text-primary shrink-0' : 'text-text-quaternary shrink-0'} />
-                    <span className={`text-[8px] font-[var(--fw-medium)] ${opt.primary !== false ? 'text-text-primary' : 'text-text-tertiary'}`}>{opt.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {isExtracting && (
-            <div className="flex flex-col items-center py-4 space-y-2">
-              <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
-              <p className="text-[7px] text-text-tertiary">{layout.modal.extractingMessage}</p>
-            </div>
-          )}
-
-          {showSuggestions && pool.slackSuggestions?.map(sug => (
-            <div
-              key={sug.id}
-              data-cursor-target={`ds-modal-sug-${sug.id}`}
-              className={`flex items-center justify-between px-2 py-1.5 rounded-micro border transition-all duration-300 ${
-                state.requirements.includes(sug.id)
-                  ? 'bg-surface-frost-08 border-border-default'
-                  : 'bg-surface-elevated border-border-subtle'
-              }`}
-            >
-              <div className="min-w-0">
-                <div className="text-[7px] font-[var(--fw-medium)] text-text-primary truncate">{sug.text}</div>
-                <div className="text-[6px] text-text-quaternary">{sug.source}</div>
+      {layout.modal && (
+        <MiniModal visible={showImportModal} title={layout.modal.title}>
+          <div className="space-y-2">
+            {state.modalPhase === 'open' && (
+              <div data-cursor-target="ds-modal-action" className="space-y-1.5">
+                {(layout.modal.importOptions ?? [{ icon: 'slack', label: 'Import from Slack', primary: true }]).map((opt, i) => {
+                  const Icon = ICON_MAP[opt.icon] ?? Slack;
+                  return (
+                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-standard border ${opt.primary !== false ? 'bg-surface-frost-08 border-border-default' : 'bg-surface-frost-05 border-border-subtle'}`}>
+                      <Icon size={10} className={opt.primary !== false ? 'text-text-primary shrink-0' : 'text-text-quaternary shrink-0'} />
+                      <span className={`text-[8px] font-[var(--fw-medium)] ${opt.primary !== false ? 'text-text-primary' : 'text-text-tertiary'}`}>{opt.label}</span>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          ))}
-        </div>
-      </MiniModal>
-    )}
+            )}
+
+            {isExtracting && (
+              <div className="flex flex-col items-center py-4 space-y-2">
+                <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+                <p className="text-[7px] text-text-tertiary">{layout.modal.extractingMessage}</p>
+              </div>
+            )}
+
+            {showSuggestions && pool.slackSuggestions?.map(sug => (
+              <div
+                key={sug.id}
+                data-cursor-target={`ds-modal-sug-${sug.id}`}
+                className={`flex items-center justify-between px-2 py-1.5 rounded-micro border transition-all duration-300 ${
+                  state.requirements.includes(sug.id)
+                    ? 'bg-surface-frost-08 border-border-default'
+                    : 'bg-surface-elevated border-border-subtle'
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="text-[7px] font-[var(--fw-medium)] text-text-primary truncate">{sug.text}</div>
+                  <div className="text-[6px] text-text-quaternary">{sug.source}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </MiniModal>
+      )}
+    </MiniShell>
 
     {direction.actors.map(actor => (
       <MiniCursor

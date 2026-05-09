@@ -85,3 +85,7 @@ export const heroDirection: Direction = {
 - Rules are headless — zero UI knowledge.
 - Use existing shared rule primitives from `mini-demo/rules.ts` before writing custom ones.
 - Custom rules go in the direction.ts file, not in the shared rules.
+
+## Shell Positioning Warning
+
+If you modify `MiniShell.tsx` or any shared primitive that wraps demo content: **never add `position: relative` to the same element that receives the demo's `className` (which sets `position: absolute`).** Tailwind v4 resolves conflicting position utilities by stylesheet generation order, not class attribute order — `relative` can silently override `absolute` and break all demo anchoring. See `docs/mini_demos.md` § "MiniShell Positioning" for the full incident writeup and the required two-div structure.

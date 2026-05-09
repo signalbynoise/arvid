@@ -9,6 +9,8 @@ import {
   selectRequirementRule,
   generateQuestionsRule,
   acceptQuestionRule,
+  selectQuestionRule,
+  answerQuestionRule,
 } from '../mini-demo/rules';
 
 const SARAH = { id: 'sarah', name: 'Sarah K.' };
@@ -29,7 +31,11 @@ const contentPool: ContentPool = {
     ],
   },
   answers: {
-    _default: [],
+    _default: [
+      { id: 'gha1', shortId: 'A01', author: 'Sarah K.', date: 'Today', text: 'Trigger refresh when OAuth callback succeeds and persist provider session metadata.', isCurrent: true },
+      { id: 'gha2', shortId: 'A02', author: 'Sarah K.', date: 'Today', text: 'Sync username, avatar, team memberships, and repository permissions from GitHub.', isCurrent: true },
+      { id: 'gha3', shortId: 'A03', author: 'Sarah K.', date: 'Today', text: 'Run repo analysis on initial connect, then queue incremental scans on webhook pushes.', isCurrent: true },
+    ],
   },
   slackSuggestions: [
     { id: 'gh-r1', text: 'Post-Login OAuth Profile Refresh', source: 'codebase analysis' },
@@ -39,7 +45,7 @@ const contentPool: ContentPool = {
 };
 
 export const githubDirection: Direction = {
-  goal: (s) => s.acceptedQuestions.length >= 2,
+  goal: (s) => s.acceptedQuestions.length >= 2 && Object.values(s.answers).some(answerIds => answerIds.length > 0),
 
   actors: [SARAH, ARVID],
 
@@ -53,6 +59,8 @@ export const githubDirection: Direction = {
     selectRequirementRule(SARAH.id),
     generateQuestionsRule(ARVID.id),
     acceptQuestionRule(SARAH.id, 2),
+    selectQuestionRule(SARAH.id),
+    answerQuestionRule(SARAH.id),
   ],
 
   contentPool,

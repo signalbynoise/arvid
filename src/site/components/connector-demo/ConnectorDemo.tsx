@@ -24,13 +24,13 @@ const layout: DemoLayoutConfig = {
     ],
   },
   columns: [
-    { key: 'requirements', title: 'Requirements', width: 'w-1/2' },
-    { key: 'questions', title: 'Questions', width: 'w-1/2', borderRight: false },
+    { key: 'requirements', title: 'Requirements' },
+    { key: 'questions', title: 'Questions' },
   ],
   shell: {
-    className: 'absolute w-[800px] h-[600px] top-[40px] right-[40px] md:right-auto md:left-0',
+    className: 'absolute w-[800px] h-[600px] top-[40px] right-[40px] lg:right-auto lg:left-0 lg:rounded-l-none lg:border-l-0',
     shadow: false,
-    roundedRight: false,
+    roundedRight: true,
   },
   modal: {
     title: 'Import Requirements',
@@ -41,6 +41,8 @@ const layout: DemoLayoutConfig = {
       { icon: 'file', label: 'Import from Document', primary: false },
     ],
   },
+  showAnswers: true,
+  showSummary: false,
 };
 
 export function ConnectorDemo() {

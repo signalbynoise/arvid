@@ -5,8 +5,6 @@ import {
   acceptQuestionRule,
   selectQuestionRule,
   answerQuestionRule,
-  generateSummaryRule,
-  exportToCursorRule,
 } from '../mini-demo/rules';
 
 const DAVID = { id: 'david', name: 'David M.' };
@@ -35,7 +33,7 @@ const contentPool: ContentPool = {
 };
 
 export const agentsDirection: Direction = {
-  goal: (s) => s.exports.includes('cursor'),
+  goal: (s) => s.acceptedQuestions.length >= 2 && Object.values(s.answers).some(answerIds => answerIds.length > 0),
 
   actors: [DAVID, ARVID],
 
@@ -45,8 +43,6 @@ export const agentsDirection: Direction = {
     acceptQuestionRule(DAVID.id, 2),
     selectQuestionRule(DAVID.id),
     answerQuestionRule(DAVID.id),
-    generateSummaryRule(ARVID.id),
-    exportToCursorRule(DAVID.id),
   ],
 
   contentPool,
