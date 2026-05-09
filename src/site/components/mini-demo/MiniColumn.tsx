@@ -10,8 +10,9 @@ interface MiniColumnProps {
 }
 
 export function MiniColumn({ title, controls, borderRight = true, width = 'w-1/4', children }: MiniColumnProps) {
+  const shrink = width.startsWith('flex') ? '' : 'shrink-0';
   return (
-    <div className={`${width} shrink-0 flex flex-col bg-surface-panel${borderRight ? ' border-r border-border-subtle' : ''}`}>
+    <div className={`${width} ${shrink} flex flex-col bg-surface-panel${borderRight ? ' border-r border-border-subtle' : ''}`}>
       <MiniColumnHeader title={title} trailing={controls} />
       <div className="flex-1 p-2 space-y-2 overflow-hidden">
         {children}

@@ -78,10 +78,13 @@ export function useSidebarModals(
         clearPendingModal();
         break;
       case 'createProject': {
-        const currentProjectId = useStore.getState().selectedProjectId;
-        const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) : undefined;
+        const storeState = useStore.getState();
+        const currentProjectId = storeState.selectedProjectId;
+        const storeProjects = storeState.projects;
+        const storeTeams = storeState.teams;
+        const currentProject = currentProjectId ? storeProjects.find(p => p.id === currentProjectId) : undefined;
         const projectTeamId = currentProject?.teamId;
-        const team = projectTeamId ? teams.find(t => t.id === projectTeamId) : teams[0];
+        const team = projectTeamId ? storeTeams.find(t => t.id === projectTeamId) : storeTeams[0];
         if (team) {
           setCreateProjectContext({
             parentId: currentProject?.id,

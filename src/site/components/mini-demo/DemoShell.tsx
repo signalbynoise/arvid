@@ -105,7 +105,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
   const hasSummary = layout.showSummary;
 
   return (
-    <div ref={containerRef} data-cursor-boundary={layout.boundaryId} className="absolute inset-0">
+    <div ref={containerRef} data-cursor-boundary={layout.boundaryId} className={layout.shell.containerClassName ?? 'absolute inset-0'}>
     <MiniShell visible shadow={layout.shell.shadow} roundedRight={layout.shell.roundedRight} className={layout.shell.className}>
       <MiniSidebar
         workspaceName={layout.workspace}
@@ -120,7 +120,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasReqColumn && (() => {
             const col = layout.columns.find(c => c.key === 'requirements')!;
             return (
-              <div className={`${col.width ?? 'w-1/4'} shrink-0 flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${col.width ?? 'flex-1'} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   <div data-cursor-target="ds-add-btn"><Plus size={8} className="text-text-quaternary" /></div>
@@ -148,7 +148,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasQColumn && (() => {
             const col = layout.columns.find(c => c.key === 'questions')!;
             return (
-              <div className={`${col.width ?? 'w-1/4'} shrink-0 flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${col.width ?? 'flex-1'} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   {state.selectedRequirement && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
@@ -176,6 +176,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasAColumn && (
             <MiniColumn
               title="Answers"
+              width="flex-1"
               controls={state.selectedQuestion ? <Plus size={8} className="text-text-quaternary" /> : undefined}
             >
               {state.selectedQuestion ? (
@@ -196,6 +197,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasSummary && (
             <MiniColumn
               title="Summary"
+              width="flex-1"
               borderRight={false}
               controls={state.summaryGenerated ? <BarChart3 size={8} className="text-text-quaternary" /> : undefined}
             >

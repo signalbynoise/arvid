@@ -112,6 +112,7 @@ export interface DemoLayoutConfig {
   columns: DemoColumn[];
   shell: {
     className: string;
+    containerClassName?: string;
     shadow?: boolean;
     roundedRight?: boolean;
   };

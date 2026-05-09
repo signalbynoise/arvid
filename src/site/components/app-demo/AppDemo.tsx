@@ -28,7 +28,8 @@ const layout: DemoLayoutConfig = {
     { key: 'questions', title: 'Questions', width: 'w-1/4' },
   ],
   shell: {
-    className: 'min-w-[900px] w-full h-full max-w-[1180px]',
+    className: 'min-w-[900px] w-full max-w-[1180px]',
+    containerClassName: 'relative w-full h-full',
   },
   modal: {
     title: 'Import Requirements',

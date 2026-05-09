@@ -20,11 +20,10 @@ const layout: DemoLayoutConfig = {
     expandedProjectId: 'p1',
   },
   columns: [
-    { key: 'requirements', title: 'Requirements', width: 'w-1/4' },
-    { key: 'questions', title: 'Questions', width: 'w-1/4' },
+    { key: 'questions', title: 'Questions', width: 'w-1/3' },
   ],
   shell: {
-    className: 'absolute w-[900px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0',
+    className: 'absolute w-[800px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0',
     shadow: false,
     roundedRight: false,
   },
