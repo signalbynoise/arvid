@@ -426,14 +426,12 @@
   }
 
   .card-hint {
-    animation: card-hint-pulse 2s ease-in-out;
+    animation: card-hint-nudge 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-@keyframes card-hint-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);   border-color: rgba(255, 255, 255, 0.08); }
-  15%  { box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.18); }
-  40%  { box-shadow: 0 0 4px 0 rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.12); }
-  55%  { box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.18); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);   border-color: rgba(255, 255, 255, 0.08); }
+@keyframes card-hint-nudge {
+  0%   { transform: scale(1);    border-color: rgba(255, 255, 255, 0.08); }
+  40%  { transform: scale(1.015); border-color: rgba(255, 255, 255, 0.16); }
+  100% { transform: scale(1);    border-color: rgba(255, 255, 255, 0.08); }
 }

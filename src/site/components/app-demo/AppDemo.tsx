@@ -98,17 +98,18 @@ export function AppDemo() {
           <div className="w-1/4 shrink-0 flex flex-col bg-surface-panel border-r border-border-subtle">
             <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
               <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">Requirements</span>
-              <Plus size={8} className="text-text-quaternary" />
+              <div data-cursor-target="req-add"><Plus size={8} className="text-text-quaternary" /></div>
             </div>
-            <div ref={reqColumnRef} className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
+            <div ref={reqColumnRef} data-cursor-target="req-column-body" className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
               {allReqs.map((req, i) => (
-                <RequirementCard
-                  key={req.id}
-                  req={req}
-                  selected={selectedReqIdx === i}
-                  dimmed={reqSelected && selectedReqIdx !== i}
-                  visible={showReqs}
-                />
+                <div key={req.id} data-cursor-target={`req-${req.id}`}>
+                  <RequirementCard
+                    req={req}
+                    selected={selectedReqIdx === i}
+                    dimmed={reqSelected && selectedReqIdx !== i}
+                    visible={showReqs}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -118,7 +119,7 @@ export function AppDemo() {
               <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">Questions</span>
               {reqSelected && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
             </div>
-            <div ref={qColumnRef} className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
+            <div ref={qColumnRef} data-cursor-target="q-column-body" className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
               {reqSelected ? (
                 QUESTIONS_R13.map((q, i) => {
                   const isVisible = visibleQuestions[i] ?? (i < 6 && visibleQuestions[5]);
@@ -127,13 +128,14 @@ export function AppDemo() {
                   );
                   const isSelected = i === 0 && selectQuestion && acceptQ1;
                   return (
-                    <QuestionCard
-                      key={q.id}
-                      q={q}
-                      visible={isVisible}
-                      suggested={isSuggested}
-                      selected={isSelected}
-                    />
+                    <div key={q.id} data-cursor-target={`q-${q.id}`}>
+                      <QuestionCard
+                        q={q}
+                        visible={isVisible}
+                        suggested={isSuggested}
+                        selected={isSelected}
+                      />
+                    </div>
                   );
                 })
               ) : (
@@ -148,8 +150,8 @@ export function AppDemo() {
           >
             {selectQuestion ? (
               <>
-                <AnswerCard answer={ANSWERS_R13[0]} visible={showAnswer1} />
-                <AnswerCard answer={ANSWERS_R13[1]} visible={showAnswer2} />
+                <div data-cursor-target="a-a1"><AnswerCard answer={ANSWERS_R13[0]} visible={showAnswer1} /></div>
+                <div data-cursor-target="a-a2"><AnswerCard answer={ANSWERS_R13[1]} visible={showAnswer2} /></div>
               </>
             ) : (
               <MiniColumnEmpty
@@ -166,12 +168,16 @@ export function AppDemo() {
           >
             {showSummary ? (
               <>
-                <KnowledgeSummary
-                  summary={SUMMARY_R13}
-                  completeness={completeness}
-                  sendEnabled={animComp}
-                  generating={summaryGenerating}
-                />
+                <div data-cursor-target="summary">
+                  <KnowledgeSummary
+                    summary={SUMMARY_R13}
+                    completeness={completeness}
+                    sendEnabled={animComp}
+                    generating={summaryGenerating}
+                  />
+                </div>
+                <div data-cursor-target="btn-linear" />
+                <div data-cursor-target="btn-cursor" />
                 {showLinear && (
                   <MiniConfirmation visible icon="/linear.svg" message="Ticket LIN-142 created" />
                 )}
@@ -193,7 +199,7 @@ export function AppDemo() {
     <MiniModal visible={showImportModal} title="Import Requirements">
       <div className="space-y-2">
         {!extractingSlack && !showSlackOptions && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-standard bg-surface-frost-08 border border-border-default">
+          <div data-cursor-target="modal-import-slack" className="flex items-center gap-2 px-3 py-2 rounded-standard bg-surface-frost-08 border border-border-default">
             <Slack size={10} className="text-text-primary shrink-0" />
             <span className="text-[8px] font-[var(--fw-medium)] text-text-primary">Import from Slack</span>
           </div>
@@ -209,6 +215,7 @@ export function AppDemo() {
         {showSlackOptions && SLACK_SUGGESTIONS.map((sug, i) => (
           <div
             key={sug.id}
+            data-cursor-target={`modal-slack-${sug.id}`}
             className={`flex items-center justify-between px-2 py-1.5 rounded-micro border transition-all duration-300 ${
               slackItemSelected && i === 0
                 ? 'bg-surface-frost-08 border-border-default'
@@ -230,9 +237,9 @@ export function AppDemo() {
         <MiniCursor
           key={c.id}
           name={c.name}
-          x={pos.x}
-          y={pos.y}
+          target={pos.target}
           visible={pos.visible !== false}
+          containerRef={containerRef}
         />
       ) : null;
     })}

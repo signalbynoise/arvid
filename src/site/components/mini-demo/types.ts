@@ -25,8 +25,7 @@ export interface BreadcrumbSegment {
 
 export interface CursorPosition {
   id: string;
-  x: string;
-  y: string;
+  target: string;
   visible?: boolean;
 }
 

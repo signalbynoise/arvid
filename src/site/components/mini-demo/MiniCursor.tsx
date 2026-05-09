@@ -1,27 +1,52 @@
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MiniCursorProps {
   name: string;
-  x: string;
-  y: string;
+  target: string;
   visible: boolean;
+  containerRef: React.RefObject<HTMLElement | null>;
 }
 
 const SPRING = { stiffness: 60, damping: 18, mass: 1.2 };
 
-export function MiniCursor({ name, x, y, visible }: MiniCursorProps) {
+function resolveTargetPosition(target: string, container: HTMLElement | null): { x: number; y: number } | null {
+  if (!container) return null;
+  const el = container.querySelector(`[data-cursor-target="${target}"]`);
+  if (!el) return null;
+  const elRect = el.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  return {
+    x: elRect.left - containerRect.left + 4,
+    y: elRect.top - containerRect.top + 4,
+  };
+}
+
+export function MiniCursor({ name, target, visible, containerRef }: MiniCursorProps) {
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const updatePos = useCallback(() => {
+    const resolved = resolveTargetPosition(target, containerRef.current);
+    if (resolved) setPos(resolved);
+  }, [target, containerRef]);
+
+  useEffect(() => {
+    updatePos();
+    const frame = requestAnimationFrame(updatePos);
+    return () => cancelAnimationFrame(frame);
+  }, [updatePos]);
+
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
           key={name}
           className="absolute pointer-events-none"
-          style={{ zIndex: 50, left: x, top: y }}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
+          style={{ zIndex: 50 }}
+          initial={{ x: pos.x, y: pos.y, opacity: 0, scale: 0.5 }}
+          animate={{ x: pos.x, y: pos.y, opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
-          transition={{ layout: SPRING, opacity: { duration: 0.5 }, scale: { duration: 0.3 } }}
-          layout
+          transition={{ x: SPRING, y: SPRING, opacity: { duration: 0.5 }, scale: { duration: 0.3 } }}
         >
           <svg width="15" height="20" viewBox="0 0 16 22" fill="none" className="drop-shadow-md">
             <path
