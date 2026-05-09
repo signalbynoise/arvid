@@ -10,9 +10,9 @@ export function HeroSection() {
   return (
     <PageGrid as="section" className="w-full pt-[120px]">
       <h1 className="col-span-full text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
-        Arvid builds the knowledge graph,
+        Arvid builds the missing knowledge graph,
         <br />
-        all teams need.
+        for your issues and agents.
       </h1>
 
       <div className="col-span-full flex items-center gap-4">
@@ -32,7 +32,7 @@ export function HeroSection() {
         </a>
       </div>
 
-      <div className="col-span-full relative mt-[60px] h-[680px] w-full overflow-hidden rounded-card bg-surface-frost-08">
+      <div data-cursor-boundary="hero" className="col-span-full relative mt-[60px] h-[680px] w-full overflow-hidden rounded-card bg-surface-frost-08">
         <div className="absolute inset-0">
           <Grainient
             color1="#616161"

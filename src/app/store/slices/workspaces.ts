@@ -136,7 +136,7 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
     }
   },
 
-  updateWorkspace: async (id: string, updates: { name?: string; logoUrl?: string | null }) => {
+  updateWorkspace: async (id: string, updates: { name?: string; logoUrl?: string | null }): Promise<string | undefined> => {
     log.info('updateWorkspace', 'Updating workspace', { id, ...updates });
 
     const previous = get().workspaces;
@@ -149,10 +149,12 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
       if (updates.name !== undefined) apiUpdates.name = updates.name;
       if (updates.logoUrl !== undefined) apiUpdates.logo_url = updates.logoUrl;
       await api.updateWorkspace(id, apiUpdates);
+      return undefined;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('updateWorkspace', 'Failed to update workspace, rolling back', { error: message });
       set({ workspaces: previous });
+      return message;
     }
   },
 

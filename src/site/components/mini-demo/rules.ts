@@ -218,7 +218,7 @@ export function answerQuestionRule(actor: string): Rule {
         subject: answer.id as string,
         stateUpdate: (prev) => ({
           ...prev,
-          answers: { ...prev.answers, [qId]: [...(prev.answers[qId] ?? []), answer.id as string] },
+          answers: { ...prev.answers, [qId]: [answer.id as string] },
           completeness: Math.min(95, prev.completeness + 10 + Math.floor(Math.random() * 15)),
         }),
       };

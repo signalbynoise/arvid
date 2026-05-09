@@ -5,17 +5,19 @@ interface MiniCursorProps {
   name: string;
   target: string;
   visible: boolean;
+  boundaryId?: string;
 }
 
 const SPRING = { stiffness: 60, damping: 18, mass: 1.2 };
 
-export function MiniCursor({ name, target, visible }: MiniCursorProps) {
+export function MiniCursor({ name, target, visible, boundaryId }: MiniCursorProps) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [inBounds, setInBounds] = useState(true);
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current);
-    if (!visible) return;
+    if (!visible || !target) return;
 
     let attempts = 0;
 
@@ -30,21 +32,34 @@ export function MiniCursor({ name, target, visible }: MiniCursorProps) {
       const newX = rect.left + rect.width / 2;
       const newY = rect.top + rect.height / 2;
 
+      if (boundaryId) {
+        const boundary = document.querySelector(`[data-cursor-boundary="${boundaryId}"]`);
+        if (boundary) {
+          const bRect = boundary.getBoundingClientRect();
+          const inside = newX >= bRect.left && newX <= bRect.right && newY >= bRect.top && newY <= bRect.bottom;
+          setInBounds(inside);
+        }
+      }
+
       setPos(prev => {
         if (!prev || Math.abs(prev.x - newX) > 2 || Math.abs(prev.y - newY) > 2) {
           return { x: newX, y: newY };
         }
         return prev;
       });
+
+      rafRef.current = requestAnimationFrame(poll);
     }
 
     poll();
     return () => cancelAnimationFrame(rafRef.current);
-  }, [target, visible]);
+  }, [target, visible, boundaryId]);
+
+  const isVisible = visible && !!pos && inBounds;
 
   return (
     <AnimatePresence>
-      {visible && pos && (
+      {isVisible && (
         <motion.div
           key={name}
           className="pointer-events-none"

@@ -130,12 +130,20 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
     await updateWorkspace(workspace.id, { logoUrl: null });
   };
 
+  const [nameError, setNameError] = useState<string | null>(null);
+
   const handleSaveName = async () => {
     const trimmed = nameValue.trim();
     if (trimmed && trimmed !== workspace.name) {
-      await updateWorkspace(workspace.id, { name: trimmed });
+      setNameError(null);
+      const error = await updateWorkspace(workspace.id, { name: trimmed });
+      if (error) {
+        setNameError(error.includes('already exists') ? 'A workspace with this name already exists.' : 'Failed to rename workspace.');
+        return;
+      }
     }
     setEditingName(false);
+    setNameError(null);
   };
 
   const handleSaveTeamName = async (teamId: string) => {
@@ -203,21 +211,26 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
           Workspace Name
         </label>
         {editingName ? (
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={nameValue}
-              onChange={(e) => setNameValue(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
-              autoFocus
-              className="flex-1 bg-surface-frost-02 border border-border-default rounded-comfortable px-3 py-2 text-[14px] text-text-primary focus:outline-none focus:border-border-focus transition-all"
-            />
-            <button onClick={handleSaveName} className="btn-primary">
-              Save
-            </button>
-            <button onClick={() => setEditingName(false)} className="btn-ghost">
-              Cancel
-            </button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={nameValue}
+                onChange={(e) => { setNameValue(e.target.value); setNameError(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setEditingName(false); setNameError(null); } }}
+                autoFocus
+                className={`flex-1 bg-surface-frost-02 border rounded-comfortable px-3 py-2 text-[14px] text-text-primary focus:outline-none transition-all ${nameError ? 'border-status-error' : 'border-border-default focus:border-border-focus'}`}
+              />
+              <button onClick={handleSaveName} className="btn-primary">
+                Save
+              </button>
+              <button onClick={() => { setEditingName(false); setNameError(null); }} className="btn-ghost">
+                Cancel
+              </button>
+            </div>
+            {nameError && (
+              <p className="text-[12px] text-status-error">{nameError}</p>
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-between">

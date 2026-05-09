@@ -146,6 +146,7 @@ export function GitHubDemo() {
         name={actor.name}
         target={activeActor === actor.id && cursorTarget ? cursorTarget : ''}
         visible={activeActor === actor.id && !!cursorTarget}
+        boundaryId="feature"
       />
     ))}
     </div>
