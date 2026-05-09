@@ -93,7 +93,7 @@ export function WorkspaceLayout() {
   useEffect(() => {
     if (projectShortId || projectsDataState.status !== 'ready' || projects.length === 0 || workspaces.length === 0) return;
 
-    const workspace = workspaces.find(w => w.shortId === wsShortId);
+    const workspace = workspaces.find(w => w.slug === wsShortId || w.shortId === wsShortId);
     if (!workspace) return;
 
     const firstProject = projects.find(p => !p.parentId);
