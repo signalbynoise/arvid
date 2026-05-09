@@ -420,6 +420,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                   <option value="owner">Owner</option>
                   <option value="admin">Admin</option>
                   <option value="member">Member</option>
+                  <option value="guest">Guest</option>
                 </select>
               ) : (
                 <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary px-2 py-1 bg-surface-frost-04 rounded-pill">

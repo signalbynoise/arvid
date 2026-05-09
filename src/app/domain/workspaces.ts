@@ -14,6 +14,7 @@ const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
   owner: 3,
   admin: 2,
   member: 1,
+  guest: 0,
 };
 
 export function hasMinimumRole(userRole: WorkspaceRole, requiredRole: WorkspaceRole): boolean {
@@ -41,6 +42,7 @@ export function getRoleLabel(role: WorkspaceRole): string {
     owner: 'Owner',
     admin: 'Admin',
     member: 'Member',
+    guest: 'Guest',
   };
   return labels[role];
 }
