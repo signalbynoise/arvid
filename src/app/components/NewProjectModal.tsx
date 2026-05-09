@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectTeams } from '../store';
+import { useStore } from '../store';
 import { ProjectNameSchema } from '../../../shared/schemas';
 import { buildProjectPathFromEntities } from '../domain/paths';
 import { BaseModal } from './BaseModal';
@@ -20,9 +20,6 @@ interface Props {
 export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName, parentId, parentName }: Props) {
   const navigate = useNavigate();
   const createProject = useStore(s => s.createProject);
-  const workspaces = useStore(selectWorkspaces);
-  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
-  const teams = useStore(selectTeams);
 
   const [name, setName] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -45,9 +42,10 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
     setIsCreating(false);
     handleClose();
     if (created) {
-      const workspace = workspaces.find(w => w.id === activeWorkspaceId);
-      if (workspace) {
-        const path = buildProjectPathFromEntities(workspace, teams, created);
+      const state = useStore.getState();
+      const ws = state.workspaces.find(w => w.id === state.activeWorkspaceId);
+      if (ws) {
+        const path = buildProjectPathFromEntities(ws, state.teams, created);
         if (path) navigate(path);
       }
     }
