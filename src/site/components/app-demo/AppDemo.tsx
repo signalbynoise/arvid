@@ -33,7 +33,7 @@ const layout: DemoLayoutConfig = {
     { key: 'questions', title: 'Questions', width: 'w-1/4' },
   ],
   shell: {
-    className: 'absolute bottom-0 left-1/2 -translate-x-1/2 min-w-[900px] w-[95%] max-w-[1180px] h-[90%]',
+    className: 'absolute bottom-0 right-0 h-[90%] w-[calc(100%-20px)] max-w-[1180px] md:left-1/2 md:right-auto md:w-[95%] md:-translate-x-1/2 lg:min-w-[900px]',
     containerClassName: 'relative w-full h-full',
     roundedBottom: false,
   },

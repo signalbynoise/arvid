@@ -185,6 +185,7 @@ export function useSidebarModals(
     <>
       {createProjectContext && (
         <NewProjectModal
+          key={`${createProjectContext.parentId ?? 'root'}-${createProjectContext.teamId}`}
           isOpen={isCreateOpen}
           onClose={() => { setIsCreateOpen(false); setCreateProjectContext(null); }}
           workspaceId={activeWorkspaceId ?? ''}
