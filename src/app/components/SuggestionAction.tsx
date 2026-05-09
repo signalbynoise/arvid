@@ -4,10 +4,11 @@ interface SuggestionActionProps {
   icon: React.ReactNode;
   label: string;
   description: string;
+  shortcut?: string;
   onClick: () => void;
 }
 
-export function SuggestionAction({ icon, label, description, onClick }: SuggestionActionProps) {
+export function SuggestionAction({ icon, label, description, shortcut, onClick }: SuggestionActionProps) {
   return (
     <button
       type="button"
@@ -17,7 +18,7 @@ export function SuggestionAction({ icon, label, description, onClick }: Suggesti
       <span className="mt-0.5 text-text-quaternary group-hover:text-text-tertiary transition-colors shrink-0">
         {icon}
       </span>
-      <div className="min-w-0">
+      <div className="flex-1 min-w-0">
         <p className="text-[13px] font-[var(--fw-medium)] text-text-tertiary group-hover:text-text-secondary transition-colors">
           {label}
         </p>
@@ -25,6 +26,11 @@ export function SuggestionAction({ icon, label, description, onClick }: Suggesti
           {description}
         </p>
       </div>
+      {shortcut && (
+        <span className="mt-1 shrink-0 text-[11px] font-mono text-text-empty group-hover:text-text-quaternary transition-colors">
+          {shortcut}
+        </span>
+      )}
     </button>
   );
 }

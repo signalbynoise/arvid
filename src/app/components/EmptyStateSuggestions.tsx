@@ -23,6 +23,7 @@ interface Suggestion {
   icon: React.ReactNode;
   label: string;
   description: string;
+  shortcut?: string;
   action: () => void;
 }
 
@@ -65,6 +66,7 @@ export function EmptyStateSuggestions({
         icon: <Plus size={16} />,
         label: 'Create a requirement',
         description: 'Define what your project needs to deliver',
+        shortcut: 'C R',
         action: onCreateRequirement,
       });
     }
@@ -74,6 +76,7 @@ export function EmptyStateSuggestions({
       icon: <Users size={16} />,
       label: 'Invite members to project',
       description: 'Collaborate on requirements and answers',
+      shortcut: 'C U P',
       action: onInviteMembers,
     });
 
@@ -82,6 +85,7 @@ export function EmptyStateSuggestions({
       icon: <FolderPlus size={16} />,
       label: 'Create a sub-project',
       description: 'Organize work into smaller scopes',
+      shortcut: 'C P',
       action: onCreateSubProject,
     });
 
@@ -207,6 +211,7 @@ export function EmptyStateSuggestions({
             icon={s.icon}
             label={s.label}
             description={s.description}
+            shortcut={s.shortcut}
             onClick={s.action}
           />
         ))}
@@ -220,6 +225,7 @@ export function EmptyStateSuggestions({
                 icon={s.icon}
                 label={s.label}
                 description={s.description}
+                shortcut={s.shortcut}
                 onClick={s.action}
               />
             ))}
@@ -231,6 +237,7 @@ export function EmptyStateSuggestions({
           icon={<Command size={16} />}
           label="Open Command Central"
           description="Quick actions, search, and navigation"
+          shortcut="⌘K"
           onClick={onOpenCommandPalette}
         />
 
