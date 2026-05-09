@@ -93,7 +93,7 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
       if (workspaces.length === 0) {
         log.info('loadWorkspaces', 'No workspaces found, creating personal workspace');
         const personal = await api.createWorkspace('My Workspace');
-        workspaces = [personal];
+        workspaces = [{ ...personal, userRole: 'owner' as const }];
       }
 
       set({ workspaces, workspacesDataState: { status: 'ready' } });
@@ -125,12 +125,13 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
 
     try {
       const created = await api.createWorkspace(name);
+      const withRole = { ...created, userRole: 'owner' as const };
       set(state => ({
-        workspaces: [...state.workspaces, created],
-        activeWorkspaceId: created.id,
+        workspaces: [...state.workspaces, withRole],
+        activeWorkspaceId: withRole.id,
       }));
-      log.info('createWorkspace', 'Workspace created', { id: created.id });
-      return created;
+      log.info('createWorkspace', 'Workspace created', { id: withRole.id });
+      return withRole;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createWorkspace', 'Failed to create workspace', { error: message });
