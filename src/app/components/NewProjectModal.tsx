@@ -40,15 +40,19 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
     setIsCreating(true);
     const created = await createProject(result.data.name, parentId, workspaceId, teamId);
     setIsCreating(false);
-    handleClose();
     if (created) {
       const state = useStore.getState();
       const ws = state.workspaces.find(w => w.id === state.activeWorkspaceId);
       if (ws) {
         const path = buildProjectPathFromEntities(ws, state.teams, created);
-        if (path) navigate(path);
+        if (path) {
+          navigate(path);
+          handleClose();
+          return;
+        }
       }
     }
+    handleClose();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
