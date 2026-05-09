@@ -81,21 +81,55 @@ export function createRouterResolverMachine(actions: ResolverActions) {
       questions: [],
     },
     on: {
-      URL_CHANGED: {
-        target: '.resolvingWorkspace',
-        actions: assign(({ context, event }) => {
-          const workspaceChanged = event.wsShortId !== context.wsShortId;
-          const projectChanged = event.projectShortId !== context.projectShortId;
-          return {
-            wsShortId: event.wsShortId,
+      URL_CHANGED: [
+        {
+          guard: ({ context, event }) =>
+            event.wsShortId === context.wsShortId
+            && event.projectShortId === context.projectShortId
+            && context.requirements.length > 0,
+          target: '.resolvingRequirement',
+          actions: assign(({ event }) => ({
+            reqShortId: event.reqShortId,
+            questionShortId: event.questionShortId,
+          })),
+        },
+        {
+          guard: ({ context, event }) =>
+            event.wsShortId === context.wsShortId
+            && event.projectShortId === context.projectShortId,
+          target: '.awaitingEntities',
+          actions: assign(({ event }) => ({
+            reqShortId: event.reqShortId,
+            questionShortId: event.questionShortId,
+          })),
+        },
+        {
+          guard: ({ context, event }) =>
+            event.wsShortId === context.wsShortId
+            && event.projectShortId !== context.projectShortId,
+          target: '.resolvingProject',
+          actions: assign(({ context, event }) => ({
             projectShortId: event.projectShortId,
             reqShortId: event.reqShortId,
             questionShortId: event.questionShortId,
-            ...(workspaceChanged ? { projects: [], teams: [], requirements: [], questions: [] } : {}),
-            ...(projectChanged && !workspaceChanged ? { requirements: [], questions: [] } : {}),
-          };
-        }),
-      },
+            requirements: [],
+            questions: [],
+          })),
+        },
+        {
+          target: '.resolvingWorkspace',
+          actions: assign(({ context, event }) => {
+            const workspaceChanged = event.wsShortId !== context.wsShortId;
+            return {
+              wsShortId: event.wsShortId,
+              projectShortId: event.projectShortId,
+              reqShortId: event.reqShortId,
+              questionShortId: event.questionShortId,
+              ...(workspaceChanged ? { projects: [], teams: [], requirements: [], questions: [] } : {}),
+            };
+          }),
+        },
+      ],
       WORKSPACES_READY: {
         target: '.resolvingWorkspace',
         actions: assign(({ event }) => ({
