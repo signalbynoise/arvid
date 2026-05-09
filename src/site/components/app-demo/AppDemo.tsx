@@ -33,8 +33,8 @@ const layout: DemoLayoutConfig = {
     { key: 'questions', title: 'Questions', width: 'w-1/4' },
   ],
   shell: {
-    className: 'min-w-[900px] w-full max-w-[1180px] h-[90%]',
-    containerClassName: 'relative w-full h-full flex items-end justify-center overflow-visible',
+    className: 'absolute bottom-0 left-1/2 -translate-x-1/2 min-w-[900px] w-[95%] max-w-[1180px] h-[90%]',
+    containerClassName: 'relative w-full h-full',
     roundedBottom: false,
   },
   modal: {
