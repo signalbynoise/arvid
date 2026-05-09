@@ -83,6 +83,9 @@ export function WorkspaceLayout() {
     const workspace = workspaces.find(w => w.slug === wsShortId || w.shortId === wsShortId);
     if (!workspace) return;
 
+    const projectsBelongToWorkspace = projects[0]?.workspaceId === workspace.id;
+    if (!projectsBelongToWorkspace) return;
+
     if (projectShortId) {
       if (syncedProjectRef.current === projectShortId) return;
 
