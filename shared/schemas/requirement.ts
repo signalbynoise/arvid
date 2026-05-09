@@ -25,6 +25,8 @@ export const RequirementRowSchema = z.object({
   impl_checked_at: z.string().nullable().optional(),
   impl_evidence: z.string().nullable().optional(),
   impl_analysis: z.unknown().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -51,6 +53,8 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   implCheckedAt: row.impl_checked_at ?? undefined,
   implEvidence: row.impl_evidence ?? undefined,
   implAnalysis: (row.impl_analysis as import('./implCheck').ImplAnalysis | null) ?? undefined,
+  createdBy: row.created_by ?? undefined,
+  isDeactivated: row.is_deactivated ?? false,
 }));
 
 export const CreateRequirementBodySchema = z.object({
@@ -66,6 +70,8 @@ export const CreateRequirementBodySchema = z.object({
   clarity: ClarityEnum.default('Low'),
   risk: RiskEnum.default('Medium'),
   project_id: z.string().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const UpdateRequirementBodySchema = CreateRequirementBodySchema.partial().omit({ id: true });

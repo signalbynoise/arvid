@@ -5,6 +5,7 @@ import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../
 import { enhanceRequirement, classifyImplementation } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
+import type { DbAnalysis } from '../../shared/schemas/dbContext';
 import { nextShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
@@ -19,6 +20,10 @@ requirementsRouter.get('/', async (req, res) => {
 
   if (req.query.project_id) {
     query = query.eq('project_id', req.query.project_id as string);
+  }
+
+  if (req.query.include_deactivated !== 'true') {
+    query = query.eq('is_deactivated', false);
   }
 
   const { data, error } = await query;
@@ -67,7 +72,7 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
     : `R${String(Date.now()).slice(-2)}`;
   const { data, error } = await db
     .from('requirements')
-    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString() })
+    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString(), created_by: req.user!.id })
     .select()
     .single();
 
@@ -109,7 +114,7 @@ requirementsRouter.post('/enhance', async (req, res) => {
   }
 
   try {
-    let context: { projectName?: string; existingRequirements?: string[]; repoContext?: RepoAnalysis } | undefined;
+    let context: { projectName?: string; existingRequirements?: string[]; repoContext?: RepoAnalysis; dbContext?: DbAnalysis } | undefined;
 
     if (project_id) {
       const { data: project } = await db
@@ -131,15 +136,23 @@ requirementsRouter.post('/enhance', async (req, res) => {
         .eq('status', 'ready')
         .single();
 
+      const { data: dbCtx } = await db
+        .from('db_contexts')
+        .select('analysis')
+        .eq('project_id', project_id)
+        .eq('status', 'ready')
+        .single();
+
       context = {
         projectName: project?.name,
         existingRequirements: (existingReqs || []).map((r: { title: string }) => r.title),
         repoContext: repoCtx?.analysis as RepoAnalysis | undefined,
+        dbContext: dbCtx?.analysis as DbAnalysis | undefined,
       };
 
       console.info(
         '[INFO] [requirements:enhance] Context loaded',
-        JSON.stringify({ projectId: project_id, projectName: context.projectName, existingCount: context.existingRequirements?.length, hasRepoContext: !!context.repoContext }),
+        JSON.stringify({ projectId: project_id, projectName: context.projectName, existingCount: context.existingRequirements?.length, hasRepoContext: !!context.repoContext, hasDbContext: !!context.dbContext }),
       );
     }
 
@@ -299,6 +312,19 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
 
     res.status(500).json({ error: `Implementation check failed: ${message}` });
   }
+});
+
+requirementsRouter.patch('/:id/deactivate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
+    .from('requirements')
+    .update({ is_deactivated: true })
+    .eq('id', req.params.id)
+    .select()
+    .single();
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
 });
 
 requirementsRouter.delete('/:id', async (req, res) => {

@@ -1,5 +1,5 @@
-import type { MiniTeam } from '../mini-demo/types';
-import type { Requirement, Question, Step } from '../app-demo/types';
+import type { MiniTeam, Step } from '../mini-demo/types';
+import type { Requirement, Question } from '../app-demo/types';
 
 export const WORKSPACE_NAME = 'Acme Inc.';
 
@@ -39,20 +39,27 @@ export const QUESTIONS: Question[] = [
 ];
 
 export const SEQUENCE: Step[] = [
+  // Settle — shell appears, sidebar expands (~2.6s)
   { action: 'show_shell', delay: 0 },
-  { action: 'expand_project', delay: 1000 },
-  { action: 'show_footer', delay: 1000 },
-  { action: 'open_selector', delay: 1200 },
+  { action: 'expand_project', delay: 1400 },
+  { action: 'show_footer', delay: 1200 },
+
+  // Flow — connect repo, fetch requirements, select (~10.2s)
+  { action: 'open_selector', delay: 1400 },
   { action: 'select_repo', delay: 2000 },
-  { action: 'start_fetching', delay: 800 },
-  { action: 'fetch_done', delay: 2400 },
-  { action: 'show_req_1', delay: 1000 },
-  { action: 'show_req_2', delay: 800 },
-  { action: 'select_req', delay: 1200 },
-  { action: 'suggest_q1', delay: 800 },
-  { action: 'suggest_q2', delay: 1000 },
-  { action: 'accept_q1', delay: 1200 },
-  { action: 'suggest_q3', delay: 800 },
-  { action: 'accept_q2', delay: 1000 },
+  { action: 'start_fetching', delay: 1000 },
+  { action: 'fetch_done', delay: 2000 },
+  { action: 'show_req_1', delay: 1200 },
+  { action: 'show_req_2', delay: 1200 },
+  { action: 'select_req', delay: 1400 },
+
+  // Resolve — AI suggests questions one by one (~6.4s)
+  { action: 'suggest_q1', delay: 1200 },
+  { action: 'suggest_q2', delay: 1400 },
+  { action: 'accept_q1', delay: 1400 },
+  { action: 'suggest_q3', delay: 1200 },
+  { action: 'accept_q2', delay: 1200 },
+
+  // Drift — hold, then gently loop (~3.5s)
   { action: 'reset', delay: 3500 },
 ];

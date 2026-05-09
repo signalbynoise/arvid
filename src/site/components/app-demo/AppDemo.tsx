@@ -1,21 +1,21 @@
-import { Plus, LoaderPinwheel, MessageSquare, FileText, Network, Folder } from 'lucide-react';
-import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty } from '../mini-demo';
-import { useSequence } from './useSequence';
-import { DemoSidebar } from './DemoSidebar';
-import { DemoRequirementCard } from './DemoRequirementCard';
-import { DemoQuestionCard } from './DemoQuestionCard';
-import { DemoAnswerCard } from './DemoAnswerCard';
-import { DemoSummary } from './DemoSummary';
+import { useRef, useEffect } from 'react';
+import { Plus, LoaderPinwheel, MessageSquare, FileText, BarChart3, Network, Folder, Slack } from 'lucide-react';
+import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniCursor, MiniModal, MiniConfirmation, useSequence } from '../mini-demo';
+import { ProjectSidebar } from './ProjectSidebar';
+import { RequirementCard } from './RequirementCard';
+import { QuestionCard } from './QuestionCard';
+import { AnswerCard } from './AnswerCard';
+import { KnowledgeSummary } from './KnowledgeSummary';
 import {
   REQUIREMENTS,
-  QUESTIONS_R1,
-  QUESTIONS_R2,
-  ANSWERS_R1,
-  ANSWERS_R2,
-  SUMMARY_R1,
-  SUMMARY_R2,
+  IMPORTED_REQUIREMENT,
+  QUESTIONS_R13,
+  ANSWERS_R13,
+  SUMMARY_R13,
+  SLACK_SUGGESTIONS,
   SEQUENCE,
   WORKSPACE_NAME,
+  COLLABORATORS,
 } from './data';
 
 const BREADCRUMBS = [
@@ -25,93 +25,87 @@ const BREADCRUMBS = [
 ];
 
 export function AppDemo() {
-  const s = useSequence(SEQUENCE);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reqColumnRef = useRef<HTMLDivElement>(null);
+  const s = useSequence(SEQUENCE, containerRef);
 
   const showShell = s.has('show_shell');
-  const projectExpanded = s.has('expand_project');
   const showReqs = s.has('show_requirements');
+  const scrolled = s.has('scroll_requirements');
 
-  const req0Selected = s.has('select_req_0') && !s.has('select_req_1');
-  const req1Selected = s.has('select_req_1');
-  const anyReqSelected = s.has('select_req_0');
-  const activeReqIdx = req1Selected ? 1 : req0Selected ? 0 : -1;
+  const showImportModal = s.has('show_import_modal') && !s.has('close_modal');
+  const extractingSlack = s.has('extracting_slack') && !s.has('show_slack_options');
+  const showSlackOptions = s.has('show_slack_options');
+  const slackItemSelected = s.has('select_slack_item');
+  const modalClosed = s.has('close_modal');
 
-  const showSummaryR1 = s.has('show_summary') && !req1Selected;
-  const showSummaryR2 = s.has('show_summary_r2');
-  const showSummary = req1Selected ? showSummaryR2 : showSummaryR1;
+  const reqSelected = s.has('select_requirement');
+  const showSummary = s.has('show_summary');
 
   const suggestQ1 = s.has('suggest_q1');
   const suggestQ2 = s.has('suggest_q2');
-  const suggestQ3 = s.has('suggest_q3');
   const acceptQ1 = s.has('accept_q1');
-  const acceptQ2 = s.has('accept_q2');
+  const selectQuestion = s.has('select_question');
+  const showAnswer = s.has('show_answer');
 
-  const suggestQ4 = s.has('suggest_q4');
-  const acceptQ4 = s.has('accept_q4');
-  const suggestQ5 = s.has('suggest_q5');
+  const animComp = s.has('animate_completeness');
+  const showLinear = s.has('show_linear_confirmation');
+  const showCursor = s.has('show_cursor_confirmation');
 
-  const selectQuestion = s.has('select_question') && !req1Selected;
-  const selectQuestionR2 = s.has('select_question_r2');
-  const questionIsSelected = req1Selected ? selectQuestionR2 : selectQuestion;
+  const summaryGenerating = showSummary && !animComp;
+  const completeness = animComp ? SUMMARY_R13.targetCompleteness : 0;
 
-  const showA1 = s.has('show_answer_1');
-  const showA2 = s.has('show_answer_2');
-  const showAR2 = s.has('show_answer_r2');
+  const q1Visible = suggestQ1;
+  const q1Suggested = suggestQ1 && !acceptQ1;
+  const q2Visible = suggestQ2;
 
-  const animComp1 = s.has('animate_completeness');
-  const animComp2 = s.has('animate_completeness_r2');
-  const sendEnabled = s.has('enable_send');
+  const allReqs = modalClosed ? [...REQUIREMENTS, IMPORTED_REQUIREMENT] : REQUIREMENTS;
+  const selectedReqIdx = reqSelected ? allReqs.length - 1 : -1;
 
-  const activeSummary = req1Selected ? SUMMARY_R2 : SUMMARY_R1;
-  const summaryGenerating = showSummary && !(req1Selected ? animComp2 : animComp1);
-  const completeness = req1Selected
-    ? (animComp2 ? SUMMARY_R2.targetCompleteness : 0)
-    : (animComp1 ? SUMMARY_R1.targetCompleteness : 0);
-
-  const q1Visible = !req1Selected && suggestQ1;
-  const q1Suggested = !req1Selected && suggestQ1 && !acceptQ1;
-  const q2Visible = !req1Selected && suggestQ2;
-  const q2Suggested = !req1Selected && suggestQ2 && !acceptQ2;
-  const q3Visible = !req1Selected && suggestQ3;
-
-  const q4Visible = req1Selected && suggestQ4;
-  const q4Suggested = req1Selected && suggestQ4 && !acceptQ4;
-  const q5Visible = req1Selected && suggestQ5;
+  useEffect(() => {
+    if (scrolled && reqColumnRef.current) {
+      reqColumnRef.current.scrollTo({ top: 200, behavior: 'smooth' });
+    }
+    if (!scrolled && reqColumnRef.current) {
+      reqColumnRef.current.scrollTop = 0;
+    }
+  }, [scrolled]);
 
   return (
+    <div ref={containerRef} className="relative w-full h-full">
     <MiniShell visible={showShell} className="min-w-[900px] w-full h-full max-w-[1180px]">
-      <DemoSidebar expanded={projectExpanded} />
+      <ProjectSidebar expanded={s.has('show_requirements')} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <MiniTopbar segments={BREADCRUMBS} />
 
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          <MiniColumn title="Requirements" controls={<Plus size={8} className="text-text-quaternary" />}>
-            {REQUIREMENTS.map((req, i) => (
-              <DemoRequirementCard
-                key={req.id}
-                req={req}
-                selected={activeReqIdx === i}
-                dimmed={anyReqSelected && activeReqIdx !== i}
-                visible={showReqs}
-              />
-            ))}
-          </MiniColumn>
+          <div className="w-1/4 shrink-0 flex flex-col bg-surface-panel border-r border-border-subtle">
+            <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
+              <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">Requirements</span>
+              <Plus size={8} className="text-text-quaternary" />
+            </div>
+            <div ref={reqColumnRef} className="flex-1 p-2 space-y-2 overflow-y-auto hide-scrollbar">
+              {allReqs.map((req, i) => (
+                <RequirementCard
+                  key={req.id}
+                  req={req}
+                  selected={selectedReqIdx === i}
+                  dimmed={reqSelected && selectedReqIdx !== i}
+                  visible={showReqs}
+                />
+              ))}
+            </div>
+          </div>
 
           <MiniColumn
             title="Questions"
-            controls={anyReqSelected ? <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" /> : undefined}
+            controls={reqSelected ? <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" /> : undefined}
           >
-            {req1Selected ? (
+            {reqSelected ? (
               <>
-                <DemoQuestionCard q={QUESTIONS_R2[0]} visible={q4Visible} suggested={q4Suggested} selected={selectQuestionR2 && !q4Suggested} />
-                <DemoQuestionCard q={QUESTIONS_R2[1]} visible={q5Visible} suggested />
-              </>
-            ) : anyReqSelected ? (
-              <>
-                <DemoQuestionCard q={QUESTIONS_R1[0]} visible={q1Visible} suggested={q1Suggested} selected={selectQuestion && !q1Suggested} />
-                <DemoQuestionCard q={QUESTIONS_R1[1]} visible={q2Visible} suggested={q2Suggested} />
-                <DemoQuestionCard q={QUESTIONS_R1[2]} visible={q3Visible} suggested />
+                <QuestionCard q={QUESTIONS_R13[0]} visible={q1Visible} suggested={q1Suggested} selected={selectQuestion && !q1Suggested} />
+                <QuestionCard q={QUESTIONS_R13[1]} visible={q2Visible} suggested />
               </>
             ) : (
               <MiniColumnEmpty icon={null} message="Select a requirement" />
@@ -120,17 +114,10 @@ export function AppDemo() {
 
           <MiniColumn
             title="Answers"
-            controls={questionIsSelected ? <Plus size={8} className="text-text-quaternary" /> : undefined}
+            controls={selectQuestion ? <Plus size={8} className="text-text-quaternary" /> : undefined}
           >
-            {questionIsSelected ? (
-              req1Selected ? (
-                <DemoAnswerCard answer={ANSWERS_R2[0]} visible={showAR2} />
-              ) : (
-                <>
-                  <DemoAnswerCard answer={ANSWERS_R1[0]} visible={showA1} />
-                  <DemoAnswerCard answer={ANSWERS_R1[1]} visible={showA2} />
-                </>
-              )
+            {selectQuestion ? (
+              <AnswerCard answer={ANSWERS_R13[0]} visible={showAnswer} />
             ) : (
               <MiniColumnEmpty
                 icon={<MessageSquare size={12} className="text-text-quaternary opacity-20 mb-1" />}
@@ -139,25 +126,83 @@ export function AppDemo() {
             )}
           </MiniColumn>
 
-          <div className="w-1/4 shrink-0 min-w-0 bg-surface-panel">
+          <MiniColumn
+            title="Summary"
+            borderRight={false}
+            controls={showSummary ? <BarChart3 size={8} className="text-text-quaternary" /> : undefined}
+          >
             {showSummary ? (
-              <DemoSummary
-                summary={activeSummary}
-                completeness={completeness}
-                sendEnabled={!req1Selected && sendEnabled}
-                generating={summaryGenerating}
-              />
-            ) : (
-              <MiniColumn title="Summary" borderRight={false}>
-                <MiniColumnEmpty
-                  icon={<FileText size={12} className="text-text-quaternary opacity-20 mb-1" />}
-                  message="Select a requirement"
+              <>
+                <KnowledgeSummary
+                  summary={SUMMARY_R13}
+                  completeness={completeness}
+                  sendEnabled={animComp}
+                  generating={summaryGenerating}
                 />
-              </MiniColumn>
+                {showLinear && (
+                  <MiniConfirmation visible icon="/linear.svg" message="Ticket LIN-142 created" />
+                )}
+                {showCursor && (
+                  <MiniConfirmation visible icon="/cursor.svg" message="Agents started building" />
+                )}
+              </>
+            ) : (
+              <MiniColumnEmpty
+                icon={<FileText size={12} className="text-text-quaternary opacity-20 mb-1" />}
+                message="Select a requirement"
+              />
             )}
-          </div>
+          </MiniColumn>
         </div>
       </div>
     </MiniShell>
+
+    <MiniModal visible={showImportModal} title="Import Requirements">
+      <div className="space-y-2">
+        {!extractingSlack && !showSlackOptions && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-standard bg-surface-frost-08 border border-border-default">
+            <Slack size={10} className="text-text-primary shrink-0" />
+            <span className="text-[8px] font-[var(--fw-medium)] text-text-primary">Import from Slack</span>
+          </div>
+        )}
+
+        {extractingSlack && (
+          <div className="flex flex-col items-center py-4 space-y-2">
+            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+            <p className="text-[7px] text-text-tertiary">Arvid is analyzing Slack messages...</p>
+          </div>
+        )}
+
+        {showSlackOptions && SLACK_SUGGESTIONS.map((sug, i) => (
+          <div
+            key={sug.id}
+            className={`flex items-center justify-between px-2 py-1.5 rounded-micro border transition-all duration-300 ${
+              slackItemSelected && i === 0
+                ? 'bg-surface-frost-08 border-border-default'
+                : 'bg-surface-elevated border-border-subtle'
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="text-[7px] font-[var(--fw-medium)] text-text-primary truncate">{sug.text}</div>
+              <div className="text-[6px] text-text-quaternary">{sug.source}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MiniModal>
+
+    {COLLABORATORS.map(c => {
+      const pos = s.cursors.get(c.id);
+      return pos ? (
+        <MiniCursor
+          key={c.id}
+          name={c.name}
+          x={pos.x}
+          y={pos.y}
+          visible={pos.visible !== false}
+        />
+      ) : null;
+    })}
+    </div>
   );
 }

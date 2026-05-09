@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Network } from 'lucide-react';
 import { SidebarItem } from './SidebarItem';
 import { TeamItemMenu } from './TeamItemMenu';
@@ -6,6 +7,16 @@ import { ProjectTreeItem } from './ProjectTreeItem';
 import { buildProjectTree } from '../domain/projects';
 import type { Team, Project } from '../types';
 import type { ProjectTreeNode } from '../domain/projects';
+
+const EXPAND_VARIANTS = {
+  collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },
+  expanded: { height: 'auto', opacity: 1, overflow: 'hidden' as const },
+};
+
+const EXPAND_TRANSITION = {
+  height: { type: 'spring' as const, stiffness: 300, damping: 30 },
+  opacity: { duration: 0.2 },
+};
 
 interface TeamSectionProps {
   teams: Team[];
@@ -85,6 +96,7 @@ export function TeamSection({
         return (
           <div key={team.id}>
             <SidebarItem
+              itemId={`team-${team.id}`}
               label={team.name}
               icon={<Network size={14} className="text-text-quaternary shrink-0" />}
               chevron={teamProjectTree.length > 0 ? { open: isTeamExpanded, onToggle: (e) => onToggleTeamExpand(e, team.id) } : undefined}
@@ -101,28 +113,38 @@ export function TeamSection({
               }
             />
 
-            {isTeamExpanded && teamProjectTree.length > 0 && (
-              <div className="space-y-0.5">
-                {teamProjectTree.map(node => (
-                  <ProjectTreeItem
-                    key={node.id}
-                    node={node}
-                    depth={1}
-                    isSelected={selectedProjectId === node.id}
-                    isExpanded={!!expandedMap[node.id]}
-                    onSelect={onSelectProject}
-                    onToggleExpand={onToggleExpand}
-                    onAddUser={onAddUserToProject}
-                    onRename={onRenameProject}
-                    onCreateSubProject={onCreateSubProject}
-                    onDeactivate={onDeactivateProject}
-                    getTeamId={getTeamId}
-                    expandedMap={expandedMap}
-                    selectedProjectId={selectedProjectId}
-                  />
-                ))}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {isTeamExpanded && teamProjectTree.length > 0 && (
+                <motion.div
+                  key="team-projects"
+                  initial="collapsed"
+                  animate="expanded"
+                  exit="collapsed"
+                  variants={EXPAND_VARIANTS}
+                  transition={EXPAND_TRANSITION}
+                  className="space-y-0.5"
+                >
+                  {teamProjectTree.map(node => (
+                    <ProjectTreeItem
+                      key={node.id}
+                      node={node}
+                      depth={1}
+                      isSelected={selectedProjectId === node.id}
+                      isExpanded={!!expandedMap[node.id]}
+                      onSelect={onSelectProject}
+                      onToggleExpand={onToggleExpand}
+                      onAddUser={onAddUserToProject}
+                      onRename={onRenameProject}
+                      onCreateSubProject={onCreateSubProject}
+                      onDeactivate={onDeactivateProject}
+                      getTeamId={getTeamId}
+                      expandedMap={expandedMap}
+                      selectedProjectId={selectedProjectId}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       })}

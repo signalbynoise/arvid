@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Settings, Trash2, GitCompare, LoaderPinwheel, ToggleRight, ToggleLeft } from 'lucide-react';
 import { Chevron } from './Chevron';
+import { IconButton } from './IconButton';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
 import { buildWorkspacePath } from '../domain/paths';
 import { DropdownPanel } from './ui/DropdownPanel';
@@ -65,81 +66,79 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
         <span className="text-caption-lg text-text-primary truncate">
           {activeWorkspace?.name ?? 'No workspace'}
         </span>
-        <span className="shrink-0 p-0.5 rounded-standard hover:bg-surface-frost-10 opacity-0 group-hover:opacity-100 transition-all">
+        <IconButton className="opacity-0 group-hover:opacity-100">
           <Chevron open={isOpen} size={14} />
-        </span>
+        </IconButton>
       </button>
 
-      {isOpen && (
-        <DropdownPanel position="below">
-          <DropdownSection label="WORKSPACES">
-            {workspaces.map(ws => (
+      <DropdownPanel isOpen={isOpen} position="below">
+        <DropdownSection label="WORKSPACES">
+          {workspaces.map(ws => (
+            <DropdownItem
+              key={ws.id}
+              icon={<GitCompare size={16} />}
+              label={ws.name}
+              right={
+                ws.id === activeWorkspaceId
+                  ? <ToggleRight size={16} className="text-status-success" />
+                  : <ToggleLeft size={16} className="text-text-quaternary" />
+              }
+              onClick={() => handleSelect(ws)}
+              variant={ws.id === activeWorkspaceId ? 'default' : 'muted'}
+            />
+          ))}
+        </DropdownSection>
+
+        <DropdownDivider />
+
+        <DropdownSection label="ACTIONS">
+          <DropdownItem
+            icon={<Plus size={16} />}
+            label="Add user to workspace"
+            onClick={() => { setIsOpen(false); onInviteClick(); }}
+          />
+          <DropdownItem
+            icon={<Pencil size={16} />}
+            label="Rename workspace"
+            onClick={() => { setIsOpen(false); onRenameClick(); }}
+          />
+          <DropdownItem
+            icon={<Plus size={16} />}
+            label="Create new team"
+            onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
+          />
+          <DropdownItem
+            icon={<Plus size={16} />}
+            label="Create new workspace"
+            onClick={() => { setIsOpen(false); onCreateClick(); }}
+          />
+        </DropdownSection>
+
+        <DropdownDivider />
+
+        <DropdownSection label="GENERAL">
+          <DropdownItem
+            icon={<Settings size={16} />}
+            label="Workspace settings"
+            onClick={() => { setIsOpen(false); onSettingsClick(); }}
+          />
+        </DropdownSection>
+
+        {canDeactivate && (
+          <>
+            <DropdownDivider />
+            <DropdownSection label="AVOID">
               <DropdownItem
-                key={ws.id}
-                icon={<GitCompare size={16} />}
-                label={ws.name}
-                right={
-                  ws.id === activeWorkspaceId
-                    ? <ToggleRight size={16} className="text-status-success" />
-                    : <ToggleLeft size={16} className="text-text-quaternary" />
-                }
-                onClick={() => handleSelect(ws)}
-                variant={ws.id === activeWorkspaceId ? 'default' : 'muted'}
+                icon={<Trash2 size={16} />}
+                label="Deactivate workspace"
+                variant="muted"
+                right={<ToggleRight size={16} className="text-status-success" />}
+                onClick={() => { setIsOpen(false); onDeactivateClick(); }}
               />
-            ))}
-          </DropdownSection>
-
-          <DropdownDivider />
-
-          <DropdownSection label="ACTIONS">
-            <DropdownItem
-              icon={<Plus size={16} />}
-              label="Add user to workspace"
-              onClick={() => { setIsOpen(false); onInviteClick(); }}
-            />
-            <DropdownItem
-              icon={<Pencil size={16} />}
-              label="Rename workspace"
-              onClick={() => { setIsOpen(false); onRenameClick(); }}
-            />
-            <DropdownItem
-              icon={<Plus size={16} />}
-              label="Create new team"
-              onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
-            />
-            <DropdownItem
-              icon={<Plus size={16} />}
-              label="Create new workspace"
-              onClick={() => { setIsOpen(false); onCreateClick(); }}
-            />
-          </DropdownSection>
-
-          <DropdownDivider />
-
-          <DropdownSection label="GENERAL">
-            <DropdownItem
-              icon={<Settings size={16} />}
-              label="Workspace settings"
-              onClick={() => { setIsOpen(false); onSettingsClick(); }}
-            />
-          </DropdownSection>
-
-          {canDeactivate && (
-            <>
-              <DropdownDivider />
-              <DropdownSection label="AVOID">
-                <DropdownItem
-                  icon={<Trash2 size={16} />}
-                  label="Deactivate workspace"
-                  variant="muted"
-                  right={<ToggleRight size={16} className="text-status-success" />}
-                  onClick={() => { setIsOpen(false); onDeactivateClick(); }}
-                />
-              </DropdownSection>
-            </>
-          )}
-        </DropdownPanel>
-      )}
+            </DropdownSection>
+          </>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

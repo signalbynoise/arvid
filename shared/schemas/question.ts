@@ -17,6 +17,8 @@ export const QuestionRowSchema = z.object({
   author_role: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const QuestionSchema = QuestionRowSchema.transform(row => ({
@@ -35,6 +37,8 @@ export const QuestionSchema = QuestionRowSchema.transform(row => ({
   authorRole: row.author_role ?? undefined,
   createdAt: row.created_at ?? undefined,
   description: row.description ?? undefined,
+  createdBy: row.created_by ?? undefined,
+  isDeactivated: row.is_deactivated ?? false,
 }));
 
 export const CreateQuestionBodySchema = z.object({
@@ -52,6 +56,8 @@ export const CreateQuestionBodySchema = z.object({
   author_role: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const UpdateQuestionBodySchema = z.object({
@@ -66,6 +72,7 @@ export const UpdateQuestionBodySchema = z.object({
   author_team: z.string().nullable().optional(),
   author_role: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export type QuestionRow = z.infer<typeof QuestionRowSchema>;

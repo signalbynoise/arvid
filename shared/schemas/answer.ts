@@ -10,6 +10,8 @@ export const AnswerRowSchema = z.object({
   is_current: z.boolean(),
   is_suggested: z.boolean().nullable().optional(),
   is_hidden: z.boolean().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const AnswerSchema = AnswerRowSchema.transform(row => ({
@@ -22,6 +24,8 @@ export const AnswerSchema = AnswerRowSchema.transform(row => ({
   isCurrent: row.is_current,
   isSuggested: row.is_suggested ?? undefined,
   isHidden: row.is_hidden ?? undefined,
+  createdBy: row.created_by ?? undefined,
+  isDeactivated: row.is_deactivated ?? false,
 }));
 
 export const CreateAnswerBodySchema = z.object({
@@ -33,6 +37,8 @@ export const CreateAnswerBodySchema = z.object({
   is_current: z.boolean().default(false),
   is_suggested: z.boolean().nullable().optional(),
   is_hidden: z.boolean().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export const UpdateAnswerBodySchema = z.object({
@@ -41,6 +47,7 @@ export const UpdateAnswerBodySchema = z.object({
   is_current: z.boolean().optional(),
   is_suggested: z.boolean().nullable().optional(),
   is_hidden: z.boolean().nullable().optional(),
+  is_deactivated: z.boolean().optional(),
 });
 
 export type AnswerRow = z.infer<typeof AnswerRowSchema>;

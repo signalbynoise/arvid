@@ -1,8 +1,8 @@
+import { useRef } from 'react';
 import { Plus, LoaderPinwheel, Folder } from 'lucide-react';
-import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniSidebar } from '../mini-demo';
-import { DemoRequirementCard } from '../app-demo/DemoRequirementCard';
-import { DemoQuestionCard } from '../app-demo/DemoQuestionCard';
-import { useSequence } from '../app-demo/useSequence';
+import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniSidebar, useSequence } from '../mini-demo';
+import { RequirementCard } from '../app-demo/RequirementCard';
+import { QuestionCard } from '../app-demo/QuestionCard';
 import { GitHubDemoRepoFooter } from './GitHubDemoRepoFooter';
 import { WORKSPACE_NAME, TEAMS, REQUIREMENTS, QUESTIONS, SEQUENCE } from './data';
 
@@ -13,7 +13,8 @@ const BREADCRUMBS = [
 ];
 
 export function GitHubDemo() {
-  const s = useSequence(SEQUENCE);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const s = useSequence(SEQUENCE, containerRef);
 
   const showShell = s.has('show_shell');
   const expandProject = s.has('expand_project');
@@ -40,6 +41,7 @@ export function GitHubDemo() {
   const q3Visible = suggestQ3;
 
   return (
+    <div ref={containerRef} className="absolute inset-0">
     <MiniShell visible={showShell} shadow={false} roundedRight={false} className="absolute w-[800px] h-[600px] top-[40px] left-[40px] md:left-auto md:right-0">
       <MiniSidebar
           workspaceName={WORKSPACE_NAME}
@@ -67,13 +69,13 @@ export function GitHubDemo() {
             >
               {showReq1 || showReq2 ? (
                 <>
-                  <DemoRequirementCard
+                  <RequirementCard
                     req={REQUIREMENTS[0]}
                     selected={selectReq}
                     dimmed={false}
                     visible={showReq1}
                   />
-                  <DemoRequirementCard
+                  <RequirementCard
                     req={REQUIREMENTS[1]}
                     selected={false}
                     dimmed={selectReq}
@@ -93,9 +95,9 @@ export function GitHubDemo() {
             >
               {selectReq ? (
                 <>
-                  <DemoQuestionCard q={QUESTIONS[0]} visible={q1Visible} suggested={q1Suggested} selected={!q1Suggested && q1Visible} />
-                  <DemoQuestionCard q={QUESTIONS[1]} visible={q2Visible} suggested={q2Suggested} />
-                  <DemoQuestionCard q={QUESTIONS[2]} visible={q3Visible} suggested />
+                  <QuestionCard q={QUESTIONS[0]} visible={q1Visible} suggested={q1Suggested} selected={!q1Suggested && q1Visible} />
+                  <QuestionCard q={QUESTIONS[1]} visible={q2Visible} suggested={q2Suggested} />
+                  <QuestionCard q={QUESTIONS[2]} visible={q3Visible} suggested />
                 </>
               ) : (
                 <MiniColumnEmpty icon={null} message="Select a requirement" />
@@ -104,5 +106,6 @@ export function GitHubDemo() {
           </div>
         </div>
     </MiniShell>
+    </div>
   );
 }

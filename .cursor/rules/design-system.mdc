@@ -16,6 +16,16 @@ Read `docs/design_system.md` for the complete token reference before writing any
 9. **`font-feature-settings` is global.** Set on `body` in `theme.css`. Never set inline.
 10. **New tokens must be added to `theme.css` `:root`, registered in `@theme inline`, and documented in `docs/design_system.md`.**
 
+## MDA (Mini Demo Animation) Exceptions
+
+Demo components in `src/site/components/*-demo/` and `src/site/components/mini-demo/` operate at miniature scale and have explicit carve-outs:
+
+- **Text sizes:** `text-[6px]` through `text-[9px]` are permitted (demo-scale typography). See `docs/mini_demos.md` for the size table.
+- **Inline `style={{}}`:** Permitted only for dynamic progress bar widths (`width: ${n}%`) and conic-gradient completeness chips.
+- **Typography presets:** Not applicable at demo scale — use the explicit `text-[Npx]` sizes from the spec.
+
+All other rules (colors, weights, radii, shadows, borders) apply without exception.
+
 ## Quick Reference
 
 ### Common Replacements

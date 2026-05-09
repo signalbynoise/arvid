@@ -33,3 +33,8 @@ export const selectActiveWorkspaceId = (state: AppState) => state.activeWorkspac
 export const selectTeams = (state: AppState) => state.teams;
 export const selectMembers = (state: AppState) => state.members;
 export const selectInvitations = (state: AppState) => state.invitations;
+export const selectCardAssignees = (state: AppState) => state.cardAssignees;
+
+export const selectGitHubConnection = (state: AppState) => state.githubConnection;
+export const selectLinearConnection = (state: AppState) => state.linearConnection;
+export const selectSupabaseConnection = (state: AppState) => state.supabaseConnection;

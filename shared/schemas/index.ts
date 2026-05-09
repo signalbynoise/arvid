@@ -182,3 +182,42 @@ export {
 } from './projectMembership';
 
 export type { ProjectMembershipRow, ProjectMembership } from './projectMembership';
+
+export {
+  EntityTypeEnum,
+  CardAssigneeRowSchema,
+  CardAssigneeSchema,
+  CreateCardAssigneeBodySchema,
+} from './cardAssignee';
+
+export type { EntityType, CardAssigneeRow, CardAssignee } from './cardAssignee';
+
+export {
+  SupabaseConnectionRowSchema,
+  SupabaseConnectionSchema,
+  SupabaseProjectRefSchema,
+} from './supabaseConnection';
+
+export type { SupabaseConnectionRow, SupabaseConnection, SupabaseProjectRef } from './supabaseConnection';
+
+export {
+  DbColumnSchema,
+  DbTableSchema,
+  DbRelationshipSchema,
+  DbFunctionSchema,
+  EdgeFunctionSchema,
+  DbAnalysisSchema,
+  DbContextRowSchema,
+  DbContextSchema,
+} from './dbContext';
+
+export type {
+  DbColumn,
+  DbTable,
+  DbRelationship,
+  DbFunction,
+  EdgeFunction,
+  DbAnalysis,
+  DbContextRow,
+  DbContext,
+} from './dbContext';

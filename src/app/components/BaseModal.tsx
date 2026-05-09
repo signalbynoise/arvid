@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useStore, selectCommandPaletteOpen } from '../store';
 
@@ -10,6 +11,9 @@ const SIZE_CLASSES: Record<ModalSize, string> = {
   lg: 'max-w-modal-lg',
   xl: 'max-w-modal-xl',
 };
+
+const BACKDROP_TRANSITION = { duration: 0.2, ease: 'easeInOut' };
+const PANEL_TRANSITION = { type: 'spring', stiffness: 150, damping: 25 };
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -33,33 +37,43 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
     }
   }, [isOpen, handleKeyDown]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-overlay-scrim backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      <div
-        className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
-      >
-        <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle">
-          <h2 className="text-caption-lg text-text-primary">{title}</h2>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            className="absolute inset-0 bg-overlay-scrim backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={BACKDROP_TRANSITION}
             onClick={onClose}
-            aria-label="Close"
-            className="text-text-quaternary hover:text-text-primary transition-colors p-1 rounded-standard hover:bg-surface-frost-05"
-          >
-            <X size={16} />
-          </button>
-        </div>
+          />
 
-        <div className={size === 'xl' ? '' : 'p-6'}>
-          {children}
+          <motion.div
+            className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -24, scale: 0.95 }}
+            transition={PANEL_TRANSITION}
+          >
+            <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle">
+              <h2 className="text-caption-lg text-text-primary">{title}</h2>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="text-text-quaternary hover:text-text-primary transition-colors p-1 rounded-standard hover:bg-surface-frost-05"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className={size === 'xl' ? '' : 'p-6'}>
+              {children}
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

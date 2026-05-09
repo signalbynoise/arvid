@@ -13,7 +13,7 @@ interface GitHubDemoRepoFooterProps {
 export function GitHubDemoRepoFooter({ visible, selectorOpen, repoSelected, fetching, fetchDone }: GitHubDemoRepoFooterProps) {
   return (
     <div className={`border-t border-border-subtle shrink-0 py-2 transition-all duration-500 ${
-      visible ? 'opacity-100' : 'opacity-0'
+      visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
     }`}>
       <MiniSidebarFooterItem
         icon="/github.svg"
@@ -25,7 +25,7 @@ export function GitHubDemoRepoFooter({ visible, selectorOpen, repoSelected, fetc
       >
         {!repoSelected && (
           <div className="relative">
-            <div className={`flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-[1px] transition-colors ${
+            <div className={`flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-micro transition-colors ${
               selectorOpen ? 'border-border-focus' : ''
             }`}>
               <span className="text-[6px] font-[var(--fw-medium)] text-text-tertiary truncate">Select a repository</span>
@@ -33,10 +33,10 @@ export function GitHubDemoRepoFooter({ visible, selectorOpen, repoSelected, fetc
             </div>
 
             {selectorOpen && (
-              <div className="absolute bottom-full left-0 mb-0.5 z-10 w-[150px] bg-surface-panel border border-border-default rounded-[3px] shadow-elevated overflow-hidden">
+              <div className="absolute bottom-full left-0 mb-0.5 z-10 w-[150px] bg-surface-panel border border-border-default rounded-standard shadow-elevated overflow-hidden">
                 <div className="py-0.5">
                   <div className="px-2 py-0.5">
-                    <span className="text-[5px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wide">Private</span>
+                    <span className="text-[6px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wide">Private</span>
                   </div>
                   {REPOS.filter(r => r.visibility === 'private').map((repo, i) => (
                     <div key={repo.name} className={`flex items-center gap-1 px-2 py-1 text-[7px] ${
@@ -48,7 +48,7 @@ export function GitHubDemoRepoFooter({ visible, selectorOpen, repoSelected, fetc
                   ))}
                   <div className="border-t border-border-subtle my-0.5" />
                   <div className="px-2 py-0.5">
-                    <span className="text-[5px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wide">Public</span>
+                    <span className="text-[6px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wide">Public</span>
                   </div>
                   {REPOS.filter(r => r.visibility === 'public').map(repo => (
                     <div key={repo.name} className="flex items-center gap-1 px-2 py-1 text-[7px]">
@@ -63,7 +63,7 @@ export function GitHubDemoRepoFooter({ visible, selectorOpen, repoSelected, fetc
         )}
 
         {repoSelected && (
-          <div className="flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-[1px]">
+          <div className="flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-micro">
             <span className="text-[6px] font-[var(--fw-medium)] text-text-primary truncate">acme/web-app</span>
             <ChevronDown size={6} className="text-text-quaternary shrink-0 ml-1" />
           </div>

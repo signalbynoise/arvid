@@ -43,39 +43,37 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
         <MoreHorizontal size={14} />
       </IconButton>
 
-      {isOpen && (
-        <DropdownPanel position="right" anchorRef={menuRef} panelRef={panelRef}>
-          <DropdownSection label="ACTIONS">
-            <DropdownItem icon={<Plus size={16} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
-            <DropdownItem icon={<Pencil size={16} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
-            <DropdownItem icon={<Network size={16} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
-            {onCreateSubProject && (
-              <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
-            )}
-          </DropdownSection>
-
-          <DropdownDivider />
-
-          <DropdownSection label="GENERAL">
-            <DropdownItem icon={<Settings2 size={16} />} label="All project settings" onClick={() => { setIsOpen(false); onSettings(); }} />
-          </DropdownSection>
-
-          {canDeactivate && (
-            <>
-              <DropdownDivider />
-              <DropdownSection label="AVOID">
-                <DropdownItem
-                  icon={<Trash2 size={16} />}
-                  label="Deactivate project"
-                  variant="muted"
-                  right={<ToggleRight size={16} className="text-status-success" />}
-                  onClick={() => { setIsOpen(false); onDeactivate(); }}
-                />
-              </DropdownSection>
-            </>
+      <DropdownPanel isOpen={isOpen} position="right" anchorRef={menuRef} panelRef={panelRef}>
+        <DropdownSection label="ACTIONS">
+          <DropdownItem icon={<Plus size={16} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
+          <DropdownItem icon={<Pencil size={16} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
+          <DropdownItem icon={<Network size={16} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
+          {onCreateSubProject && (
+            <DropdownItem icon={<Plus size={16} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
           )}
-        </DropdownPanel>
-      )}
+        </DropdownSection>
+
+        <DropdownDivider />
+
+        <DropdownSection label="GENERAL">
+          <DropdownItem icon={<Settings2 size={16} />} label="All project settings" onClick={() => { setIsOpen(false); onSettings(); }} />
+        </DropdownSection>
+
+        {canDeactivate && (
+          <>
+            <DropdownDivider />
+            <DropdownSection label="AVOID">
+              <DropdownItem
+                icon={<Trash2 size={16} />}
+                label="Deactivate project"
+                variant="muted"
+                right={<ToggleRight size={16} className="text-status-success" />}
+                onClick={() => { setIsOpen(false); onDeactivate(); }}
+              />
+            </DropdownSection>
+          </>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

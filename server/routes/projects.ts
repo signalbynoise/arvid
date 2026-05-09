@@ -78,6 +78,10 @@ projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, 
   if (req.body.linear_project_id !== undefined) updates.linear_project_id = req.body.linear_project_id;
   if (req.body.linear_project_name !== undefined) updates.linear_project_name = req.body.linear_project_name;
   if (req.body.linear_team_id !== undefined) updates.linear_team_id = req.body.linear_team_id;
+  if (req.body.supabase_project_ref !== undefined) {
+    updates.supabase_project_ref = req.body.supabase_project_ref;
+    updates.supabase_connected_at = req.body.supabase_project_ref ? new Date().toISOString() : null;
+  }
 
   const { data, error } = await db
     .from('projects')

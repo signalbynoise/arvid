@@ -30,7 +30,7 @@ export function MiniSidebar({ workspaceName, teams, expandedProjectId, footer }:
 
             {team.projects.map(p => (
               <div key={p.id}>
-                <div className={`flex items-center gap-1 px-3 py-0.5 ml-2 text-[8px] rounded-[1px] transition-colors duration-300 ${
+                <div className={`flex items-center gap-1 px-3 py-0.5 ml-2 text-[8px] rounded-micro transition-colors duration-300 ${
                   p.isActive ? 'text-text-primary' : 'text-text-tertiary'
                 }`}>
                   <Folder size={8} className={`shrink-0 ${p.isActive ? 'text-text-primary' : 'text-text-quaternary'}`} />

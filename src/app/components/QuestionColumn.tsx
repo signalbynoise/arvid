@@ -15,6 +15,9 @@ import { useAutoSuggestQuestions } from '../hooks/useAutoSuggestQuestions';
 
 interface Props {
   onOpenDetails?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onAddUser?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
+  onDeactivate?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
 }
 
 const GROUP_OPTIONS = [
@@ -31,7 +34,7 @@ const SORT_OPTIONS = [
   { label: 'Status (Action needed)', value: 'status_action' }
 ];
 
-export function QuestionColumn({ onOpenDetails }: Props) {
+export function QuestionColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }: Props) {
   const navigate = useNavigate();
   const { wsShortId, teamShortId, projectShortId, reqShortId } = useParams();
   const allQuestions = useStore(selectQuestions);
@@ -127,6 +130,9 @@ export function QuestionColumn({ onOpenDetails }: Props) {
         isDimmed={selectedId !== null && q.id !== selectedId}
         onSelect={navigateToQuestion}
         onOpenDetails={onOpenDetails}
+        onEdit={onEdit}
+        onAddUser={onAddUser ? (id) => onAddUser('question', id) : undefined}
+        onDeactivate={onDeactivate ? (id) => onDeactivate('question', id) : undefined}
         onUseSuggestion={useSuggestion}
         onHideSuggestion={hideSuggestion}
       />

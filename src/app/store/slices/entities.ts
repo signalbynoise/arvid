@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Requirement, Question, Answer } from '../../types';
+import { Requirement, Question, Answer, CardAssignee, EntityType } from '../../types';
 import { api } from '../../api';
 import { deriveQuestionStatus } from '../../domain/questions';
 import { logger } from '../../logger';
@@ -19,6 +19,7 @@ export interface EntitiesSlice {
   requirements: Requirement[];
   questions: Question[];
   answers: Answer[];
+  cardAssignees: Record<string, CardAssignee[]>;
   dataState: DataState;
   abortController: AbortController | null;
   isSuggestingQuestions: boolean;
@@ -48,12 +49,18 @@ export interface EntitiesSlice {
   hideSuggestion: (id: string) => Promise<void>;
   toggleCurrentAnswer: (answerId: string) => Promise<void>;
   checkImplementation: (requirementId: string) => Promise<void>;
+
+  fetchCardAssignees: (projectId: string) => Promise<void>;
+  assignUser: (entityType: EntityType, entityId: string, userId: string) => Promise<void>;
+  unassignUser: (assigneeId: string, entityType: EntityType, entityId: string) => Promise<void>;
+  deactivateEntity: (entityType: EntityType, entityId: string) => Promise<void>;
 }
 
 export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSlice> = (set, get) => ({
   requirements: [],
   questions: [],
   answers: [],
+  cardAssignees: {},
   dataState: { status: 'idle' },
   abortController: null,
   isSuggestingQuestions: false,
@@ -612,6 +619,80 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
         return { checkingImplementation: updatedSet };
       });
       log.error('checkImplementation', 'Implementation check failed', { requirementId, error: message });
+    }
+  },
+
+  fetchCardAssignees: async (projectId: string) => {
+    log.info('fetchCardAssignees', 'Loading assignees for project', { projectId });
+    try {
+      const assignees = await api.getCardAssignees(projectId);
+      const grouped: Record<string, CardAssignee[]> = {};
+      for (const a of assignees) {
+        const key = `${a.entityType}:${a.entityId}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(a);
+      }
+      set({ cardAssignees: grouped });
+      log.info('fetchCardAssignees', 'Assignees loaded', { count: assignees.length });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('fetchCardAssignees', 'Failed to load assignees', { error: message });
+    }
+  },
+
+  assignUser: async (entityType: EntityType, entityId: string, userId: string) => {
+    log.info('assignUser', 'Assigning user to entity', { entityType, entityId, userId });
+    try {
+      const assignee = await api.assignUser(entityType, entityId, userId);
+      set(state => {
+        const key = `${entityType}:${entityId}`;
+        const existing = state.cardAssignees[key] || [];
+        return { cardAssignees: { ...state.cardAssignees, [key]: [...existing, assignee] } };
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('assignUser', 'Failed to assign user', { entityType, entityId, userId, error: message });
+    }
+  },
+
+  unassignUser: async (assigneeId: string, entityType: EntityType, entityId: string) => {
+    log.info('unassignUser', 'Removing assignment', { assigneeId });
+    try {
+      await api.unassignUser(assigneeId);
+      set(state => {
+        const key = `${entityType}:${entityId}`;
+        const existing = state.cardAssignees[key] || [];
+        return { cardAssignees: { ...state.cardAssignees, [key]: existing.filter(a => a.id !== assigneeId) } };
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('unassignUser', 'Failed to unassign user', { assigneeId, error: message });
+    }
+  },
+
+  deactivateEntity: async (entityType: EntityType, entityId: string) => {
+    log.info('deactivateEntity', 'Deactivating entity', { entityType, entityId });
+    try {
+      if (entityType === 'requirement') {
+        await api.deactivateRequirement(entityId);
+        set(state => ({
+          requirements: state.requirements.filter(r => r.id !== entityId),
+        }));
+      } else if (entityType === 'question') {
+        await api.deactivateQuestion(entityId);
+        set(state => ({
+          questions: state.questions.filter(q => q.id !== entityId),
+        }));
+      } else if (entityType === 'answer') {
+        await api.deactivateAnswer(entityId);
+        set(state => ({
+          answers: state.answers.filter(a => a.id !== entityId),
+        }));
+      }
+      log.info('deactivateEntity', 'Entity deactivated', { entityType, entityId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.error('deactivateEntity', 'Deactivation failed', { entityType, entityId, error: message });
     }
   },
 });

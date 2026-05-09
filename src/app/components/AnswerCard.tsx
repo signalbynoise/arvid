@@ -1,19 +1,40 @@
 import React from 'react';
-import { MoreHorizontal, LoaderPinwheel } from 'lucide-react';
+import { LoaderPinwheel } from 'lucide-react';
 import { CardShell } from './CardShell';
 import { CardHeader } from './ui/CardHeader';
 import { CardBody } from './ui/CardBody';
 import { CardFooter } from './ui/CardFooter';
 import { Chip } from './Chip';
+import { CardItemMenu } from './CardItemMenu';
 import { formatCardDate } from '../lib/formatDate';
+import { useStore, selectMembers, selectCardAssignees } from '../store';
 import type { Answer } from '../types';
 
 interface AnswerCardProps {
   answer: Answer;
   onToggleActive: (id: string) => void;
+  onOpenDetails?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onAddUser?: (id: string) => void;
+  onDeactivate?: (id: string) => void;
 }
 
-export function AnswerCard({ answer: ans, onToggleActive }: AnswerCardProps) {
+export function AnswerCard({
+  answer: ans,
+  onToggleActive,
+  onOpenDetails,
+  onEdit,
+  onAddUser,
+  onDeactivate,
+}: AnswerCardProps) {
+  const members = useStore(selectMembers);
+  const allAssignees = useStore(selectCardAssignees);
+  const assignees = allAssignees[`answer:${ans.id}`] || [];
+
+  const authorName = ans.createdBy
+    ? (members.find(m => m.userId === ans.createdBy)?.email?.split('@')[0] || ans.author)
+    : ans.author;
+
   return (
     <CardShell
       id={`answer-${ans.id}`}
@@ -23,9 +44,12 @@ export function AnswerCard({ answer: ans, onToggleActive }: AnswerCardProps) {
       <CardHeader
         shortId={ans.shortId}
         actions={
-          <button className="p-1 rounded-standard text-text-quaternary hover:text-text-primary hover:bg-surface-frost-08 transition-all">
-            <MoreHorizontal size={14} />
-          </button>
+          <CardItemMenu
+            onAddUser={() => onAddUser?.(ans.id)}
+            onEdit={() => onEdit?.(ans.id)}
+            onViewDetails={() => onOpenDetails?.(ans.id)}
+            onDeactivate={() => onDeactivate?.(ans.id)}
+          />
         }
       />
 
@@ -42,6 +66,8 @@ export function AnswerCard({ answer: ans, onToggleActive }: AnswerCardProps) {
 
       <CardFooter
         meta={`${ans.author} - ${formatCardDate(ans.date)}`}
+        authorName={authorName}
+        assigneeCount={assignees.length}
         indicators={<div className="w-2 h-2 rounded-full bg-indicator-high" />}
       />
     </CardShell>

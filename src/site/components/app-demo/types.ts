@@ -1,4 +1,4 @@
-export type { MiniTeam as Team, MiniProject as Project } from '../mini-demo/types';
+export type { MiniTeam as Team, MiniProject as Project, Step } from '../mini-demo/types';
 
 export interface Requirement {
   id: string;
@@ -37,9 +37,4 @@ export interface Summary {
   objective: string;
   tags: string[];
   targetCompleteness: number;
-}
-
-export interface Step {
-  action: string;
-  delay: number;
 }

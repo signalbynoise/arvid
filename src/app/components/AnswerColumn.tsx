@@ -23,7 +23,14 @@ const SORT_OPTIONS = [
   { label: 'Status (Active First)', value: 'status_active' }
 ];
 
-export function AnswerColumn() {
+interface Props {
+  onOpenDetails?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onAddUser?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
+  onDeactivate?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
+}
+
+export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }: Props) {
   const allAnswers = useStore(selectAnswers);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
   const isSuggestingAnswer = useStore(selectIsSuggestingAnswer);
@@ -90,7 +97,15 @@ export function AnswerColumn() {
 
   const renderCards = (items: Answer[]) =>
     items.map(a => (
-      <AnswerCard key={a.id} answer={a} onToggleActive={toggleCurrentAnswer} />
+      <AnswerCard
+        key={a.id}
+        answer={a}
+        onToggleActive={toggleCurrentAnswer}
+        onOpenDetails={onOpenDetails}
+        onEdit={onEdit}
+        onAddUser={onAddUser ? (id) => onAddUser('answer', id) : undefined}
+        onDeactivate={onDeactivate ? (id) => onDeactivate('answer', id) : undefined}
+      />
     ));
 
   if (!questionSelected) {

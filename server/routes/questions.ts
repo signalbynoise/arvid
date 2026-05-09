@@ -20,6 +20,10 @@ questionsRouter.get('/', async (req, res) => {
     query = query.eq('requirement_id', req.query.requirement_id as string);
   }
 
+  if (req.query.include_deactivated !== 'true') {
+    query = query.eq('is_deactivated', false);
+  }
+
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -42,7 +46,7 @@ questionsRouter.post('/', validateBody(CreateQuestionBodySchema), async (req, re
   const shortId = await nextShortId(db, 'questions', 'Q', 'requirement_id', req.body.requirement_id);
   const { data, error } = await db
     .from('questions')
-    .insert({ ...req.body, short_id: shortId })
+    .insert({ ...req.body, short_id: shortId, created_by: req.user!.id })
     .select()
     .single();
 
@@ -93,6 +97,7 @@ questionsRouter.post('/classify', async (req, res) => {
       answers: q.answers.map(a => ({ text: a.text, author: a.author })),
     })),
     repoContext: fullContext.repoContext,
+    dbContext: fullContext.dbContext,
   } : null;
 
   try {
@@ -138,6 +143,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       repoFileTree: context.repoFileTree,
       repoKeyFiles: context.repoKeyFiles,
       repoRecentCommits: context.repoRecentCommits,
+      dbContext: context.dbContext,
     });
 
     const existingTexts = new Set(
@@ -225,6 +231,19 @@ questionsRouter.patch('/:id', validateBody(UpdateQuestionBodySchema), async (req
   const { data, error } = await db
     .from('questions')
     .update(req.body)
+    .eq('id', req.params.id)
+    .select()
+    .single();
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+questionsRouter.patch('/:id/deactivate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
+    .from('questions')
+    .update({ is_deactivated: true })
     .eq('id', req.params.id)
     .select()
     .single();

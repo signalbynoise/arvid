@@ -1,4 +1,5 @@
 import React from 'react';
+import { MiniColumnHeader } from './MiniColumnHeader';
 
 interface MiniColumnProps {
   title: string;
@@ -11,10 +12,7 @@ interface MiniColumnProps {
 export function MiniColumn({ title, controls, borderRight = true, width = 'w-1/4', children }: MiniColumnProps) {
   return (
     <div className={`${width} shrink-0 flex flex-col bg-surface-panel${borderRight ? ' border-r border-border-subtle' : ''}`}>
-      <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
-        <span className="text-[7px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{title}</span>
-        {controls}
-      </div>
+      <MiniColumnHeader title={title} trailing={controls} />
       <div className="flex-1 p-2 space-y-2 overflow-hidden">
         {children}
       </div>

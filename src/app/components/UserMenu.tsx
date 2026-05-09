@@ -25,12 +25,16 @@ export function UserMenu() {
   const slackConnection = useStore(s => s.slackConnection);
   const loadSlackStatus = useStore(s => s.loadSlackStatus);
   const disconnectSlack = useStore(s => s.disconnectSlack);
+  const supabaseConnection = useStore(s => s.supabaseConnection);
+  const loadSupabaseConnectStatus = useStore(s => s.loadSupabaseConnectStatus);
+  const disconnectSupabase = useStore(s => s.disconnectSupabase);
 
   useEffect(() => {
     loadGitHubStatus();
     loadLinearStatus();
     loadSlackStatus();
-  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus]);
+    loadSupabaseConnectStatus();
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus]);
 
   const fullName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -85,6 +89,16 @@ export function UserMenu() {
     }
   };
 
+  const handleConnectSupabase = async () => {
+    log.info('connect', 'Initiating Supabase OAuth');
+    try {
+      const { url } = await api.getSupabaseConnectAuthUrl();
+      window.location.href = url;
+    } catch (err) {
+      log.error('connect', 'Failed to get Supabase auth URL', { error: err instanceof Error ? err.message : 'Unknown' });
+    }
+  };
+
   const toggleIndicator = (connected: boolean) =>
     connected
       ? <ToggleRight size={16} className="text-status-success" />
@@ -99,50 +113,54 @@ export function UserMenu() {
         <Settings size={14} />
       </IconButton>
 
-      {isOpen && (
-        <DropdownPanel position="below" align="end">
-          <DropdownSection label="Profile">
-            <DropdownItem
-              icon={<UserRound size={16} />}
-              label={fullName || email}
-            />
-          </DropdownSection>
+      <DropdownPanel isOpen={isOpen} position="below" align="end">
+        <DropdownSection label="Profile">
+          <DropdownItem
+            icon={<UserRound size={16} />}
+            label={fullName || email}
+          />
+        </DropdownSection>
 
-          <DropdownDivider />
+        <DropdownDivider />
 
-          <DropdownSection label="Integrations">
-            <DropdownItem
-              icon={<img src="/github.svg" alt="" className="w-4 h-4 opacity-60" />}
-              label="Github"
-              right={toggleIndicator(githubConnection.status === 'connected')}
-              onClick={githubConnection.status === 'connected' ? disconnectGitHub : handleConnectGitHub}
-            />
-            <DropdownItem
-              icon={<img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />}
-              label="Linear"
-              right={toggleIndicator(linearConnection.status === 'connected')}
-              onClick={linearConnection.status === 'connected' ? disconnectLinear : handleConnectLinear}
-            />
-            <DropdownItem
-              icon={<img src="/slack.svg" alt="" className="w-4 h-4 opacity-60" />}
-              label="Slack"
-              right={toggleIndicator(slackConnection.status === 'connected')}
-              onClick={slackConnection.status === 'connected' ? disconnectSlack : handleConnectSlack}
-            />
-          </DropdownSection>
+        <DropdownSection label="Integrations">
+          <DropdownItem
+            icon={<img src="/github.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Github"
+            right={toggleIndicator(githubConnection.status === 'connected')}
+            onClick={githubConnection.status === 'connected' ? disconnectGitHub : handleConnectGitHub}
+          />
+          <DropdownItem
+            icon={<img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Linear"
+            right={toggleIndicator(linearConnection.status === 'connected')}
+            onClick={linearConnection.status === 'connected' ? disconnectLinear : handleConnectLinear}
+          />
+          <DropdownItem
+            icon={<img src="/slack.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Slack"
+            right={toggleIndicator(slackConnection.status === 'connected')}
+            onClick={slackConnection.status === 'connected' ? disconnectSlack : handleConnectSlack}
+          />
+          <DropdownItem
+            icon={<img src="/supabase.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Supabase"
+            right={toggleIndicator(supabaseConnection.status === 'connected')}
+            onClick={supabaseConnection.status === 'connected' ? disconnectSupabase : handleConnectSupabase}
+          />
+        </DropdownSection>
 
-          <DropdownDivider />
+        <DropdownDivider />
 
-          <DropdownSection label="Avoid">
-            <DropdownItem
-              icon={<LogOut size={16} />}
-              label="Leave Arvid"
-              variant="muted"
-              onClick={handleSignOut}
-            />
-          </DropdownSection>
-        </DropdownPanel>
-      )}
+        <DropdownSection label="Avoid">
+          <DropdownItem
+            icon={<LogOut size={16} />}
+            label="Leave Arvid"
+            variant="muted"
+            onClick={handleSignOut}
+          />
+        </DropdownSection>
+      </DropdownPanel>
     </div>
   );
 }

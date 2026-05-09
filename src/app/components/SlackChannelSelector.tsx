@@ -79,40 +79,38 @@ export function SlackChannelSelector({ projectId, onLinked }: SlackChannelSelect
         </span>
       </FooterDropdownTrigger>
 
-      {isOpen && (
-        <DropdownPanel variant="attached" position="above">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 size={16} className="animate-spin text-text-quaternary" />
+      <DropdownPanel isOpen={isOpen} variant="attached" position="above">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+          </div>
+        ) : slackChannels.length === 0 ? (
+          <div className="px-3 py-4 text-center text-text-quaternary">
+            No channels found.
+          </div>
+        ) : (
+          <>
+            <div className="overflow-y-auto flex-1">
+              <DropdownSection label="SELECT CHANNELS">
+                {slackChannels.filter(ch => !ch.isIm).map(ch => (
+                  <DropdownItem
+                    key={ch.id}
+                    icon={channelIcon(ch)}
+                    label={ch.name}
+                    right={selectedIds.has(ch.id) ? <Check size={14} className="text-status-success" /> : undefined}
+                    onClick={() => toggleChannel(ch.id)}
+                  />
+                ))}
+              </DropdownSection>
             </div>
-          ) : slackChannels.length === 0 ? (
-            <div className="px-3 py-4 text-center text-text-quaternary">
-              No channels found.
+            <div className="border-t border-border-subtle px-3 py-2 shrink-0">
+              <button type="button" onClick={handleSave} disabled={isLinking} className="btn-primary w-full">
+                {isLinking ? 'Saving...' : `Link ${selectedIds.size} channel${selectedIds.size !== 1 ? 's' : ''}`}
+              </button>
             </div>
-          ) : (
-            <>
-              <div className="overflow-y-auto flex-1">
-                <DropdownSection label="SELECT CHANNELS">
-                  {slackChannels.filter(ch => !ch.isIm).map(ch => (
-                    <DropdownItem
-                      key={ch.id}
-                      icon={channelIcon(ch)}
-                      label={ch.name}
-                      right={selectedIds.has(ch.id) ? <Check size={14} className="text-status-success" /> : undefined}
-                      onClick={() => toggleChannel(ch.id)}
-                    />
-                  ))}
-                </DropdownSection>
-              </div>
-              <div className="border-t border-border-subtle px-3 py-2 shrink-0">
-                <button type="button" onClick={handleSave} disabled={isLinking} className="btn-primary w-full">
-                  {isLinking ? 'Saving...' : `Link ${selectedIds.size} channel${selectedIds.size !== 1 ? 's' : ''}`}
-                </button>
-              </div>
-            </>
-          )}
-        </DropdownPanel>
-      )}
+          </>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

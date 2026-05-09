@@ -16,6 +16,9 @@ import { RISK_SCORE, CLARITY_SCORE, scoreFor } from '../domain/sorting';
 interface Props {
   onNewReqClick?: () => void;
   onOpenDetails?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onAddUser?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
+  onDeactivate?: (entityType: 'requirement' | 'question' | 'answer', entityId: string) => void;
 }
 
 const GROUP_OPTIONS = [
@@ -34,7 +37,7 @@ const SORT_OPTIONS = [
   { label: 'Clarity (Low to High)', value: 'clarity_asc' }
 ];
 
-export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
+export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddUser, onDeactivate }: Props) {
   const navigate = useNavigate();
   const { wsShortId, teamShortId, projectShortId } = useParams();
   const requirements = useStore(selectRequirements);
@@ -90,6 +93,9 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails }: Props) {
         isDimmed={selectedId !== null && req.id !== selectedId}
         onClick={() => handleClick(req)}
         onOpenDetails={onOpenDetails ?? (() => {})}
+        onEdit={onEdit ?? (() => {})}
+        onAddUser={onAddUser ? (id) => onAddUser('requirement', id) : () => {}}
+        onDeactivate={onDeactivate ? (id) => onDeactivate('requirement', id) : () => {}}
         onCheckImplementation={checkImplementation}
         onViewImplDetails={(id) => setImplDetailReqId(id)}
       />

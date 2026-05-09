@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { GenerateSummaryResponseSchema, GenerateSummaryResponse, ImplementationCheckResponseSchema } from '../shared/schemas';
 import type { ImplementationCheckResponse } from '../shared/schemas';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
+import type { DbAnalysis, DbTable, DbRelationship, DbFunction, EdgeFunction } from '../shared/schemas/dbContext';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_MODEL = 'x-ai/grok-4.1-fast';
@@ -40,6 +41,7 @@ export interface SummaryGenerationInput {
   requirement: RequirementContext;
   questions: QuestionContext[];
   repoContext?: RepoAnalysis;
+  dbContext?: DbAnalysis;
 }
 
 function buildCodebaseContextBlock(repoContext: RepoAnalysis): string {
@@ -85,6 +87,67 @@ function buildCodebaseContextBlock(repoContext: RepoAnalysis): string {
   return parts.join('\n') + '\n\n';
 }
 
+export function buildDbContextBlock(dbContext: DbAnalysis): string {
+  const parts: string[] = ['## Database Schema Context'];
+
+  const publicTables = dbContext.tables.filter(t => t.schema === 'public');
+  if (publicTables.length > 0) {
+    parts.push(`Tables (${publicTables.length}):`);
+    for (const table of publicTables.slice(0, 20)) {
+      const cols = table.columns
+        .map(c => {
+          let desc = `${c.name} (${c.type}`;
+          if (c.isPrimaryKey) desc += ', PK';
+          if (c.isForeignKey && c.references) desc += `, FK→${c.references.table}`;
+          if (!c.isNullable) desc += ', NOT NULL';
+          desc += ')';
+          return desc;
+        })
+        .join(', ');
+      const rlsTag = table.hasRls ? ' [RLS]' : '';
+      parts.push(`  ${table.name}${rlsTag}: ${cols}`);
+    }
+    if (publicTables.length > 20) {
+      parts.push(`  ... and ${publicTables.length - 20} more tables`);
+    }
+  }
+
+  if (dbContext.relationships.length > 0) {
+    parts.push(`\nRelationships (${dbContext.relationships.length}):`);
+    for (const rel of dbContext.relationships.slice(0, 15)) {
+      parts.push(`  ${rel.fromTable}.${rel.fromColumn} → ${rel.toTable}.${rel.toColumn}`);
+    }
+  }
+
+  if (dbContext.functions.length > 0) {
+    parts.push(`\nDatabase Functions (${dbContext.functions.length}):`);
+    for (const fn of dbContext.functions.slice(0, 10)) {
+      parts.push(`  ${fn.name}(${fn.argumentTypes}) → ${fn.returnType} [${fn.language}]`);
+    }
+  }
+
+  if (dbContext.edgeFunctions.length > 0) {
+    parts.push(`\nEdge Functions (${dbContext.edgeFunctions.length}):`);
+    for (const fn of dbContext.edgeFunctions.slice(0, 10)) {
+      parts.push(`  ${fn.slug} (v${fn.version}, ${fn.status})`);
+    }
+  }
+
+  if (dbContext.patterns.length > 0) {
+    parts.push(`\nDB Patterns: ${dbContext.patterns.join(', ')}`);
+  }
+
+  if (dbContext.dataModel) {
+    parts.push(`Data Model: ${dbContext.dataModel}`);
+  }
+
+  if (dbContext.summary) {
+    parts.push(`Summary: ${dbContext.summary}`);
+  }
+
+  return parts.join('\n') + '\n\n';
+}
+
 function buildSystemPrompt(): string {
   return `You are Arvid, an AI specification analyst. Given a requirement and its associated questions and answers, produce a structured JSON analysis.
 
@@ -117,12 +180,16 @@ Respond ONLY with the JSON object, no markdown fences, no explanation.`;
 }
 
 function buildUserPrompt(input: SummaryGenerationInput): string {
-  const { requirement, questions, repoContext } = input;
+  const { requirement, questions, repoContext, dbContext } = input;
 
   let prompt = '';
 
   if (repoContext) {
     prompt += buildCodebaseContextBlock(repoContext);
+  }
+
+  if (dbContext) {
+    prompt += buildDbContextBlock(dbContext);
   }
 
   prompt += `## Requirement\nTitle: ${requirement.title}\n`;
@@ -154,6 +221,7 @@ export interface EnhanceContext {
   projectName?: string;
   existingRequirements?: string[];
   repoContext?: RepoAnalysis;
+  dbContext?: DbAnalysis;
 }
 
 export interface EnhanceResult {
@@ -184,6 +252,9 @@ export async function enhanceRequirement(rawText: string, context?: EnhanceConte
   }
   if (context?.repoContext) {
     contextBlock += `\n\n${buildCodebaseContextBlock(context.repoContext)}Use the codebase context to ground the requirement in the actual technology stack, naming conventions, and architecture of the project.`;
+  }
+  if (context?.dbContext) {
+    contextBlock += `\n\n${buildDbContextBlock(context.dbContext)}Use the database schema context to ground the requirement in the actual data model, table structures, and relationships of the project.`;
   }
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -486,6 +557,7 @@ export interface ClassifyQuestionContext {
     answers: { text: string; author: string }[];
   }[];
   repoContext?: RepoAnalysis;
+  dbContext?: DbAnalysis;
 }
 
 export async function classifyQuestion(
@@ -535,6 +607,10 @@ export async function classifyQuestion(
 
   if (context?.repoContext) {
     userMessage += `\n${buildCodebaseContextBlock(context.repoContext)}`;
+  }
+
+  if (context?.dbContext) {
+    userMessage += `\n${buildDbContextBlock(context.dbContext)}`;
   }
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -625,6 +701,7 @@ export interface SuggestQuestionsInput {
   repoFileTree?: FileTreeEntry[];
   repoKeyFiles?: Record<string, string>;
   repoRecentCommits?: CommitEntry[];
+  dbContext?: DbAnalysis;
 }
 
 export interface SuggestedQuestion {
@@ -735,6 +812,11 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
     repoContextBlock += '\n';
   }
 
+  let dbContextBlock = '';
+  if (input.dbContext) {
+    dbContextBlock = buildDbContextBlock(input.dbContext);
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -820,7 +902,7 @@ Respond ONLY with the JSON object, no markdown fences.`,
 
 Title: ${input.requirementTitle}
 ${input.requirementDescription ? `Description: ${input.requirementDescription}` : ''}
-${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}`,
+${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}`,
         },
       ],
       temperature: 0.4,
@@ -885,6 +967,7 @@ export interface SuggestAnswerInput {
   repoFileTree?: FileTreeEntry[];
   repoKeyFiles?: Record<string, string>;
   repoRecentCommits?: CommitEntry[];
+  dbContext?: DbAnalysis;
 }
 
 const SuggestAnswerResponseSchema = z.object({
@@ -974,6 +1057,11 @@ export async function suggestAnswer(input: SuggestAnswerInput): Promise<SuggestA
     repoContextBlock += '\n';
   }
 
+  let dbContextBlock = '';
+  if (input.dbContext) {
+    dbContextBlock = buildDbContextBlock(input.dbContext);
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -1055,7 +1143,7 @@ ${contextBlock}
 
 ## Question to Answer
 ${input.questionText}
-${qaTreeBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}`,
+${qaTreeBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}`,
         },
       ],
       temperature: 0.3,

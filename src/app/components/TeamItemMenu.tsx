@@ -43,37 +43,35 @@ export function TeamItemMenu({ teamId, onAddUser, onRename, onMove, onCreateProj
         <MoreHorizontal size={14} />
       </IconButton>
 
-      {isOpen && (
-        <DropdownPanel position="right" anchorRef={menuRef} panelRef={panelRef}>
-          <DropdownSection label="ACTIONS">
-            <DropdownItem icon={<Plus size={16} />} label="Add user to team" onClick={() => { setIsOpen(false); onAddUser(); }} />
-            <DropdownItem icon={<Pencil size={16} />} label="Rename team" onClick={() => { setIsOpen(false); onRename(); }} />
-            <DropdownItem icon={<Network size={16} />} label="Move team" onClick={() => { setIsOpen(false); onMove(); }} />
-            <DropdownItem icon={<Plus size={16} />} label="Create project" onClick={() => { setIsOpen(false); onCreateProject(); }} />
-          </DropdownSection>
+      <DropdownPanel isOpen={isOpen} position="right" anchorRef={menuRef} panelRef={panelRef}>
+        <DropdownSection label="ACTIONS">
+          <DropdownItem icon={<Plus size={16} />} label="Add user to team" onClick={() => { setIsOpen(false); onAddUser(); }} />
+          <DropdownItem icon={<Pencil size={16} />} label="Rename team" onClick={() => { setIsOpen(false); onRename(); }} />
+          <DropdownItem icon={<Network size={16} />} label="Move team" onClick={() => { setIsOpen(false); onMove(); }} />
+          <DropdownItem icon={<Plus size={16} />} label="Create project" onClick={() => { setIsOpen(false); onCreateProject(); }} />
+        </DropdownSection>
 
-          <DropdownDivider />
+        <DropdownDivider />
 
-          <DropdownSection label="GENERAL">
-            <DropdownItem icon={<Settings2 size={16} />} label="All team settings" onClick={() => { setIsOpen(false); onSettings(); }} />
-          </DropdownSection>
+        <DropdownSection label="GENERAL">
+          <DropdownItem icon={<Settings2 size={16} />} label="All team settings" onClick={() => { setIsOpen(false); onSettings(); }} />
+        </DropdownSection>
 
-          {canDeactivate && (
-            <>
-              <DropdownDivider />
-              <DropdownSection label="AVOID">
-                <DropdownItem
-                  icon={<Trash2 size={16} />}
-                  label="Deactivate team"
-                  variant="muted"
-                  right={<ToggleRight size={16} className="text-status-success" />}
-                  onClick={() => { setIsOpen(false); onDeactivate(); }}
-                />
-              </DropdownSection>
-            </>
-          )}
-        </DropdownPanel>
-      )}
+        {canDeactivate && (
+          <>
+            <DropdownDivider />
+            <DropdownSection label="AVOID">
+              <DropdownItem
+                icon={<Trash2 size={16} />}
+                label="Deactivate team"
+                variant="muted"
+                right={<ToggleRight size={16} className="text-status-success" />}
+                onClick={() => { setIsOpen(false); onDeactivate(); }}
+              />
+            </DropdownSection>
+          </>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

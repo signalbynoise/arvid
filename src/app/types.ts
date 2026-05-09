@@ -19,4 +19,6 @@ export type {
   InvitationScope,
   TeamMembership,
   ProjectMembership,
+  EntityType,
+  CardAssignee,
 } from '../../shared/schemas';

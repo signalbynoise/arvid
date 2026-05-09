@@ -1,10 +1,21 @@
 import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { SidebarItem } from './SidebarItem';
 import { ProjectIcon } from './ProjectIcon';
 import { ProjectItemMenu } from './ProjectItemMenu';
 import type { ProjectTreeNode } from '../domain/projects';
 
 const DEPTH_INDENT_PX = 24;
+
+const EXPAND_VARIANTS = {
+  collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },
+  expanded: { height: 'auto', opacity: 1, overflow: 'hidden' as const },
+};
+
+const EXPAND_TRANSITION = {
+  height: { type: 'spring' as const, stiffness: 300, damping: 30 },
+  opacity: { duration: 0.2 },
+};
 
 interface ProjectTreeItemProps {
   node: ProjectTreeNode;
@@ -42,8 +53,9 @@ export function ProjectTreeItem({
   return (
     <div>
       <SidebarItem
+        itemId={node.id}
         label={node.name}
-        icon={<ProjectIcon depth={depth} isSelected={isSelected} />}
+        icon={<ProjectIcon depth={depth} isSelected={isSelected} isOpen={hasChildren && isExpanded} />}
         isSelected={isSelected}
         indent={depth * DEPTH_INDENT_PX}
         chevron={hasChildren ? { open: !!isExpanded, onToggle: (e) => onToggleExpand(e, node.id) } : undefined}
@@ -61,28 +73,38 @@ export function ProjectTreeItem({
         }
       />
 
-      {isExpanded && hasChildren && (
-        <div className="mt-0.5">
-          {node.children.map(child => (
-            <ProjectTreeItem
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              isSelected={selectedProjectId === child.id}
-              isExpanded={!!expandedMap[child.id]}
-              onSelect={onSelect}
-              onToggleExpand={onToggleExpand}
-              onAddUser={onAddUser}
-              onRename={onRename}
-              onCreateSubProject={onCreateSubProject}
-              onDeactivate={onDeactivate}
-              getTeamId={getTeamId}
-              expandedMap={expandedMap}
-              selectedProjectId={selectedProjectId}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {isExpanded && hasChildren && (
+          <motion.div
+            key="children"
+            initial="collapsed"
+            animate="expanded"
+            exit="collapsed"
+            variants={EXPAND_VARIANTS}
+            transition={EXPAND_TRANSITION}
+            className="mt-0.5"
+          >
+            {node.children.map(child => (
+              <ProjectTreeItem
+                key={child.id}
+                node={child}
+                depth={depth + 1}
+                isSelected={selectedProjectId === child.id}
+                isExpanded={!!expandedMap[child.id]}
+                onSelect={onSelect}
+                onToggleExpand={onToggleExpand}
+                onAddUser={onAddUser}
+                onRename={onRename}
+                onCreateSubProject={onCreateSubProject}
+                onDeactivate={onDeactivate}
+                getTeamId={getTeamId}
+                expandedMap={expandedMap}
+                selectedProjectId={selectedProjectId}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

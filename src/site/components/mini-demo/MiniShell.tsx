@@ -9,7 +9,7 @@ interface MiniShellProps {
 }
 
 export function MiniShell({ visible, className, shadow = true, roundedRight = true, children }: MiniShellProps) {
-  const radiusClass = roundedRight ? 'rounded-[4px]' : 'rounded-l-[4px] rounded-r-none';
+  const radiusClass = roundedRight ? 'rounded-standard' : 'rounded-l-standard rounded-r-none';
 
   return (
     <div className={`flex ${radiusClass} overflow-hidden border border-border-subtle bg-surface-base ${shadow ? 'shadow-elevated' : ''} transition-all duration-700 ${

@@ -66,35 +66,33 @@ export function SlackNotifySelector({ projectId }: Props) {
         </span>
       </FooterDropdownTrigger>
 
-      {isOpen && (
-        <DropdownPanel variant="attached" position="above">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 size={16} className="animate-spin text-text-quaternary" />
-            </div>
-          ) : nonImChannels.length === 0 ? (
-            <div className="px-3 py-4 text-center text-text-quaternary">
-              No channels found. Reinstall the Slack app to grant channel permissions.
-            </div>
-          ) : (
-            <DropdownSection label="NOTIFY ON EVENTS">
+      <DropdownPanel isOpen={isOpen} variant="attached" position="above">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+          </div>
+        ) : nonImChannels.length === 0 ? (
+          <div className="px-3 py-4 text-center text-text-quaternary">
+            No channels found. Reinstall the Slack app to grant channel permissions.
+          </div>
+        ) : (
+          <DropdownSection label="NOTIFY ON EVENTS">
+            <DropdownItem
+              label="None (disabled)"
+              variant="muted"
+              onClick={() => handleSelect(null)}
+            />
+            {nonImChannels.map(ch => (
               <DropdownItem
-                label="None (disabled)"
-                variant="muted"
-                onClick={() => handleSelect(null)}
+                key={ch.id}
+                icon={ch.isPrivate ? <Lock size={16} /> : <Hash size={16} />}
+                label={ch.name}
+                onClick={() => handleSelect(ch.id)}
               />
-              {nonImChannels.map(ch => (
-                <DropdownItem
-                  key={ch.id}
-                  icon={ch.isPrivate ? <Lock size={16} /> : <Hash size={16} />}
-                  label={ch.name}
-                  onClick={() => handleSelect(ch.id)}
-                />
-              ))}
-            </DropdownSection>
-          )}
-        </DropdownPanel>
-      )}
+            ))}
+          </DropdownSection>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

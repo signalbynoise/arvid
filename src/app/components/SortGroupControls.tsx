@@ -56,25 +56,23 @@ export function SortGroupControls({
           <ListFilter size={14} />
         </IconButton>
 
-        {groupOpen && (
-          <DropdownPanel position="below" align="end">
-            <DropdownSection label="GROUP">
-              {groupByOptions.map(opt => (
-                <DropdownItem
-                  key={opt.value}
-                  icon={<ListFilter size={16} />}
-                  label={opt.label}
-                  right={
-                    currentGroup === opt.value
-                      ? <ToggleRight size={16} className="text-status-success" />
-                      : <ToggleLeft size={16} className="text-text-quaternary" />
-                  }
-                  onClick={() => { onGroupChange(opt.value); setGroupOpen(false); }}
-                />
-              ))}
-            </DropdownSection>
-          </DropdownPanel>
-        )}
+        <DropdownPanel isOpen={groupOpen} position="below" align="end">
+          <DropdownSection label="GROUP">
+            {groupByOptions.map(opt => (
+              <DropdownItem
+                key={opt.value}
+                icon={<ListFilter size={16} />}
+                label={opt.label}
+                right={
+                  currentGroup === opt.value
+                    ? <ToggleRight size={16} className="text-status-success" />
+                    : <ToggleLeft size={16} className="text-text-quaternary" />
+                }
+                onClick={() => { onGroupChange(opt.value); setGroupOpen(false); }}
+              />
+            ))}
+          </DropdownSection>
+        </DropdownPanel>
       </div>
 
       <div className="relative" ref={sortRef}>
@@ -82,25 +80,23 @@ export function SortGroupControls({
           <ArrowUpDown size={14} />
         </IconButton>
 
-        {sortOpen && (
-          <DropdownPanel position="below" align="end">
-            <DropdownSection label="SORT">
-              {sortByOptions.map(opt => (
-                <DropdownItem
-                  key={opt.value}
-                  icon={<ArrowUpDown size={16} />}
-                  label={opt.label}
-                  right={
-                    currentSort === opt.value
-                      ? <ToggleRight size={16} className="text-status-success" />
-                      : <ToggleLeft size={16} className="text-text-quaternary" />
-                  }
-                  onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
-                />
-              ))}
-            </DropdownSection>
-          </DropdownPanel>
-        )}
+        <DropdownPanel isOpen={sortOpen} position="below" align="end">
+          <DropdownSection label="SORT">
+            {sortByOptions.map(opt => (
+              <DropdownItem
+                key={opt.value}
+                icon={<ArrowUpDown size={16} />}
+                label={opt.label}
+                right={
+                  currentSort === opt.value
+                    ? <ToggleRight size={16} className="text-status-success" />
+                    : <ToggleLeft size={16} className="text-text-quaternary" />
+                }
+                onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
+              />
+            ))}
+          </DropdownSection>
+        </DropdownPanel>
       </div>
     </>
   );

@@ -22,3 +22,16 @@ export interface BreadcrumbSegment {
   label: string;
   icon?: React.ComponentType<{ size?: number; className?: string }>;
 }
+
+export interface CursorPosition {
+  id: string;
+  x: string;
+  y: string;
+  visible?: boolean;
+}
+
+export interface Step {
+  action: string;
+  delay: number;
+  cursors?: CursorPosition[];
+}

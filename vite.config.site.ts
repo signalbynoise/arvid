@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      dedupe: ['react', 'react-dom'],
     },
     publicDir: path.resolve(__dirname, 'public'),
     build: {

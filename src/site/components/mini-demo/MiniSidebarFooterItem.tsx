@@ -25,7 +25,7 @@ export function MiniSidebarFooterItem({ icon, label, isConnected, value, placeho
         )}
       </div>
       {children ?? (
-        <div className="flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-[1px]">
+        <div className="flex items-center justify-between w-full px-1.5 py-1 bg-surface-panel border border-border-default rounded-micro">
           <span className={`text-[6px] font-[var(--fw-medium)] truncate ${value ? 'text-text-primary' : 'text-text-tertiary'}`}>
             {value ?? placeholder ?? `Select ${label.toLowerCase()}`}
           </span>

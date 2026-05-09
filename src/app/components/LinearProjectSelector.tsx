@@ -69,56 +69,54 @@ export function LinearProjectSelector({ projectId, onLinked }: LinearProjectSele
         <span className="text-text-tertiary">{isLinking ? 'Linking...' : 'Select project'}</span>
       </FooterDropdownTrigger>
 
-      {isOpen && (
-        <DropdownPanel variant="attached" position="above">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 size={16} className="animate-spin text-text-quaternary" />
+      <DropdownPanel isOpen={isOpen} variant="attached" position="above">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 size={16} className="animate-spin text-text-quaternary" />
+          </div>
+        ) : selectedTeamId === null ? (
+          linearTeams.length === 0 ? (
+            <div className="px-3 py-4 text-center text-text-quaternary">
+              No teams found.
             </div>
-          ) : selectedTeamId === null ? (
-            linearTeams.length === 0 ? (
-              <div className="px-3 py-4 text-center text-text-quaternary">
-                No teams found.
-              </div>
-            ) : (
-              <DropdownSection label="SELECT TEAM">
-                {linearTeams.map(team => (
-                  <DropdownItem
-                    key={team.id}
-                    right={<span className="font-mono text-text-quaternary">{team.key}</span>}
-                    label={team.name}
-                    onClick={() => handleSelectTeam(team.id)}
-                  />
-                ))}
-              </DropdownSection>
-            )
           ) : (
-            <>
-              <DropdownItem
-                icon={<ChevronLeft size={16} />}
-                label="Back to teams"
-                variant="muted"
-                onClick={handleBack}
-              />
-              <DropdownSection label="SELECT PROJECT">
-                {linearProjects.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-text-quaternary">
-                    No projects found in this team.
-                  </div>
-                ) : (
-                  linearProjects.map(proj => (
-                    <DropdownItem
-                      key={proj.id}
-                      label={proj.name}
-                      onClick={() => handleSelectProject(proj.id, proj.name)}
-                    />
-                  ))
-                )}
-              </DropdownSection>
-            </>
-          )}
-        </DropdownPanel>
-      )}
+            <DropdownSection label="SELECT TEAM">
+              {linearTeams.map(team => (
+                <DropdownItem
+                  key={team.id}
+                  right={<span className="font-mono text-text-quaternary">{team.key}</span>}
+                  label={team.name}
+                  onClick={() => handleSelectTeam(team.id)}
+                />
+              ))}
+            </DropdownSection>
+          )
+        ) : (
+          <>
+            <DropdownItem
+              icon={<ChevronLeft size={16} />}
+              label="Back to teams"
+              variant="muted"
+              onClick={handleBack}
+            />
+            <DropdownSection label="SELECT PROJECT">
+              {linearProjects.length === 0 ? (
+                <div className="px-3 py-4 text-center text-text-quaternary">
+                  No projects found in this team.
+                </div>
+              ) : (
+                linearProjects.map(proj => (
+                  <DropdownItem
+                    key={proj.id}
+                    label={proj.name}
+                    onClick={() => handleSelectProject(proj.id, proj.name)}
+                  />
+                ))
+              )}
+            </DropdownSection>
+          </>
+        )}
+      </DropdownPanel>
     </div>
   );
 }

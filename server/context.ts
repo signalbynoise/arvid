@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
+import type { DbAnalysis, DbTable, DbRelationship, DbFunction, EdgeFunction } from '../shared/schemas/dbContext';
 
 export type SuggestionDisposition = 'pending' | 'accepted' | 'rejected';
 
@@ -37,6 +38,11 @@ export interface RequirementFullContext {
   repoFileTree?: FileTreeEntry[];
   repoKeyFiles?: Record<string, string>;
   repoRecentCommits?: CommitEntry[];
+  dbContext?: DbAnalysis;
+  dbTables?: DbTable[];
+  dbRelationships?: DbRelationship[];
+  dbFunctions?: DbFunction[];
+  dbEdgeFunctions?: EdgeFunction[];
 }
 
 export async function fetchRequirementContext(db: SupabaseClient, requirementId: string): Promise<RequirementFullContext | null> {
@@ -54,6 +60,11 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
   let repoFileTree: FileTreeEntry[] | undefined;
   let repoKeyFiles: Record<string, string> | undefined;
   let repoRecentCommits: CommitEntry[] | undefined;
+  let dbContext: DbAnalysis | undefined;
+  let dbTables: DbTable[] | undefined;
+  let dbRelationships: DbRelationship[] | undefined;
+  let dbFunctions: DbFunction[] | undefined;
+  let dbEdgeFunctions: EdgeFunction[] | undefined;
 
   if (requirement.project_id) {
     const { data: project } = await db
@@ -108,6 +119,48 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
           fileTreeSize: repoFileTree?.length,
           keyFilesCount: repoKeyFiles ? Object.keys(repoKeyFiles).length : 0,
           commitsCount: repoRecentCommits?.length,
+        }),
+      );
+    }
+
+    const { data: dbCtx, error: dbErr } = await db
+      .from('db_contexts')
+      .select('analysis, tables, relationships, functions, edge_functions')
+      .eq('project_id', requirement.project_id)
+      .eq('status', 'ready')
+      .single();
+
+    if (dbErr) {
+      console.debug(
+        `[DEBUG] [context:dbContext] No DB context found`,
+        JSON.stringify({ projectId: requirement.project_id, error: dbErr.message }),
+      );
+    }
+
+    if (dbCtx) {
+      if (dbCtx.analysis) {
+        dbContext = dbCtx.analysis as DbAnalysis;
+      }
+      if (dbCtx.tables) {
+        dbTables = dbCtx.tables as DbTable[];
+      }
+      if (dbCtx.relationships) {
+        dbRelationships = dbCtx.relationships as DbRelationship[];
+      }
+      if (dbCtx.functions) {
+        dbFunctions = dbCtx.functions as DbFunction[];
+      }
+      if (dbCtx.edge_functions) {
+        dbEdgeFunctions = dbCtx.edge_functions as EdgeFunction[];
+      }
+      console.info(
+        `[INFO] [context:dbContext] DB context loaded`,
+        JSON.stringify({
+          projectId: requirement.project_id,
+          tableCount: dbTables?.length,
+          relationshipCount: dbRelationships?.length,
+          functionCount: dbFunctions?.length,
+          edgeFunctionCount: dbEdgeFunctions?.length,
         }),
       );
     }
@@ -182,5 +235,10 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     repoFileTree,
     repoKeyFiles,
     repoRecentCommits,
+    dbContext,
+    dbTables,
+    dbRelationships,
+    dbFunctions,
+    dbEdgeFunctions,
   };
 }

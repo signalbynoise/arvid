@@ -18,8 +18,10 @@ import {
   MembershipSchema,
   InvitationRowSchema,
   InvitationSchema,
+  CardAssigneeRowSchema,
+  CardAssigneeSchema,
 } from '../../shared/schemas';
-import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation } from './types';
+import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
@@ -531,5 +533,60 @@ export const api = {
     return request<{
       suggestions: Array<{ title: string; description: string; sourceMessageTs: string[] }>;
     }>('POST', `/slack/reanalyze/${projectId}`, { messages });
+  },
+
+  // --- Supabase Connect ---
+
+  async getSupabaseConnectStatus(signal?: AbortSignal): Promise<{ connected: boolean; orgName?: string; orgId?: string }> {
+    return request<{ connected: boolean; orgName?: string; orgId?: string }>('GET', '/supabase-connect/status', undefined, signal);
+  },
+
+  async getSupabaseConnectAuthUrl(): Promise<{ url: string }> {
+    return request<{ url: string }>('GET', '/supabase-connect/auth');
+  },
+
+  async disconnectSupabase(): Promise<void> {
+    await request<unknown>('DELETE', '/supabase-connect/connect');
+  },
+
+  async getSupabaseProjects(signal?: AbortSignal): Promise<Array<{ id: string; name: string; organizationId: string; region: string }>> {
+    return request<Array<{ id: string; name: string; organizationId: string; region: string }>>('GET', '/supabase-connect/projects', undefined, signal);
+  },
+
+  async fetchDbContext(projectId: string): Promise<{ status: string; analysis: unknown }> {
+    return request<{ status: string; analysis: unknown }>('POST', `/supabase-connect/fetch/${projectId}`);
+  },
+
+  // --- Card Assignees ---
+
+  async getCardAssignees(projectId: string, signal?: AbortSignal): Promise<CardAssignee[]> {
+    const raw = await request<unknown[]>('GET', `/card-assignees?project_id=${projectId}`, undefined, signal);
+    return parseArray(CardAssigneeRowSchema, CardAssigneeSchema, raw, '/card-assignees');
+  },
+
+  async assignUser(entityType: string, entityId: string, userId: string): Promise<CardAssignee> {
+    const raw = await request<unknown>('POST', '/card-assignees', { entity_type: entityType, entity_id: entityId, user_id: userId });
+    return parseSingle(CardAssigneeRowSchema, CardAssigneeSchema, raw, '/card-assignees');
+  },
+
+  async unassignUser(assigneeId: string): Promise<void> {
+    await request<void>('DELETE', `/card-assignees/${assigneeId}`);
+  },
+
+  // --- Deactivation ---
+
+  async deactivateRequirement(id: string): Promise<Requirement> {
+    const raw = await request<unknown>('PATCH', `/requirements/${id}/deactivate`);
+    return parseSingle(RequirementRowSchema, RequirementSchema, raw, `/requirements/${id}/deactivate`);
+  },
+
+  async deactivateQuestion(id: string): Promise<Question> {
+    const raw = await request<unknown>('PATCH', `/questions/${id}/deactivate`);
+    return parseSingle(QuestionRowSchema, QuestionSchema, raw, `/questions/${id}/deactivate`);
+  },
+
+  async deactivateAnswer(id: string): Promise<Answer> {
+    const raw = await request<unknown>('PATCH', `/answers/${id}/deactivate`);
+    return parseSingle(AnswerRowSchema, AnswerSchema, raw, `/answers/${id}/deactivate`);
   },
 };

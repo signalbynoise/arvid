@@ -198,7 +198,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
       </div>
 
       {selectedProject && (
-        <SidebarFooter project={selectedProject} onProjectsReload={() => loadProjects()} />
+        <SidebarFooter project={selectedProject} onProjectsReload={() => loadProjects(activeWorkspaceId ?? undefined)} />
       )}
 
       {modals.renderModals()}

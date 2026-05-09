@@ -20,6 +20,10 @@ answersRouter.get('/', async (req, res) => {
     query = query.eq('question_id', req.query.question_id as string);
   }
 
+  if (req.query.include_deactivated !== 'true') {
+    query = query.eq('is_deactivated', false);
+  }
+
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -42,7 +46,7 @@ answersRouter.post('/', validateBody(CreateAnswerBodySchema), async (req, res) =
   const shortId = await nextShortId(db, 'answers', 'A', 'question_id', req.body.question_id);
   const { data, error } = await db
     .from('answers')
-    .insert({ ...req.body, short_id: shortId })
+    .insert({ ...req.body, short_id: shortId, created_by: req.user!.id })
     .select()
     .single();
 
@@ -126,6 +130,7 @@ answersRouter.post('/suggest/:questionId', async (req, res) => {
       repoFileTree: context.repoFileTree,
       repoKeyFiles: context.repoKeyFiles,
       repoRecentCommits: context.repoRecentCommits,
+      dbContext: context.dbContext,
     });
 
     if (!result.answerable || !result.answer_text) {
@@ -183,6 +188,19 @@ answersRouter.patch('/:id', validateBody(UpdateAnswerBodySchema), async (req, re
   const { data, error } = await db
     .from('answers')
     .update(req.body)
+    .eq('id', req.params.id)
+    .select()
+    .single();
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+answersRouter.patch('/:id/deactivate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
+    .from('answers')
+    .update({ is_deactivated: true })
     .eq('id', req.params.id)
     .select()
     .single();

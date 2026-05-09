@@ -101,3 +101,7 @@ services:
         sync: false
       - key: SLACK_SIGNING_SECRET
         sync: false
+      - key: SUPABASE_OAUTH_CLIENT_ID
+        sync: false
+      - key: SUPABASE_OAUTH_CLIENT_SECRET
+        sync: false

@@ -1,5 +1,4 @@
 import React from 'react';
-import { MoreHorizontal } from 'lucide-react';
 import { CardShell } from './CardShell';
 import { CardHeader } from './ui/CardHeader';
 import { CardBody } from './ui/CardBody';
@@ -7,7 +6,9 @@ import { CardFooter } from './ui/CardFooter';
 import { CompletenessChip } from './CompletenessChip';
 import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
+import { CardItemMenu } from './CardItemMenu';
 import { formatCardDate } from '../lib/formatDate';
+import { useStore, selectMembers, selectCardAssignees } from '../store';
 import type { Requirement } from '../types';
 
 interface RequirementCardProps {
@@ -17,6 +18,9 @@ interface RequirementCardProps {
   isDimmed: boolean;
   onClick: () => void;
   onOpenDetails: (id: string) => void;
+  onEdit: (id: string) => void;
+  onAddUser: (id: string) => void;
+  onDeactivate: (id: string) => void;
   onCheckImplementation: (id: string) => void;
   onViewImplDetails: (id: string) => void;
 }
@@ -28,9 +32,20 @@ export function RequirementCard({
   isDimmed,
   onClick,
   onOpenDetails,
+  onEdit,
+  onAddUser,
+  onDeactivate,
   onCheckImplementation,
   onViewImplDetails,
 }: RequirementCardProps) {
+  const members = useStore(selectMembers);
+  const allAssignees = useStore(selectCardAssignees);
+  const assignees = allAssignees[`requirement:${req.id}`] || [];
+
+  const authorName = req.createdBy
+    ? (members.find(m => m.userId === req.createdBy)?.email?.split('@')[0] || req.owner)
+    : req.owner;
+
   return (
     <CardShell
       id={`req-${req.id}`}
@@ -43,12 +58,12 @@ export function RequirementCard({
       <CardHeader
         shortId={req.shortId}
         actions={
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpenDetails(req.id); }}
-            className="p-1 rounded-standard text-text-quaternary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-          >
-            <MoreHorizontal size={14} />
-          </button>
+          <CardItemMenu
+            onAddUser={() => onAddUser(req.id)}
+            onEdit={() => onEdit(req.id)}
+            onViewDetails={() => onOpenDetails(req.id)}
+            onDeactivate={() => onDeactivate(req.id)}
+          />
         }
       />
 
@@ -70,6 +85,8 @@ export function RequirementCard({
 
       <CardFooter
         meta={`${req.owner} - ${formatCardDate(req.createdAt)}`}
+        authorName={authorName}
+        assigneeCount={assignees.length}
         indicators={
           <>
             <div

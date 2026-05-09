@@ -116,17 +116,15 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
               inputRef={inputRef}
             />
           </FormField>
-          {showSuggestions && suggestions.length > 0 && (
-            <DropdownPanel position="below">
-              {suggestions.map((s, i) => (
-                <button
-                  key={s.id}
-                  onClick={() => selectSuggestion(s)}
-                  className={`w-full px-3 py-2 text-left text-caption-lg transition-colors ${i === activeSuggestionIndex ? 'bg-surface-frost-08 text-text-primary' : 'text-text-tertiary hover:text-text-primary'}`}
-                >{s.email}</button>
-              ))}
-            </DropdownPanel>
-          )}
+          <DropdownPanel isOpen={showSuggestions && suggestions.length > 0} position="below">
+            {suggestions.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => selectSuggestion(s)}
+                className={`w-full px-3 py-2 text-left text-caption-lg transition-colors ${i === activeSuggestionIndex ? 'bg-surface-frost-08 text-text-primary' : 'text-text-tertiary hover:text-text-primary'}`}
+              >{s.email}</button>
+            ))}
+          </DropdownPanel>
         </div>
 
         <div className="flex justify-end gap-3 pt-6">

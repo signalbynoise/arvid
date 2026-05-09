@@ -1,36 +1,64 @@
+---
+description: Rules for creating and editing animated mini demo components on the marketing site
+globs:
+  - src/site/components/*-demo/**
+  - src/site/components/mini-demo/**
+---
+
 # Mini Demo Components
 
-Applies when creating or editing animated mini demo components on the marketing site.
+Read `docs/mini_demos.md` for the engineering spec and `docs/mda_director.md` for the creative direction rulebook before writing any demo code.
 
-Read `docs/mini_demos.md` for the complete specification before writing any demo code.
+## Mandatory Workflow
+
+Creating or redesigning an MDA **must** follow this pipeline in order:
+
+1. **Director** — invoke the `mda-director` skill. Produce a Director's Treatment (mood, cast, beats, phase breakdown). No code is written at this stage.
+2. **Script Writer** — invoke the `mda-scriptwriter` skill. Translate the treatment into `data.ts` (SEQUENCE, collaborators, cursor positions, static content). No components are written at this stage.
+3. **Implementation** — build the orchestrator and any new sub-components using shared primitives from `mini-demo/`.
+
+Skipping steps is forbidden. If the narrative changes, go back to the Director — never patch code on top of a stale script.
 
 ## Architecture (enforced)
 
 1. Every demo lives in `src/site/components/<feature>-demo/` with a barrel `index.ts`.
-2. Animation uses `useSequence` from `src/site/components/app-demo/useSequence.ts` — never write custom timer logic.
-3. Step types (`Step`) come from `src/site/components/app-demo/types.ts`.
-4. All timing and static data live in `data.ts` — components only receive props.
-5. The orchestrator (`<Feature>Demo.tsx`) is a thin wiring layer: derives booleans from sequence state, passes down as props.
-6. Sub-components get their own files, named for their role in the feature narrative (e.g. `RepoConnector.tsx`, not `DemoSidebar.tsx`).
+2. Animation uses `useSequence` from `src/site/components/mini-demo/useSequence.ts` — never write custom timer logic.
+3. Step types (`Step`) come from `src/site/components/mini-demo/types.ts`.
+4. Shared primitives live in `src/site/components/mini-demo/` — one component per file. Demo sub-components must compose these primitives with zero `className` or `style` attributes.
+5. All timing, static data, collaborators, and cursor positions live in `data.ts` — components only receive props.
+6. The orchestrator (`<Feature>Demo.tsx`) is a thin wiring layer: derives booleans from sequence state, passes down as props.
+7. Sub-components get their own files, named for their role in the feature narrative (e.g. `RequirementCard.tsx`, not `DemoCard.tsx`).
+8. Pass a container `ref` to `useSequence` for viewport-aware playback.
 
 ## Animation Timing
 
+- Demos must feel **slow, ambient, and continuous** — like glancing through a window, not watching a presentation.
+- Demos **loop seamlessly** — the viewer must never perceive a restart point.
 - Steps use **relative delays** (ms before firing), not absolute timestamps.
-- Standard ranges: reveals 400–800ms, actions 600–1000ms, fetches 1200–1600ms, reading pauses 1600–2500ms, reset 2000–3000ms.
-- Total loop: 12–18 seconds.
-- CSS transitions: `duration-300` (micro), `duration-500` (standard), `duration-700` (major).
+- Standard ranges: reveals 800-1200ms, actions 1000-1400ms, fetches 1400-2000ms, reading pauses 2000-3000ms, drift hold 3000-4000ms.
+- Total cycle: 20-30 seconds (18s hard minimum).
+- CSS transitions: `duration-300` (micro), `duration-500` (standard), `duration-700` (major + fade-outs). No other values.
 
 ## Visual Fidelity
 
 - Demos must visually replicate the real app — same tokens, same layout proportions, same interaction patterns.
 - All colors, weights, radii, shadows, and borders from `src/styles/theme.css` tokens.
-- Demo-scale text: `text-[9px]` titles, `text-[8px]` body, `text-[7px]` metadata, `text-[6px]` micro labels.
+- Use shared primitives instead of building UI from scratch. No `className` in demo sub-components.
+- Demo-scale text: `text-[9px]` titles, `text-[8px]` body/headers, `text-[7px]` metadata, `text-[6px]` micro labels.
+- Radius: `rounded-standard` for cards, `rounded-micro` for chips/badges. No arbitrary `rounded-[Npx]`.
 - No placeholder content — all text must be realistic and meaningful.
+
+## Director Rules
+
+Demos are **ambient and continuous**, not presentations. They cycle through phases: Settle (10-15%) -> Flow (55-65%) -> Resolve (15-20%) -> Drift (10-15%). Loops must be seamless — no visible reset. See `docs/mda_director.md` for the full creative direction spec.
 
 ## Forbidden
 
+- Writing demo code without a Director's Treatment and a reviewed script
 - Generic component names (`DemoSidebar`, `DemoCard`, `DemoPanel`)
+- `className` or `style` attributes in demo sub-components — compose shared primitives only
 - Inline timer logic or `useEffect` with `setTimeout` in component files
 - Hardcoded colors, font weights, or border radii
 - Lorem ipsum or meaningless placeholder text
 - Duplicating the `useSequence` hook (import the shared one)
+- Duration values other than `duration-300`, `duration-500`, `duration-700`

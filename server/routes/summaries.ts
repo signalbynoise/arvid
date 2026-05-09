@@ -66,6 +66,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
       answers: q.answers,
     })),
     repoContext: context.repoContext,
+    dbContext: context.dbContext,
   };
 
   try {

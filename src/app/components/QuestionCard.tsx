@@ -1,12 +1,14 @@
 import React from 'react';
-import { MoreHorizontal, LoaderPinwheel } from 'lucide-react';
+import { LoaderPinwheel } from 'lucide-react';
 import { CardShell } from './CardShell';
 import { CardHeader } from './ui/CardHeader';
 import { CardBody } from './ui/CardBody';
 import { CardFooter } from './ui/CardFooter';
 import { Chip } from './Chip';
 import { Button } from './Button';
+import { CardItemMenu } from './CardItemMenu';
 import { formatCardDate } from '../lib/formatDate';
+import { useStore, selectMembers, selectCardAssignees } from '../store';
 import type { Question } from '../types';
 
 interface QuestionCardProps {
@@ -15,12 +17,33 @@ interface QuestionCardProps {
   isDimmed: boolean;
   onSelect: (id: string) => void;
   onOpenDetails?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onAddUser?: (id: string) => void;
+  onDeactivate?: (id: string) => void;
   onUseSuggestion: (id: string) => void;
   onHideSuggestion: (id: string) => void;
 }
 
-export function QuestionCard({ question: q, isSelected, isDimmed, onSelect, onOpenDetails, onUseSuggestion, onHideSuggestion }: QuestionCardProps) {
+export function QuestionCard({
+  question: q,
+  isSelected,
+  isDimmed,
+  onSelect,
+  onOpenDetails,
+  onEdit,
+  onAddUser,
+  onDeactivate,
+  onUseSuggestion,
+  onHideSuggestion,
+}: QuestionCardProps) {
   const isSuggested = q.isSuggested;
+  const members = useStore(selectMembers);
+  const allAssignees = useStore(selectCardAssignees);
+  const assignees = allAssignees[`question:${q.id}`] || [];
+
+  const authorName = q.createdBy
+    ? (members.find(m => m.userId === q.createdBy)?.email?.split('@')[0] || q.author || 'Unknown')
+    : (q.author || 'Unknown');
 
   return (
     <CardShell
@@ -41,12 +64,12 @@ export function QuestionCard({ question: q, isSelected, isDimmed, onSelect, onOp
         }
         actions={
           !isSuggested ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenDetails?.(q.id); }}
-              className="p-1 rounded-standard text-text-quaternary hover:text-text-primary hover:bg-surface-frost-08 transition-all"
-            >
-              <MoreHorizontal size={14} />
-            </button>
+            <CardItemMenu
+              onAddUser={() => onAddUser?.(q.id)}
+              onEdit={() => onEdit?.(q.id)}
+              onViewDetails={() => onOpenDetails?.(q.id)}
+              onDeactivate={() => onDeactivate?.(q.id)}
+            />
           ) : undefined
         }
       />
@@ -76,6 +99,8 @@ export function QuestionCard({ question: q, isSelected, isDimmed, onSelect, onOp
 
           <CardFooter
             meta={`${q.author || 'Unknown'} - ${formatCardDate(q.createdAt)}`}
+            authorName={authorName}
+            assigneeCount={assignees.length}
             indicators={
               <div
                 className={`w-2 h-2 rounded-full ${

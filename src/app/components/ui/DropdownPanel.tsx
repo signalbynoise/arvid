@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, type Transition } from 'framer-motion';
 
 type DropdownPanelVariant = 'floating' | 'attached';
 type DropdownPanelPosition = 'above' | 'below' | 'right';
@@ -24,27 +25,40 @@ const ALIGN_CLASSES: Record<DropdownPanelAlign, string> = {
   end: 'right-0',
 };
 
+const TRANSFORM_ORIGINS: Record<DropdownPanelPosition, Record<DropdownPanelAlign, string>> = {
+  below: { start: 'top left', end: 'top right' },
+  above: { start: 'bottom left', end: 'bottom right' },
+  right: { start: 'top left', end: 'top left' },
+};
+
+const DEFAULT_TRANSITION: Transition = { duration: 0.2, ease: [0.16, 1, 0.3, 1] };
+
 interface DropdownPanelProps {
+  isOpen: boolean;
   variant?: DropdownPanelVariant;
   position?: DropdownPanelPosition;
   align?: DropdownPanelAlign;
   anchorRef?: React.RefObject<HTMLElement | null>;
   panelRef?: React.RefObject<HTMLDivElement | null>;
+  transition?: Transition;
   children: React.ReactNode;
 }
 
 export function DropdownPanel({
+  isOpen,
   variant = 'floating',
   position = 'below',
   align = 'start',
   anchorRef,
   panelRef,
+  transition = DEFAULT_TRANSITION,
   children,
 }: DropdownPanelProps) {
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const transformOrigin = TRANSFORM_ORIGINS[position][align];
 
   useLayoutEffect(() => {
-    if (!anchorRef?.current) return;
+    if (!anchorRef?.current || !isOpen) return;
     const rect = anchorRef.current.getBoundingClientRect();
     if (position === 'right') {
       setCoords({ top: rect.top, left: rect.right + 4 });
@@ -53,21 +67,27 @@ export function DropdownPanel({
     } else {
       setCoords({ top: rect.bottom + 4, left: align === 'end' ? rect.right : rect.left });
     }
-  }, [anchorRef, position, align]);
+  }, [anchorRef, position, align, isOpen]);
 
   if (anchorRef) {
-    if (!coords) return null;
-
     const alignTransform = align === 'end' && position !== 'right' ? 'translateX(-100%)' : '';
 
     const panel = (
-      <div
-        ref={panelRef}
-        className={`fixed z-[100] bg-surface-panel py-4 min-w-(--dropdown-min-w) max-h-(--dropdown-max-h) overflow-y-auto ${VARIANT_CLASSES[variant]}`}
-        style={{ top: coords.top, left: coords.left, transform: alignTransform || undefined }}
-      >
-        {children}
-      </div>
+      <AnimatePresence>
+        {isOpen && coords && (
+          <motion.div
+            ref={panelRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={transition}
+            className={`fixed z-[100] bg-surface-panel py-4 min-w-(--dropdown-min-w) max-h-(--dropdown-max-h) overflow-y-auto ${VARIANT_CLASSES[variant]}`}
+            style={{ top: coords.top, left: coords.left, transform: alignTransform || undefined, transformOrigin }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     );
 
     return createPortal(panel, document.body);
@@ -77,8 +97,19 @@ export function DropdownPanel({
   const alignClass = position === 'right' ? '' : ALIGN_CLASSES[align];
 
   return (
-    <div className={`absolute z-50 bg-surface-panel py-4 min-w-(--dropdown-min-w) max-h-(--dropdown-max-h) overflow-y-auto ${VARIANT_CLASSES[variant]} ${POSITION_CLASSES[positionKey]} ${alignClass}`}>
-      {children}
-    </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={transition}
+          style={{ transformOrigin }}
+          className={`absolute z-50 bg-surface-panel py-4 min-w-(--dropdown-min-w) max-h-(--dropdown-max-h) overflow-y-auto ${VARIANT_CLASSES[variant]} ${POSITION_CLASSES[positionKey]} ${alignClass}`}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
