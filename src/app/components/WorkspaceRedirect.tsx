@@ -15,6 +15,7 @@ export function WorkspaceRedirect() {
   const acceptInvitationsState = useStore(s => s.acceptInvitationsState);
 
   useEffect(() => {
+    useStore.setState({ acceptInvitationsState: { status: 'idle' } });
     async function init() {
       await acceptPendingInvitations();
       loadWorkspaces();

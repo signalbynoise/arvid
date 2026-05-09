@@ -84,13 +84,6 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
   },
 
   loadWorkspaces: async () => {
-    const { acceptInvitationsState, workspacesDataState: currentState } = get();
-
-    if (acceptInvitationsState.status === 'resolved' && currentState.status === 'ready') {
-      log.debug('loadWorkspaces', 'Skipping fetch — workspaces already loaded by invitation acceptance');
-      return;
-    }
-
     set({ workspacesDataState: { status: 'loading' } });
     log.info('loadWorkspaces', 'Fetching workspaces');
 

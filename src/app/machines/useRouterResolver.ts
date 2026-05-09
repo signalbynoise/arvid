@@ -68,11 +68,10 @@ export function useRouterResolver() {
   useEffect(() => {
     if (!initializedRef.current) {
       initializedRef.current = true;
+      useStore.setState({ acceptInvitationsState: { status: 'idle' } });
       async function init() {
         await acceptPendingInvitations();
-        if (useStore.getState().workspacesDataState.status === 'idle') {
-          loadWorkspaces();
-        }
+        loadWorkspaces();
       }
       init();
     }
