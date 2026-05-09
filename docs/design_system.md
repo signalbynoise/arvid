@@ -696,3 +696,59 @@ Apply `.card-hint` to a card element for the duration of the hint. The class tri
 - Double-pulse or multi-cycle animations — one nudge is enough
 - Glow effects (`box-shadow` with blur spread) — too flashy, not a hint
 - Duration under `0.5s` (too fast to notice) or over `1.2s` (feels sluggish)
+
+---
+
+## Empty State Suggestions
+
+When no requirement is selected, the main content area shows a contextual suggestion panel. This is part of Arvid's broader agentic system — the same intelligence that suggests requirements, questions, and answers also drives what appears here.
+
+### Rule
+
+Show **at most 5** suggestions, ranked by relevance to the current state. The suggestions must reflect real, actionable next steps — not a static menu. What the user sees depends on what they have and haven't done yet.
+
+### Current Implementation (Static)
+
+The initial implementation uses deterministic rules to select from a pool of possible actions based on store state (requirements count, integration connection status, project-level linkage, etc.). This is a transitional approach.
+
+### Target Implementation (Agentic)
+
+The suggestion pool will be driven by the same LLM pipeline used for requirement enhancement, question suggestion, and answer generation. The agent evaluates the full project context — requirements, questions, answers, integrations, team composition, project structure — and returns the top 5 most relevant actions with reasoning.
+
+The `EmptyStateSuggestions` component is designed to be a **renderer only**. It receives a ranked list of suggestions and displays them. The ranking logic is the responsibility of the suggestion source, not the component.
+
+### Suggestion Pool
+
+Actions the system can suggest (non-exhaustive, will grow with capabilities):
+
+| Category | Action | Shown when |
+|----------|--------|------------|
+| Content | Create a requirement | Project has no requirements |
+| Content | Select a requirement | Requirements exist but none selected |
+| Structure | Create a sub-project | Always (project can always be decomposed) |
+| Collaboration | Invite members to project | Always |
+| Integration | Link a repository | GitHub connected, project has no repo linked |
+| Integration | Link a Linear project | Linear connected, project has no project linked |
+| Integration | Set an alert channel | Slack connected, project has no channel set |
+| Integration | Link a database | Supabase connected, project has no database linked |
+| Integration | Connect GitHub | GitHub not connected |
+| Integration | Connect Supabase | Supabase not connected |
+| Integration | Connect Linear | Linear not connected |
+| Integration | Connect Slack | Slack not connected |
+| Navigation | Open Command Central | Always |
+
+### Visual Rules
+
+- Maximum **5 suggestions** visible at once
+- Suggestions are grouped with subtle dividers between categories
+- The dimmed visual style must be preserved — suggestions are a quiet guide, not a call to action
+- Uses the `SuggestionAction` component for each item
+- The Arvid logo (pinwheel) sits above the list as a brand anchor
+- "Select a requirement" triggers the card hint animation when clicked
+
+### Anti-patterns
+
+- Showing all possible actions regardless of state — this is a menu, not a suggestion
+- Hardcoding suggestion order without considering context — relevance beats alphabetical
+- Mixing completed and actionable items — only show what the user can do next
+- Treating this as a static onboarding checklist — suggestions should change as the project evolves
