@@ -1,5 +1,5 @@
-import { setup, assign, fromCallback } from 'xstate';
-import type { Workspace, Team, Project } from '../types';
+import { setup, assign } from 'xstate';
+import type { Workspace, Team, Project, Requirement, Question } from '../types';
 import { logger } from '../logger';
 
 const log = logger.create('navigation');
@@ -12,13 +12,15 @@ export interface ResolverContext {
   workspaces: Workspace[];
   projects: Project[];
   teams: Team[];
+  requirements: Requirement[];
+  questions: Question[];
 }
 
 export type ResolverEvent =
   | { type: 'URL_CHANGED'; wsShortId?: string; projectShortId?: string; reqShortId?: string; questionShortId?: string }
   | { type: 'WORKSPACES_READY'; workspaces: Workspace[] }
   | { type: 'DATA_LOADED'; workspaceId: string; projects: Project[]; teams: Team[] }
-  | { type: 'ENTITIES_LOADED' };
+  | { type: 'ENTITIES_LOADED'; requirements: Requirement[]; questions: Question[] };
 
 export interface ResolverActions {
   navigate: (path: string) => void;
@@ -53,6 +55,16 @@ export function createRouterResolverMachine(actions: ResolverActions) {
       projectFoundInUrl: ({ context }) =>
         !!context.projectShortId && !!context.projects.find(p => p.shortId === context.projectShortId),
       hasProjects: ({ context }) => context.projects.length > 0,
+      hasReqInUrl: ({ context }) => !!context.reqShortId,
+      reqFound: ({ context }) =>
+        !!context.reqShortId && !!context.requirements.find(r => r.shortId === context.reqShortId),
+      hasQuestionInUrl: ({ context }) => !!context.questionShortId,
+      questionFound: ({ context }) => {
+        if (!context.questionShortId || !context.reqShortId) return false;
+        const req = context.requirements.find(r => r.shortId === context.reqShortId);
+        if (!req) return false;
+        return !!context.questions.find(q => q.shortId === context.questionShortId && q.requirementId === req.id);
+      },
     },
   }).createMachine({
     id: 'routerResolver',
@@ -65,18 +77,22 @@ export function createRouterResolverMachine(actions: ResolverActions) {
       workspaces: [],
       projects: [],
       teams: [],
+      requirements: [],
+      questions: [],
     },
     on: {
       URL_CHANGED: {
         target: '.resolvingWorkspace',
         actions: assign(({ context, event }) => {
           const workspaceChanged = event.wsShortId !== context.wsShortId;
+          const projectChanged = event.projectShortId !== context.projectShortId;
           return {
             wsShortId: event.wsShortId,
             projectShortId: event.projectShortId,
             reqShortId: event.reqShortId,
             questionShortId: event.questionShortId,
-            ...(workspaceChanged ? { projects: [], teams: [] } : {}),
+            ...(workspaceChanged ? { projects: [], teams: [], requirements: [], questions: [] } : {}),
+            ...(projectChanged && !workspaceChanged ? { requirements: [], questions: [] } : {}),
           };
         }),
       },
@@ -141,7 +157,7 @@ export function createRouterResolverMachine(actions: ResolverActions) {
         always: [
           {
             guard: 'projectFoundInUrl',
-            target: 'ready',
+            target: 'awaitingEntities',
             actions: ({ context }) => {
               const project = context.projects.find(p => p.shortId === context.projectShortId);
               if (project) {
@@ -166,6 +182,74 @@ export function createRouterResolverMachine(actions: ResolverActions) {
             },
           },
           { target: 'ready' },
+        ],
+      },
+
+      awaitingEntities: {
+        on: {
+          ENTITIES_LOADED: {
+            target: 'resolvingRequirement',
+            actions: assign(({ event }) => ({
+              requirements: event.requirements,
+              questions: event.questions,
+            })),
+          },
+        },
+      },
+
+      resolvingRequirement: {
+        always: [
+          {
+            guard: 'reqFound',
+            target: 'resolvingQuestion',
+            actions: ({ context }) => {
+              const req = context.requirements.find(r => r.shortId === context.reqShortId);
+              if (req) {
+                log.debug('sync', 'Requirement resolved from URL', { reqId: req.id });
+                actions.selectRequirement(req.id);
+              }
+            },
+          },
+          {
+            guard: 'hasReqInUrl',
+            target: 'ready',
+            actions: () => {
+              log.debug('sync', 'Requirement not found in URL, clearing');
+              actions.selectRequirement(null);
+              actions.selectQuestion(null);
+            },
+          },
+          {
+            target: 'ready',
+            actions: () => {
+              actions.selectRequirement(null);
+              actions.selectQuestion(null);
+            },
+          },
+        ],
+      },
+
+      resolvingQuestion: {
+        always: [
+          {
+            guard: 'questionFound',
+            target: 'ready',
+            actions: ({ context }) => {
+              const req = context.requirements.find(r => r.shortId === context.reqShortId);
+              if (!req) return;
+              const q = context.questions.find(qu => qu.shortId === context.questionShortId && qu.requirementId === req.id);
+              if (q) {
+                log.debug('sync', 'Question resolved from URL', { questionId: q.id });
+                actions.selectQuestion(q.id);
+              }
+            },
+          },
+          {
+            target: 'ready',
+            actions: () => {
+              actions.selectQuestion(null);
+            },
+          },
         ],
       },
 

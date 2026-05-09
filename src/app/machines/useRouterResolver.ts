@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMachine } from '@xstate/react';
-import { useStore, selectWorkspaces, selectRequirements, selectQuestions } from '../store';
+import { useStore, selectWorkspaces } from '../store';
 import { createRouterResolverMachine } from './routerResolver.machine';
 import { buildProjectPathFromEntities } from '../domain/paths';
-import { logger } from '../logger';
-
-const log = logger.create('navigation');
 
 export function useRouterResolver() {
   const params = useParams<{
@@ -29,7 +26,6 @@ export function useRouterResolver() {
   const selectQuestion = useStore(s => s.selectQuestion);
   const acceptPendingInvitations = useStore(s => s.acceptPendingInvitations);
   const loadWorkspaces = useStore(s => s.loadWorkspaces);
-  const workspacesDataState = useStore(s => s.workspacesDataState);
 
   const actionsRef = useRef({
     navigate: (path: string) => navigateRef.current(path, { replace: true }),
@@ -59,6 +55,7 @@ export function useRouterResolver() {
 
   const [state, send] = useMachine(machine);
 
+  // Boot: accept invitations then load workspaces
   const initializedRef = useRef(false);
   useEffect(() => {
     if (!initializedRef.current) {
@@ -73,6 +70,7 @@ export function useRouterResolver() {
     }
   }, [acceptPendingInvitations, loadWorkspaces]);
 
+  // Workspaces ready → send to machine
   const workspaces = useStore(selectWorkspaces);
   const prevWsLenRef = useRef(0);
   useEffect(() => {
@@ -82,6 +80,7 @@ export function useRouterResolver() {
     }
   }, [workspaces, send]);
 
+  // URL changes → send to machine
   const prevUrlRef = useRef<string>('');
   useEffect(() => {
     const key = `${params.wsShortId}|${params.projectShortId}|${params.reqShortId}|${params.questionShortId}`;
@@ -97,6 +96,7 @@ export function useRouterResolver() {
     });
   }, [params.wsShortId, params.projectShortId, params.reqShortId, params.questionShortId, send]);
 
+  // Zustand data readiness → DATA_LOADED event
   useEffect(() => {
     return useStore.subscribe((s, prev) => {
       const bothReady = s.projectsDataState.status === 'ready' && s.teamsDataState.status === 'ready';
@@ -113,40 +113,18 @@ export function useRouterResolver() {
     });
   }, [send]);
 
-  const requirements = useStore(selectRequirements);
-  const questions = useStore(selectQuestions);
-  const dataState = useStore(s => s.dataState);
-  const prevReqRef = useRef<string | undefined>();
-  const prevQuestionRef = useRef<string | undefined>();
-
+  // Entities readiness → ENTITIES_LOADED event
   useEffect(() => {
-    if (dataState.status !== 'ready') return;
-
-    const { reqShortId, questionShortId } = params;
-
-    if (reqShortId !== prevReqRef.current) {
-      prevReqRef.current = reqShortId;
-      if (reqShortId) {
-        const req = requirements.find(r => r.shortId === reqShortId);
-        if (req) selectRequirement(req.id);
-      } else {
-        selectRequirement(null);
+    return useStore.subscribe((s, prev) => {
+      if (s.dataState.status === 'ready' && prev.dataState.status !== 'ready') {
+        send({
+          type: 'ENTITIES_LOADED',
+          requirements: s.requirements,
+          questions: s.questions,
+        });
       }
-    }
-
-    if (questionShortId !== prevQuestionRef.current) {
-      prevQuestionRef.current = questionShortId;
-      if (questionShortId && reqShortId) {
-        const req = requirements.find(r => r.shortId === reqShortId);
-        if (req) {
-          const q = questions.find(qu => qu.shortId === questionShortId && qu.requirementId === req.id);
-          if (q) selectQuestion(q.id);
-        }
-      } else {
-        selectQuestion(null);
-      }
-    }
-  }, [params.reqShortId, params.questionShortId, dataState.status, requirements, questions, selectRequirement, selectQuestion]);
+    });
+  }, [send]);
 
   return state;
 }
