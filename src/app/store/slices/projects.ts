@@ -18,7 +18,7 @@ export interface ProjectsSlice {
   projectsDataState: ProjectsDataState;
 
   loadProjects: (workspaceId?: string) => Promise<void>;
-  createProject: (name: string, parentId?: string, workspaceId?: string, teamId?: string) => Promise<void>;
+  createProject: (name: string, parentId?: string, workspaceId?: string, teamId?: string) => Promise<Project | undefined>;
   updateProject: (id: string, name: string) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
 }
@@ -66,9 +66,11 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
       const created = await api.createProject(name, parentId, workspaceId, teamId);
       set(state => ({ projects: [...state.projects, created] }));
       log.info('createProject', 'Project created', { id: created.id });
+      return created;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createProject', 'Failed to create project', { error: message });
+      return undefined;
     }
   },
 

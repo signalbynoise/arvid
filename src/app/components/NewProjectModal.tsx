@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useStore } from '../store';
+import { useNavigate } from 'react-router-dom';
+import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectTeams } from '../store';
 import { ProjectNameSchema } from '../../../shared/schemas';
+import { buildProjectPathFromEntities } from '../domain/paths';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -16,7 +18,11 @@ interface Props {
 }
 
 export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName, parentId, parentName }: Props) {
+  const navigate = useNavigate();
   const createProject = useStore(s => s.createProject);
+  const workspaces = useStore(selectWorkspaces);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const teams = useStore(selectTeams);
 
   const [name, setName] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -35,9 +41,16 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
     }
     setValidationError(null);
     setIsCreating(true);
-    await createProject(result.data.name, parentId, workspaceId, teamId);
+    const created = await createProject(result.data.name, parentId, workspaceId, teamId);
     setIsCreating(false);
     handleClose();
+    if (created) {
+      const workspace = workspaces.find(w => w.id === activeWorkspaceId);
+      if (workspace) {
+        const path = buildProjectPathFromEntities(workspace, teams, created);
+        if (path) navigate(path);
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
