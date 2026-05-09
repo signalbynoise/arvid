@@ -70,7 +70,7 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
 
   flashRequirementHint: () => {
     set({ hintRequirementCards: true });
-    setTimeout(() => set({ hintRequirementCards: false }), 600);
+    setTimeout(() => set({ hintRequirementCards: false }), 800);
     log.debug('flashRequirementHint', 'Hint animation triggered');
   },
 });

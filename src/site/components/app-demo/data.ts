@@ -92,28 +92,26 @@ export const SEQUENCE: Step[] = [
   // ── Settle (~2.6s) ─────────────────────────────────────────────
   { action: 'show_shell', delay: 0 },
   { action: 'show_requirements', delay: 800 },
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '22%', y: '30%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', target: 'req-column-body' }] },
   { action: 'scroll_requirements', delay: 1000 },
 
   // ── Flow — Import (~6s) ────────────────────────────────────────
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '33%', y: '7%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', target: 'req-add' }] },
   { action: 'show_import_modal', delay: 600 },
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '48%', y: '46%' }] },
-  { action: 'extracting_slack', delay: 600, cursors: [{ id: 'sarah', x: '22%', y: '30%' }] },
-  { action: 'noop', delay: 1200, cursors: [{ id: 'arvid', x: '48%', y: '42%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', target: 'modal-import-slack' }] },
+  { action: 'extracting_slack', delay: 600, cursors: [{ id: 'sarah', target: 'req-column-body' }] },
+  { action: 'noop', delay: 1200, cursors: [{ id: 'arvid', target: 'modal-import-slack' }] },
   { action: 'show_slack_options', delay: 600 },
-  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '46%', y: '40%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', target: 'modal-slack-s1' }] },
   { action: 'select_slack_item', delay: 600 },
   { action: 'close_modal', delay: 800 },
 
   // ── Flow — Knowledge Tree + Questions (~10s) ──────────────────
-  // Sarah selects the imported requirement
-  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '22%', y: '16%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'sarah', target: 'req-r13' }] },
   { action: 'select_requirement', delay: 600 },
   { action: 'show_summary', delay: 600 },
 
-  // Arvid generates questions (shown progressively)
-  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '42%', y: '14%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', target: 'q-column-body' }] },
   { action: 'suggest_q1', delay: 400 },
   { action: 'suggest_q2', delay: 400 },
   { action: 'suggest_q3', delay: 400 },
@@ -121,42 +119,37 @@ export const SEQUENCE: Step[] = [
   { action: 'suggest_q5', delay: 400 },
   { action: 'suggest_q6', delay: 400 },
 
-  // David scrolls through the questions
-  { action: 'noop', delay: 800, cursors: [{ id: 'david', x: '44%', y: '30%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'david', target: 'q-q3' }] },
   { action: 'scroll_questions', delay: 800 },
 
-  // David accepts Q01
-  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '44%', y: '16%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', target: 'q-q1' }] },
   { action: 'accept_q1', delay: 600 },
 
-  // David accepts Q02
-  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '44%', y: '28%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', target: 'q-q2' }] },
   { action: 'accept_q2', delay: 600 },
 
-  // David selects Q01, moves to Answers
   { action: 'select_question', delay: 600 },
-  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '66%', y: '14%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', target: 'a-a1' }] },
   { action: 'show_answer_1', delay: 600 },
 
-  // Sarah answers Q02
-  { action: 'noop', delay: 600, cursors: [{ id: 'sarah', x: '66%', y: '28%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'sarah', target: 'a-a2' }] },
   { action: 'show_answer_2', delay: 600 },
 
   // ── Resolve (~4s) ─────────────────────────────────────────────
-  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', x: '86%', y: '16%' }] },
+  { action: 'noop', delay: 800, cursors: [{ id: 'arvid', target: 'summary' }] },
   { action: 'animate_completeness', delay: 600 },
 
-  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '84%', y: '62%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', target: 'btn-linear' }] },
   { action: 'show_linear_confirmation', delay: 600 },
 
-  { action: 'noop', delay: 600, cursors: [{ id: 'david', x: '88%', y: '62%' }] },
+  { action: 'noop', delay: 600, cursors: [{ id: 'david', target: 'btn-cursor' }] },
   { action: 'show_cursor_confirmation', delay: 600 },
 
   // ── Drift — fade cursors, hold, then seamless reset ───────────
   { action: 'noop', delay: 1000, cursors: [
-    { id: 'sarah', x: '22%', y: '30%', visible: false },
-    { id: 'david', x: '88%', y: '62%', visible: false },
-    { id: 'arvid', x: '86%', y: '16%', visible: false },
+    { id: 'sarah', target: 'req-column-body', visible: false },
+    { id: 'david', target: 'btn-cursor', visible: false },
+    { id: 'arvid', target: 'summary', visible: false },
   ]},
   { action: 'reset', delay: 2000 },
 ];

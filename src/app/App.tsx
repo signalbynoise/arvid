@@ -215,6 +215,7 @@ export default function App() {
         ) : (
           <EmptyStateSuggestions
             onCreateRequirement={() => setIsModalOpen(true)}
+            onCreateSubProject={() => requestModal('createProject')}
             onInviteMembers={() => requestModal('inviteMember', { scope: 'project' })}
             onOpenCommandPalette={openCommandPalette}
           />

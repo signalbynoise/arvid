@@ -82,16 +82,18 @@ Add comments marking each phase boundary. The phases must match the Director's T
 
 #### Cursor Positions
 
-Cursor positions use **percentage strings** relative to the demo shell: `{ id, x: '24%', y: '16%', visible? }`. Never use pixel values.
+Cursor positions use **target strings** that reference `data-cursor-target` attributes on DOM elements: `{ id, target: 'req-r13', visible? }`. Never use pixel values or percentages. The `MiniCursor` component resolves the target element's position from the DOM at runtime.
 
-Approximate column positions (sidebar ~13%, each content column ~22%):
-- Requirements center: ~24%
-- Questions center: ~46%
-- Answers center: ~68%
-- Summary center: ~87%
+Target naming convention:
+- Requirements: `req-{id}` (e.g. `req-r1`, `req-r13`)
+- Questions: `q-{id}` (e.g. `q-q1`, `q-q2`)
+- Answers: `a-{id}` (e.g. `a-a1`)
+- Buttons: `btn-linear`, `btn-cursor`, `req-add`
+- Column bodies: `req-column-body`, `q-column-body`
+- Summary: `summary`
+- Modal elements: `modal-import-slack`, `modal-slack-{id}`
 
-Card row positions:
-- Card 1: ~16%, Card 2: ~30%, Card 3: ~44%
+The orchestrator adds `data-cursor-target` attributes to wrapper divs around each interactive element. Shared components are never modified.
 
 #### Cursor-Arrive / Action-Fire Split (mandatory)
 
@@ -100,10 +102,10 @@ Every cursor movement MUST be a separate `noop` step **before** the action step.
 2. Action fires (next step, 400-800ms delay)
 
 ```typescript
-// Sarah's cursor moves to R01
-{ action: 'noop', delay: 800, cursors: [{ id: 'sarah', x: '22%', y: '16%' }] },
-// Sarah clicks — R01 selects
-{ action: 'select_req_0', delay: 600 },
+// Sarah's cursor moves to R13
+{ action: 'noop', delay: 800, cursors: [{ id: 'sarah', target: 'req-r13' }] },
+// Sarah clicks — R13 selects
+{ action: 'select_requirement', delay: 600 },
 ```
 
 This doubles the step count but keeps total timing in range because cursor-arrive and action-fire delays are shorter than a combined step would be. Only one cursor may move per `noop` step.
@@ -127,7 +129,7 @@ Before finalizing, verify:
 - [ ] Every collaborator from the cast has cursor entries
 - [ ] No two cursors move in the same `noop` step (one cursor per move)
 - [ ] Every cursor movement is a `noop` step BEFORE the action step — never simultaneous
-- [ ] Cursor positions use percentage strings, not pixel values
+- [ ] Cursor positions use target strings referencing `data-cursor-target` attributes, not coordinates
 - [ ] The first step is `{ action: 'show_shell', delay: 0 }` (instant, seamless)
 - [ ] The last step is `{ action: 'reset', delay: N }` where N is 3000-4000ms
 - [ ] All delays are within the documented ranges

@@ -652,3 +652,47 @@ The hero demo (`AppDemo`) uses a different pattern because it sits inside a Grai
 - **Adding padding/rounding on the bleeding edge** — the edge where the MDA clips should have no padding
 - **Inline `style={{}}` for positioning** — use Tailwind responsive classes (`md:right-0`)
 - **Custom card/column components per demo** — reuse from `mini-demo/` and `app-demo/`
+
+---
+
+## Hint Animation
+
+A **hint** is a non-destructive visual nudge that draws attention to interactive elements without changing their appearance. It tells the user "these are clickable" without altering colors, borders, shadows, or any visual property.
+
+### Rule
+
+Hints use **transform only**. No border changes, no glow, no shadow, no color shifts. The element must look identical before and after the hint — the only signal is brief movement.
+
+### Specification
+
+| Property | Value |
+|----------|-------|
+| Class | `.card-hint` |
+| Keyframe | `card-hint-nudge` |
+| Duration | `0.8s` |
+| Easing | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| Peak scale | `1.015` at `40%` |
+| Start / end | `scale(1)` — no residual transform |
+
+### Usage
+
+Apply `.card-hint` to a card element for the duration of the hint. The class triggers a single animation cycle and must be removed after `800ms` to allow re-triggering.
+
+```css
+.card-hint {
+  animation: card-hint-nudge 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes card-hint-nudge {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+```
+
+### Anti-patterns
+
+- Adding `box-shadow`, `border-color`, or `background` changes to hints — these change appearance
+- Double-pulse or multi-cycle animations — one nudge is enough
+- Glow effects (`box-shadow` with blur spread) — too flashy, not a hint
+- Duration under `0.5s` (too fast to notice) or over `1.2s` (feels sluggish)

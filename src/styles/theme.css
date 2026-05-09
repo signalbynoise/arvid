@@ -426,12 +426,12 @@
   }
 
   .card-hint {
-    animation: card-hint-nudge 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: card-hint-nudge 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
 @keyframes card-hint-nudge {
-  0%   { transform: scale(1);    border-color: rgba(255, 255, 255, 0.08); }
-  40%  { transform: scale(1.015); border-color: rgba(255, 255, 255, 0.16); }
-  100% { transform: scale(1);    border-color: rgba(255, 255, 255, 0.08); }
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.015); }
+  100% { transform: scale(1); }
 }
