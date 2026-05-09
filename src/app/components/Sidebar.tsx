@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Folder, Loader2 } from 'lucide-react';
+import { Plus, Folder, LoaderPinwheel } from 'lucide-react';
 import { SidebarFooter } from './SidebarFooter';
 import { WorkspacePicker } from './WorkspacePicker';
 import { TeamSection } from './TeamSection';
@@ -158,7 +158,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
       <div className="flex-1 overflow-y-auto hide-scrollbar py-3">
         {(projectsDataState.status === 'loading' || workspacesDataState.status === 'loading') && projects.length === 0 ? (
           <div className="flex justify-center py-4">
-            <Loader2 size={16} className="text-text-quaternary animate-spin" />
+            <LoaderPinwheel size={16} className="text-text-quaternary animate-spin" />
           </div>
         ) : hasTeams || tree.length > 0 ? (
           <TeamSection

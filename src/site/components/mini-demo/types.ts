@@ -34,3 +34,59 @@ export interface Step {
   delay: number;
   cursors?: CursorPosition[];
 }
+
+// ── Rule-based demo engine types ─────────────────────────────────
+
+export interface DemoState {
+  requirements: string[];
+  selectedRequirement: string | null;
+  questions: Record<string, string[]>;
+  acceptedQuestions: string[];
+  selectedQuestion: string | null;
+  answers: Record<string, string[]>;
+  summaryGenerated: boolean;
+  completeness: number;
+  modalPhase: null | 'open' | 'importing' | 'extracting' | 'suggestions' | 'selected';
+  exports: string[];
+  browsed: boolean;
+  cycleCount: number;
+}
+
+export interface Transition {
+  actor: string;
+  verb: string;
+  subject: string;
+  stateUpdate: (prev: DemoState) => DemoState;
+}
+
+export interface Actor {
+  id: string;
+  name: string;
+}
+
+export interface Rule {
+  actor: string;
+  canExecute: (state: DemoState) => boolean;
+  execute: (state: DemoState, pool: ContentPool) => Transition;
+}
+
+export interface ContentPool {
+  requirements: Array<{ id: string; [key: string]: unknown }>;
+  questions: Record<string, Array<{ id: string; [key: string]: unknown }>>;
+  answers: Record<string, Array<{ id: string; [key: string]: unknown }>>;
+  slackSuggestions?: Array<{ id: string; text: string; source: string }>;
+}
+
+export interface Direction {
+  goal: (state: DemoState) => boolean;
+  actors: Actor[];
+  rules: Rule[];
+  contentPool: ContentPool;
+  initialState?: Partial<DemoState>;
+}
+
+export interface EngineOutput {
+  state: DemoState;
+  currentTransition: Transition | null;
+  activeActor: string | null;
+}
