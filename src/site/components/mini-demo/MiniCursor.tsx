@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 
 interface MiniCursorProps {
   name: string;
@@ -11,51 +11,55 @@ interface MiniCursorProps {
 const SPRING = { stiffness: 60, damping: 18, mass: 1.2 };
 
 export function MiniCursor({ name, target, visible, boundaryId }: MiniCursorProps) {
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [inBounds, setInBounds] = useState(true);
+  const [hasPos, setHasPos] = useState(false);
+  const mvX = useMotionValue(0);
+  const mvY = useMotionValue(0);
   const rafRef = useRef<number>(0);
+  const targetRef = useRef(target);
+  targetRef.current = target;
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current);
-    if (!visible || !target) return;
-
-    let attempts = 0;
+    if (!visible || !target) {
+      setHasPos(false);
+      return;
+    }
 
     function poll() {
-      const el = document.querySelector(`[data-cursor-target="${target}"]`);
-      if (!el) {
-        if (attempts++ < 120) rafRef.current = requestAnimationFrame(poll);
-        return;
-      }
-
-      const rect = el.getBoundingClientRect();
-      const newX = rect.left + rect.width / 2;
-      const newY = rect.top + rect.height / 2;
+      const el = document.querySelector(`[data-cursor-target="${targetRef.current}"]`);
 
       if (boundaryId) {
         const boundary = document.querySelector(`[data-cursor-boundary="${boundaryId}"]`);
         if (boundary) {
           const bRect = boundary.getBoundingClientRect();
-          const inside = newX >= bRect.left && newX <= bRect.right && newY >= bRect.top && newY <= bRect.bottom;
-          setInBounds(inside);
+          if (el) {
+            const eRect = el.getBoundingClientRect();
+            const cx = eRect.left + eRect.width / 2;
+            const cy = eRect.top + eRect.height / 2;
+            const inside = cx >= bRect.left && cx <= bRect.right && cy >= bRect.top && cy <= bRect.bottom;
+            setInBounds(inside);
+          } else {
+            setInBounds(false);
+          }
         }
       }
 
-      setPos(prev => {
-        if (!prev || Math.abs(prev.x - newX) > 2 || Math.abs(prev.y - newY) > 2) {
-          return { x: newX, y: newY };
-        }
-        return prev;
-      });
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        mvX.set(rect.left + rect.width / 2);
+        mvY.set(rect.top + rect.height / 2);
+        setHasPos(true);
+      }
 
       rafRef.current = requestAnimationFrame(poll);
     }
 
     poll();
     return () => cancelAnimationFrame(rafRef.current);
-  }, [target, visible, boundaryId]);
+  }, [target, visible, boundaryId, mvX, mvY]);
 
-  const isVisible = visible && !!pos && inBounds;
+  const isVisible = visible && hasPos && inBounds;
 
   return (
     <AnimatePresence>
@@ -63,11 +67,11 @@ export function MiniCursor({ name, target, visible, boundaryId }: MiniCursorProp
         <motion.div
           key={name}
           className="pointer-events-none"
-          style={{ position: 'fixed', zIndex: 9999, left: 0, top: 0 }}
-          initial={{ x: pos.x, y: pos.y, opacity: 0, scale: 0.5 }}
-          animate={{ x: pos.x, y: pos.y, opacity: 1, scale: 1 }}
+          style={{ position: 'fixed', zIndex: 9999, left: 0, top: 0, x: mvX, y: mvY }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
-          transition={{ x: SPRING, y: SPRING, opacity: { duration: 0.5 }, scale: { duration: 0.3 } }}
+          transition={{ opacity: { duration: 0.5 }, scale: { duration: 0.3 } }}
         >
           <svg width="15" height="20" viewBox="0 0 16 22" fill="none" className="drop-shadow-md">
             <path

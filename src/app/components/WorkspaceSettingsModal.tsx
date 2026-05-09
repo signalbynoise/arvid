@@ -54,6 +54,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const workspace = useMemo(
@@ -129,8 +130,6 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
     settingsLog.info('handleRemoveLogo', 'Removing workspace logo', { workspaceId: workspace.id });
     await updateWorkspace(workspace.id, { logoUrl: null });
   };
-
-  const [nameError, setNameError] = useState<string | null>(null);
 
   const handleSaveName = async () => {
     const trimmed = nameValue.trim();
