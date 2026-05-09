@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  Plus, Users, Command, LoaderPinwheel, MousePointerClick,
-  FolderPlus, GitBranch, LayoutList, Bell, Database,
+  Plus, Users, Command, LoaderPinwheel, MousePointerClick, FolderPlus,
 } from 'lucide-react';
 import { SuggestionAction } from './SuggestionAction';
 import {
@@ -99,7 +98,7 @@ export function EmptyStateSuggestions({
     if (ghConnected && selectedProject && !selectedProject.githubRepo) {
       items.push({
         id: 'link-repo',
-        icon: <GitBranch size={16} />,
+        icon: <img src="/github.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a repository',
         description: 'Connect a GitHub repo to this project',
         action: onOpenCommandPalette,
@@ -121,7 +120,7 @@ export function EmptyStateSuggestions({
     if (linearConnected && selectedProject && !selectedProject.linearProjectName) {
       items.push({
         id: 'link-linear',
-        icon: <LayoutList size={16} />,
+        icon: <img src="/linear.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a Linear project',
         description: 'Sync issues and track implementation',
         action: onOpenCommandPalette,
@@ -143,7 +142,7 @@ export function EmptyStateSuggestions({
     if (slackConnected && selectedProject && !selectedProject.slackNotificationChannelId) {
       items.push({
         id: 'link-slack',
-        icon: <Bell size={16} />,
+        icon: <img src="/slack.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Set an alert channel',
         description: 'Get notified in Slack about changes',
         action: onOpenCommandPalette,
@@ -165,7 +164,7 @@ export function EmptyStateSuggestions({
     if (supabaseConnected && selectedProject && !selectedProject.supabaseProjectRef) {
       items.push({
         id: 'link-supabase',
-        icon: <Database size={16} />,
+        icon: <img src="/supabase.svg" alt="" className="w-4 h-4 opacity-40" />,
         label: 'Link a database',
         description: 'Import schema as project context',
         action: onOpenCommandPalette,
