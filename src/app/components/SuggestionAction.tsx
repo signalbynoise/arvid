@@ -1,4 +1,5 @@
 import React from 'react';
+import { KeyboardShortcut } from './ui/KeyboardShortcut';
 
 interface SuggestionActionProps {
   icon: React.ReactNode;
@@ -27,8 +28,8 @@ export function SuggestionAction({ icon, label, description, shortcut, onClick }
         </p>
       </div>
       {shortcut && (
-        <span className="mt-1 shrink-0 text-[11px] font-mono text-text-empty group-hover:text-text-quaternary transition-colors">
-          {shortcut}
+        <span className="mt-1">
+          <KeyboardShortcut chord={shortcut} />
         </span>
       )}
     </button>

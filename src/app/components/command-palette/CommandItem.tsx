@@ -1,6 +1,7 @@
 import React from 'react';
 import { Command } from 'cmdk';
 import type { PaletteCommand } from './types';
+import { KeyboardShortcut } from '../ui/KeyboardShortcut';
 
 interface CommandItemProps {
   command: PaletteCommand;
@@ -18,15 +19,7 @@ export function CommandItem({ command, onSelect }: CommandItemProps) {
     >
       <Icon size={16} className="shrink-0 text-text-quaternary" />
       <span className="flex-1 truncate">{command.label}</span>
-      {command.chord && (
-        <span className="flex items-center gap-1 shrink-0">
-          {command.chord.split(' ').map((key, i) => (
-            <kbd key={i} className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 bg-surface-frost-04 border border-border-default rounded-standard text-[11px] font-mono text-text-empty">
-              {key}
-            </kbd>
-          ))}
-        </span>
-      )}
+      {command.chord && <KeyboardShortcut chord={command.chord} />}
     </Command.Item>
   );
 }
