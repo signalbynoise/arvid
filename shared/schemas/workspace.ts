@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WorkspaceRoleEnum } from './membership';
 
 export const WorkspaceRowSchema = z.object({
   id: z.string().uuid(),
@@ -10,6 +11,7 @@ export const WorkspaceRowSchema = z.object({
   created_at: z.string(),
   is_deleted: z.boolean(),
   deleted_at: z.string().nullable(),
+  user_role: WorkspaceRoleEnum.optional(),
 });
 
 export const WorkspaceSchema = WorkspaceRowSchema.transform(row => ({
@@ -22,6 +24,7 @@ export const WorkspaceSchema = WorkspaceRowSchema.transform(row => ({
   createdAt: row.created_at,
   isDeleted: row.is_deleted,
   deletedAt: row.deleted_at ?? undefined,
+  userRole: row.user_role ?? 'guest',
 }));
 
 export const CreateWorkspaceBodySchema = z.object({

@@ -6,7 +6,8 @@ import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
 import { DropdownItem } from './ui/DropdownItem';
 import { DropdownDivider } from './ui/DropdownDivider';
-import { useStore } from '../store';
+import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
+import { canManageProject, canMoveProject } from '../domain/access';
 
 interface Props {
   projectId: string;
@@ -23,6 +24,9 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canDeactivate = useStore(s => s.deactivationMap.projects[projectId] ?? false);
+  const workspaces = useStore(selectWorkspaces);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const userRole = workspaces.find(w => w.id === activeWorkspaceId)?.userRole;
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     const target = e.target as Node;
@@ -46,10 +50,16 @@ export function ProjectItemMenu({ projectId, onAddUser, onRename, onMove, onCrea
 
       <DropdownPanel isOpen={isOpen} position="right" anchorRef={menuRef} panelRef={panelRef}>
         <DropdownSection label="ACTIONS">
-          <DropdownItem icon={<Plus size={ICON_SIZE.sm} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
-          <DropdownItem icon={<Pencil size={ICON_SIZE.sm} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
-          <DropdownItem icon={<Network size={ICON_SIZE.sm} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
-          {onCreateSubProject && (
+          {canManageProject(userRole) && (
+            <DropdownItem icon={<Plus size={ICON_SIZE.sm} />} label="Add user to project" onClick={() => { setIsOpen(false); onAddUser(); }} />
+          )}
+          {canManageProject(userRole) && (
+            <DropdownItem icon={<Pencil size={ICON_SIZE.sm} />} label="Rename project" onClick={() => { setIsOpen(false); onRename(); }} />
+          )}
+          {canMoveProject(userRole) && (
+            <DropdownItem icon={<Network size={ICON_SIZE.sm} />} label="Move project" onClick={() => { setIsOpen(false); onMove(); }} />
+          )}
+          {onCreateSubProject && canManageProject(userRole) && (
             <DropdownItem icon={<Plus size={ICON_SIZE.sm} />} label="Create sub-project" onClick={() => { setIsOpen(false); onCreateSubProject(); }} />
           )}
         </DropdownSection>

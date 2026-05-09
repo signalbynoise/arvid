@@ -5,6 +5,7 @@ import { ICON_SIZE } from '../../constants/icons';
 import { Chevron } from './Chevron';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
 import { buildWorkspacePath } from '../domain/paths';
+import { canRenameWorkspace, canInviteToWorkspace, canCreateTeam, canOpenWorkspaceSettings } from '../domain/access';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
 import { DropdownItem } from './ui/DropdownItem';
@@ -29,6 +30,7 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
   const canDeactivate = useStore(s => s.deactivationMap.workspace);
 
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId);
+  const userRole = activeWorkspace?.userRole;
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -89,40 +91,52 @@ export function WorkspacePicker({ onSettingsClick, onCreateClick, onCreateTeamCl
           ))}
         </DropdownSection>
 
-        <DropdownDivider />
+        {(canInviteToWorkspace(userRole) || canRenameWorkspace(userRole) || canCreateTeam(userRole)) && (
+          <>
+            <DropdownDivider />
+            <DropdownSection label="ACTIONS">
+              {canInviteToWorkspace(userRole) && (
+                <DropdownItem
+                  icon={<Plus size={ICON_SIZE.md} />}
+                  label="Add user to workspace"
+                  onClick={() => { setIsOpen(false); onInviteClick(); }}
+                />
+              )}
+              {canRenameWorkspace(userRole) && (
+                <DropdownItem
+                  icon={<Pencil size={ICON_SIZE.md} />}
+                  label="Rename workspace"
+                  onClick={() => { setIsOpen(false); onRenameClick(); }}
+                />
+              )}
+              {canCreateTeam(userRole) && (
+                <DropdownItem
+                  icon={<Plus size={ICON_SIZE.md} />}
+                  label="Create new team"
+                  onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
+                />
+              )}
+              <DropdownItem
+                icon={<Plus size={ICON_SIZE.md} />}
+                label="Create new workspace"
+                onClick={() => { setIsOpen(false); onCreateClick(); }}
+              />
+            </DropdownSection>
+          </>
+        )}
 
-        <DropdownSection label="ACTIONS">
-          <DropdownItem
-            icon={<Plus size={ICON_SIZE.md} />}
-            label="Add user to workspace"
-            onClick={() => { setIsOpen(false); onInviteClick(); }}
-          />
-          <DropdownItem
-            icon={<Pencil size={ICON_SIZE.md} />}
-            label="Rename workspace"
-            onClick={() => { setIsOpen(false); onRenameClick(); }}
-          />
-          <DropdownItem
-            icon={<Plus size={ICON_SIZE.md} />}
-            label="Create new team"
-            onClick={() => { setIsOpen(false); onCreateTeamClick(); }}
-          />
-          <DropdownItem
-            icon={<Plus size={ICON_SIZE.md} />}
-            label="Create new workspace"
-            onClick={() => { setIsOpen(false); onCreateClick(); }}
-          />
-        </DropdownSection>
-
-        <DropdownDivider />
-
-        <DropdownSection label="GENERAL">
-          <DropdownItem
-            icon={<Settings size={ICON_SIZE.md} />}
-            label="Workspace settings"
-            onClick={() => { setIsOpen(false); onSettingsClick(); }}
-          />
-        </DropdownSection>
+        {canOpenWorkspaceSettings(userRole) && (
+          <>
+            <DropdownDivider />
+            <DropdownSection label="GENERAL">
+              <DropdownItem
+                icon={<Settings size={ICON_SIZE.md} />}
+                label="Workspace settings"
+                onClick={() => { setIsOpen(false); onSettingsClick(); }}
+              />
+            </DropdownSection>
+          </>
+        )}
 
         {canDeactivate && (
           <>

@@ -20,6 +20,8 @@ function generateSlug(name: string): string {
 
 workspacesRouter.get('/', async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const userId = req.user!.id;
+
   const { data, error } = await db
     .from('workspaces')
     .select('*')
@@ -27,7 +29,17 @@ workspacesRouter.get('/', async (req, res) => {
     .order('created_at', { ascending: true });
 
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+
+  const { data: memberships } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('workspace_id, role')
+    .eq('user_id', userId)
+    .in('workspace_id', (data ?? []).map(w => w.id));
+
+  const roleMap = new Map((memberships ?? []).map(m => [m.workspace_id, m.role]));
+  const enriched = (data ?? []).map(w => ({ ...w, user_role: roleMap.get(w.id) ?? 'guest' }));
+
+  res.json(enriched);
 });
 
 workspacesRouter.get('/:id', async (req, res) => {
