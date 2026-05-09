@@ -171,16 +171,7 @@ export function createRouterResolverMachine(actions: ResolverActions) {
 
       redirecting: {},
 
-      ready: {
-        entry: ({ context }) => {
-          if (!context.reqShortId) {
-            actions.selectRequirement(null);
-          }
-          if (!context.questionShortId) {
-            actions.selectQuestion(null);
-          }
-        },
-      },
+      ready: {},
     },
   });
 }

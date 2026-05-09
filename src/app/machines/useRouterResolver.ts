@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMachine } from '@xstate/react';
-import { useStore, selectWorkspaces } from '../store';
+import { useStore, selectWorkspaces, selectRequirements, selectQuestions } from '../store';
 import { createRouterResolverMachine } from './routerResolver.machine';
 import { buildProjectPathFromEntities } from '../domain/paths';
 import { logger } from '../logger';
@@ -112,6 +112,41 @@ export function useRouterResolver() {
       }
     });
   }, [send]);
+
+  const requirements = useStore(selectRequirements);
+  const questions = useStore(selectQuestions);
+  const dataState = useStore(s => s.dataState);
+  const prevReqRef = useRef<string | undefined>();
+  const prevQuestionRef = useRef<string | undefined>();
+
+  useEffect(() => {
+    if (dataState.status !== 'ready') return;
+
+    const { reqShortId, questionShortId } = params;
+
+    if (reqShortId !== prevReqRef.current) {
+      prevReqRef.current = reqShortId;
+      if (reqShortId) {
+        const req = requirements.find(r => r.shortId === reqShortId);
+        if (req) selectRequirement(req.id);
+      } else {
+        selectRequirement(null);
+      }
+    }
+
+    if (questionShortId !== prevQuestionRef.current) {
+      prevQuestionRef.current = questionShortId;
+      if (questionShortId && reqShortId) {
+        const req = requirements.find(r => r.shortId === reqShortId);
+        if (req) {
+          const q = questions.find(qu => qu.shortId === questionShortId && qu.requirementId === req.id);
+          if (q) selectQuestion(q.id);
+        }
+      } else {
+        selectQuestion(null);
+      }
+    }
+  }, [params.reqShortId, params.questionShortId, dataState.status, requirements, questions, selectRequirement, selectQuestion]);
 
   return state;
 }
