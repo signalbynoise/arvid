@@ -87,7 +87,9 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
   useEffect(() => {
     if (pendingModal?.type === 'createProject') {
-      modals.openCreate();
+      const { selectedProjectId, projects: storeProjects } = useStore.getState();
+      const currentProject = selectedProjectId ? storeProjects.find(p => p.id === selectedProjectId) : undefined;
+      modals.openCreate(currentProject?.id, currentProject?.teamId);
       clearPendingModal();
     }
   }, [pendingModal, clearPendingModal]);

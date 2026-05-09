@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import { Plus, LoaderPinwheel, MessageSquare, FileText, BarChart3, Slack, Mail, FileText as FileDoc } from 'lucide-react';
 import { MiniShell } from './MiniShell';
 import { MiniTopbar } from './MiniTopbar';
-import { MiniColumn, MiniColumnEmpty } from './MiniColumn';
+import { MiniColumn, MiniColumnEmpty, MINI_DEMO_COLUMN_MIN_WIDTH_CLASS } from './MiniColumn';
 import { MiniSidebar } from './MiniSidebar';
 import { MiniSidebarFooterItem } from './MiniSidebarFooterItem';
 import { MiniDivider } from './MiniDivider';
@@ -136,7 +136,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasReqColumn && (() => {
             const col = layout.columns.find(c => c.key === 'requirements')!;
             return (
-              <div className={`${col.width ?? 'flex-1'} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${col.width ?? 'flex-1'} ${MINI_DEMO_COLUMN_MIN_WIDTH_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   <div data-cursor-target="ds-add-btn"><Plus size={8} className="text-text-quaternary" /></div>
@@ -164,7 +164,7 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
           {hasQColumn && (() => {
             const col = layout.columns.find(c => c.key === 'questions')!;
             return (
-              <div className={`${col.width ?? 'flex-1'} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
+              <div className={`${col.width ?? 'flex-1'} ${MINI_DEMO_COLUMN_MIN_WIDTH_CLASS} flex flex-col bg-surface-panel ${col.borderRight !== false ? 'border-r border-border-subtle' : ''}`}>
                 <div className="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between">
                   <span className="text-[8px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-wide">{col.title}</span>
                   {state.selectedRequirement && <LoaderPinwheel size={8} className="text-text-tertiary animate-spin" />}
