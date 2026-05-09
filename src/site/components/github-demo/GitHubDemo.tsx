@@ -19,6 +19,9 @@ const layout: DemoLayoutConfig = {
       ]},
     ],
     expandedProjectId: 'p1',
+    integrations: [
+      { icon: '/github.svg', label: 'Repository', value: 'acme/web-app', connected: true },
+    ],
   },
   columns: [
     { key: 'requirements', title: 'Requirements', width: 'w-1/2' },

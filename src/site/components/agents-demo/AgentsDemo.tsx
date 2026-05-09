@@ -18,6 +18,10 @@ const layout: DemoLayoutConfig = {
       ]},
     ],
     expandedProjectId: 'p1',
+    integrations: [
+      { icon: '/github.svg', label: 'Repository', value: 'acme/mobile-app', connected: true },
+      { icon: '/cursor.svg', label: 'Cursor', value: 'Connected', connected: true },
+    ],
   },
   columns: [
     { key: 'questions', title: 'Questions', width: 'w-1/3' },

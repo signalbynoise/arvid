@@ -22,14 +22,20 @@ const layout: DemoLayoutConfig = {
       ]},
     ],
     expandedProjectId: 'p1',
+    integrations: [
+      { icon: '/github.svg', label: 'Repository', value: 'acme/mobile-app', connected: true },
+      { icon: '/linear.svg', label: 'Project', value: 'Mobile App', connected: true },
+      { icon: '/slack.svg', label: 'Alerts', value: '#mobile-alerts', connected: true },
+    ],
   },
   columns: [
     { key: 'requirements', title: 'Requirements', width: 'w-1/4' },
     { key: 'questions', title: 'Questions', width: 'w-1/4' },
   ],
   shell: {
-    className: 'min-w-[900px] w-full max-w-[1180px]',
-    containerClassName: 'relative w-full h-full',
+    className: 'min-w-[900px] w-full max-w-[1180px] h-[90%]',
+    containerClassName: 'relative w-full h-full flex items-end justify-center overflow-visible',
+    roundedBottom: false,
   },
   modal: {
     title: 'Import Requirements',

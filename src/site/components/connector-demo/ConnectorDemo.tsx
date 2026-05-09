@@ -18,6 +18,10 @@ const layout: DemoLayoutConfig = {
       ]},
     ],
     expandedProjectId: 'p1',
+    integrations: [
+      { icon: '/slack.svg', label: 'Slack', value: '#product', connected: true },
+      { icon: '/linear.svg', label: 'Project', value: 'Platform', connected: true },
+    ],
   },
   columns: [
     { key: 'requirements', title: 'Requirements', width: 'w-1/2' },

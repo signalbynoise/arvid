@@ -1,9 +1,12 @@
-import { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { Plus, LoaderPinwheel, MessageSquare, FileText, BarChart3, Slack, Mail, FileText as FileDoc } from 'lucide-react';
 import { MiniShell } from './MiniShell';
 import { MiniTopbar } from './MiniTopbar';
 import { MiniColumn, MiniColumnEmpty } from './MiniColumn';
 import { MiniSidebar } from './MiniSidebar';
+import { MiniSidebarFooterItem } from './MiniSidebarFooterItem';
+import { MiniDivider } from './MiniDivider';
+import { MiniSidebarFooter } from './MiniSidebarFooter';
 import { MiniCursor } from './MiniCursor';
 import { MiniModal } from './MiniModal';
 import { MiniConfirmation } from './MiniConfirmation';
@@ -106,11 +109,24 @@ export function DemoShellView({ direction, layout }: DemoShellProps) {
 
   return (
     <div ref={containerRef} data-cursor-boundary={layout.boundaryId} className={layout.shell.containerClassName ?? 'absolute inset-0'}>
-    <MiniShell visible shadow={layout.shell.shadow} roundedRight={layout.shell.roundedRight} className={layout.shell.className}>
+    <MiniShell visible shadow={layout.shell.shadow} roundedRight={layout.shell.roundedRight} roundedBottom={layout.shell.roundedBottom} className={layout.shell.className}>
       <MiniSidebar
         workspaceName={layout.workspace}
         teams={layout.sidebar.teams}
         expandedProjectId={layout.sidebar.expandedProjectId}
+        footer={layout.sidebar.integrations ? (
+          <>
+            <MiniDivider />
+            <MiniSidebarFooter>
+              {layout.sidebar.integrations.map((int, i) => (
+                <React.Fragment key={int.label}>
+                  {i > 0 && <MiniDivider />}
+                  <MiniSidebarFooterItem icon={int.icon} label={int.label} isConnected={int.connected} value={int.value} />
+                </React.Fragment>
+              ))}
+            </MiniSidebarFooter>
+          </>
+        ) : undefined}
       />
 
       <div className="flex-1 flex flex-col min-w-0">

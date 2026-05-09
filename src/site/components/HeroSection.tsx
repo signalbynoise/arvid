@@ -59,7 +59,7 @@ export function HeroSection() {
             zoom={0.9}
           />
         </div>
-        <div className="absolute inset-0 z-10 flex items-start justify-start lg:items-center lg:justify-center p-5 lg:p-10 overflow-hidden">
+        <div className="absolute inset-0 z-10 overflow-hidden">
           <AppDemo />
         </div>
       </div>

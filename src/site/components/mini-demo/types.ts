@@ -107,7 +107,7 @@ export interface DemoLayoutConfig {
   sidebar: {
     teams: Array<{ id: string; name: string; projects: Array<{ id: string; name: string; isActive?: boolean; children: { id: string; name: string }[] }> }>;
     expandedProjectId?: string;
-    footer?: 'github';
+    integrations?: Array<{ icon: string; label: string; value?: string; connected: boolean }>;
   };
   columns: DemoColumn[];
   shell: {
@@ -115,6 +115,7 @@ export interface DemoLayoutConfig {
     containerClassName?: string;
     shadow?: boolean;
     roundedRight?: boolean;
+    roundedBottom?: boolean;
   };
   modal?: {
     title: string;

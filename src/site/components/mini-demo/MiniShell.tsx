@@ -5,11 +5,17 @@ interface MiniShellProps {
   className?: string;
   shadow?: boolean;
   roundedRight?: boolean;
+  roundedBottom?: boolean;
   children: React.ReactNode;
 }
 
-export function MiniShell({ visible, className, shadow = true, roundedRight = true, children }: MiniShellProps) {
-  const radiusClass = roundedRight ? 'rounded-standard' : 'rounded-l-standard rounded-r-none';
+export function MiniShell({ visible, className, shadow = true, roundedRight = true, roundedBottom = true, children }: MiniShellProps) {
+  let radiusClass: string;
+  if (!roundedBottom) {
+    radiusClass = roundedRight ? 'rounded-t-standard rounded-b-none' : 'rounded-tl-standard rounded-tr-none rounded-b-none';
+  } else {
+    radiusClass = roundedRight ? 'rounded-standard' : 'rounded-l-standard rounded-r-none';
+  }
 
   return (
     <div className={`flex ${radiusClass} overflow-hidden border border-border-subtle bg-surface-base ${shadow ? 'shadow-elevated' : ''} transition-all duration-700 ${
