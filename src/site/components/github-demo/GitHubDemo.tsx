@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { Plus, LoaderPinwheel, Folder } from 'lucide-react';
-import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniSidebar, MiniCursor, useDemoEngine } from '../mini-demo';
+import { MiniShell, MiniTopbar, MiniColumn, MiniColumnEmpty, MiniSidebar, MiniCursor, MiniModal, useDemoEngine } from '../mini-demo';
 import type { Requirement, Question } from '../app-demo/types';
 import { RequirementCard } from '../app-demo/RequirementCard';
 import { QuestionCard } from '../app-demo/QuestionCard';
@@ -30,13 +30,14 @@ const BREADCRUMBS = [
 ];
 
 function resolveTarget(verb: string, subject: string): string {
-  if (verb === 'open' && subject === 'repo-selector') return 'gh-repo-footer';
-  if (verb === 'select' && subject === 'repo') return 'gh-repo-footer';
-  if (verb === 'fetch') return 'gh-repo-footer';
-  if (verb === 'generate' && subject === 'requirements-from-code') return 'gh-req-column';
+  if (verb === 'open' && subject === 'import-modal') return 'gh-repo-footer';
+  if (verb === 'import') return 'gh-repo-footer';
+  if (verb === 'extract') return 'gh-repo-footer';
+  if (verb === 'suggest') return 'gh-repo-footer';
+  if (verb === 'select' && subject.startsWith('gh-r')) return `modal-slack-${subject}`;
+  if (verb === 'close') return 'gh-repo-footer';
   if (verb === 'select') return `req-${subject}`;
   if (verb === 'generate' && subject.startsWith('questions')) return 'gh-q-column';
-  if (verb === 'browse') return 'gh-q-column';
   if (verb === 'accept') return `q-${subject}`;
   return 'gh-req-column';
 }
@@ -46,10 +47,10 @@ export function GitHubDemo() {
   const { state, currentTransition, activeActor } = useDemoEngine(githubDirection, containerRef);
   const pool = githubDirection.contentPool;
 
-  const selectorOpen = state.modalPhase === 'open';
-  const repoSelected = state.modalPhase === 'importing' || state.modalPhase === 'extracting' || state.browsed;
+  const repoConnected = state.imported || state.requirements.length > 0;
   const fetching = state.modalPhase === 'importing' || state.modalPhase === 'extracting';
-  const fetchDone = state.browsed;
+  const showImportModal = state.modalPhase !== null && state.modalPhase !== 'selected' && !repoConnected;
+  const showSuggestions = state.modalPhase === 'suggestions' || state.modalPhase === 'selected';
 
   const allReqs = useMemo(() =>
     pool.requirements.filter(r => state.requirements.includes(r.id)) as Requirement[],
@@ -77,10 +78,10 @@ export function GitHubDemo() {
           <div data-cursor-target="gh-repo-footer">
             <GitHubDemoRepoFooter
               visible
-              selectorOpen={selectorOpen}
-              repoSelected={repoSelected}
+              selectorOpen={false}
+              repoSelected={repoConnected}
               fetching={fetching}
-              fetchDone={fetchDone}
+              fetchDone={repoConnected && !fetching}
             />
           </div>
         }
@@ -108,7 +109,7 @@ export function GitHubDemo() {
                   </div>
                 ))
               ) : (
-                <MiniColumnEmpty icon={null} message={fetchDone ? 'Loading...' : 'Connect a repository'} />
+                <MiniColumnEmpty icon={null} message={fetching ? 'Analyzing codebase...' : 'Connect a repository'} />
               )}
             </div>
           </MiniColumn>
@@ -139,6 +140,34 @@ export function GitHubDemo() {
         </div>
       </div>
     </MiniShell>
+
+    <MiniModal visible={!!state.modalPhase && !repoConnected} title="Connect Repository">
+      <div className="space-y-2">
+        {(state.modalPhase === 'importing' || state.modalPhase === 'extracting') && (
+          <div className="flex flex-col items-center py-4 space-y-2">
+            <LoaderPinwheel size={14} className="text-text-tertiary animate-spin" />
+            <p className="text-[7px] text-text-tertiary">Arvid is analyzing your codebase...</p>
+          </div>
+        )}
+
+        {showSuggestions && pool.slackSuggestions?.map((sug, i) => (
+          <div
+            key={sug.id}
+            data-cursor-target={`modal-slack-${sug.id}`}
+            className={`flex items-center justify-between px-2 py-1.5 rounded-micro border transition-all duration-300 ${
+              state.requirements.includes(sug.id)
+                ? 'bg-surface-frost-08 border-border-default'
+                : 'bg-surface-elevated border-border-subtle'
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="text-[7px] font-[var(--fw-medium)] text-text-primary truncate">{sug.text}</div>
+              <div className="text-[6px] text-text-quaternary">{sug.source}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MiniModal>
 
     {githubDirection.actors.map(actor => (
       <MiniCursor
