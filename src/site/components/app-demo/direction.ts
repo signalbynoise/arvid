@@ -15,6 +15,7 @@ import {
   generateSummaryRule,
   exportToLinearRule,
   exportToCursorRule,
+  deleteRequirementRule,
 } from '../mini-demo/rules';
 
 const SARAH = { id: 'sarah', name: 'Sarah K.' };
@@ -35,6 +36,9 @@ const contentPool: ContentPool = {
     { id: 'r10', shortId: 'R10', title: 'CI/CD pipeline integration', owner: 'Sarah K.', createdAt: 'Apr 8', completeness: 25, clarity: 'Low', risk: 'High' },
     { id: 'r11', shortId: 'R11', title: 'Email digest scheduling', owner: 'Emily R.', createdAt: 'Apr 5', completeness: 60, clarity: 'High', risk: 'Low' },
     { id: 'r12', shortId: 'R12', title: 'GraphQL API gateway', owner: 'David M.', createdAt: 'Apr 3', completeness: 38, clarity: 'Medium', risk: 'Medium' },
+    { id: 'slack-1', shortId: 'R13', title: 'API rate limiting for public endpoints', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'High' },
+    { id: 'slack-2', shortId: 'R14', title: 'Webhook delivery retry logic', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium' },
+    { id: 'slack-3', shortId: 'R15', title: 'Browser push notification opt-in', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium' },
   ],
   questions: {
     _default: [
@@ -78,6 +82,7 @@ export const heroDirection: Direction = {
     showSuggestionsRule(ARVID.id),
     selectSuggestionRule(ARVID.id),
     closeModalRule(SARAH.id),
+    deleteRequirementRule(SARAH.id, 5),
     selectRequirementRule(SARAH.id),
     generateQuestionsRule(ARVID.id),
     acceptQuestionRule(DAVID.id, 2),

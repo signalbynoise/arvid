@@ -85,7 +85,8 @@ export function selectSuggestionRule(actor: string): Rule {
     actor,
     canExecute: (s) => s.modalPhase === 'suggestions',
     execute: (s, pool) => {
-      const suggestion = pool.slackSuggestions?.[0];
+      const available = (pool.slackSuggestions ?? []).filter(sug => !s.requirements.includes(sug.id));
+      const suggestion = available.length > 0 ? pick(available) : pool.slackSuggestions?.[0];
       const newReqId = suggestion?.id ?? `imported-${s.cycleCount}`;
       return {
         actor,
@@ -94,7 +95,7 @@ export function selectSuggestionRule(actor: string): Rule {
         stateUpdate: (prev) => ({
           ...prev,
           modalPhase: 'selected',
-          requirements: [...prev.requirements, newReqId],
+          requirements: prev.requirements.includes(newReqId) ? prev.requirements : [...prev.requirements, newReqId],
         }),
       };
     },
@@ -261,6 +262,26 @@ export function exportToCursorRule(actor: string): Rule {
       subject: 'cursor',
       stateUpdate: (prev) => ({ ...prev, exports: [...prev.exports, 'cursor'] }),
     }),
+  };
+}
+
+export function deleteRequirementRule(actor: string, maxReqs = 5): Rule {
+  return {
+    actor,
+    weight: 2,
+    canExecute: (s) => s.requirements.length > maxReqs && !s.selectedRequirement && !s.modalPhase,
+    execute: (s) => {
+      const reqId = pick(s.requirements);
+      return {
+        actor,
+        verb: 'delete',
+        subject: reqId,
+        stateUpdate: (prev) => ({
+          ...prev,
+          requirements: prev.requirements.filter(id => id !== reqId),
+        }),
+      };
+    },
   };
 }
 
