@@ -76,33 +76,33 @@ export function WorkspaceLayout() {
   }, [wsShortId, workspaces, workspacesDataState.status, setActiveWorkspace, loadProjects, loadTeams, navigate]);
 
   useEffect(() => {
-    if (!projectShortId || projectsDataState.status !== 'ready' || projects.length === 0) return;
-    if (syncedProjectRef.current === projectShortId) return;
-
-    const project = projects.find(p => p.shortId === projectShortId);
-    if (!project) {
-      log.debug('sync', 'Unknown project short ID', { projectShortId });
-      return;
-    }
-
-    log.debug('sync', 'Syncing project from URL', { projectShortId, projectId: project.id });
-    syncedProjectRef.current = projectShortId;
-    setSelectedProjectId(project.id);
-  }, [projectShortId, projects, projectsDataState.status, setSelectedProjectId]);
-
-  useEffect(() => {
-    if (projectShortId || projectsDataState.status !== 'ready' || projects.length === 0 || workspaces.length === 0) return;
+    if (projectsDataState.status !== 'ready' || projects.length === 0 || workspaces.length === 0) return;
 
     const workspace = workspaces.find(w => w.slug === wsShortId || w.shortId === wsShortId);
     if (!workspace) return;
+
+    if (projectShortId) {
+      if (syncedProjectRef.current === projectShortId) return;
+
+      const project = projects.find(p => p.shortId === projectShortId);
+      if (project) {
+        log.debug('sync', 'Syncing project from URL', { projectShortId, projectId: project.id });
+        syncedProjectRef.current = projectShortId;
+        setSelectedProjectId(project.id);
+        return;
+      }
+
+      log.debug('sync', 'Unknown project short ID, redirecting to first project', { projectShortId });
+    }
 
     const firstProject = projects.find(p => !p.parentId);
     if (firstProject) {
       const path = buildProjectPathFromEntities(workspace, teams, firstProject);
       log.debug('sync', 'Auto-selecting first project', { path });
+      syncedProjectRef.current = firstProject.shortId ?? null;
       navigate(path, { replace: true });
     }
-  }, [projectShortId, projectsDataState.status, projects, workspaces, teams, wsShortId, navigate]);
+  }, [projectShortId, projectsDataState.status, projects, workspaces, teams, wsShortId, setSelectedProjectId, navigate]);
 
   useEffect(() => {
     if (!reqShortId) {
