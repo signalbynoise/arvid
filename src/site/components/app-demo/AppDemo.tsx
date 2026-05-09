@@ -239,7 +239,6 @@ export function AppDemo() {
           name={c.name}
           target={pos.target}
           visible={pos.visible !== false}
-          containerRef={containerRef}
         />
       ) : null;
     })}

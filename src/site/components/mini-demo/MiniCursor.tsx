@@ -1,48 +1,54 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MiniCursorProps {
   name: string;
   target: string;
   visible: boolean;
-  containerRef: React.RefObject<HTMLElement | null>;
 }
 
 const SPRING = { stiffness: 60, damping: 18, mass: 1.2 };
 
-function resolveTargetPosition(target: string, container: HTMLElement | null): { x: number; y: number } | null {
-  if (!container) return null;
-  const el = container.querySelector(`[data-cursor-target="${target}"]`);
-  if (!el) return null;
-  const elRect = el.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
-  return {
-    x: elRect.left - containerRect.left + 4,
-    y: elRect.top - containerRect.top + 4,
-  };
-}
-
-export function MiniCursor({ name, target, visible, containerRef }: MiniCursorProps) {
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  const updatePos = useCallback(() => {
-    const resolved = resolveTargetPosition(target, containerRef.current);
-    if (resolved) setPos(resolved);
-  }, [target, containerRef]);
+export function MiniCursor({ name, target, visible }: MiniCursorProps) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    updatePos();
-    const frame = requestAnimationFrame(updatePos);
-    return () => cancelAnimationFrame(frame);
-  }, [updatePos]);
+    cancelAnimationFrame(rafRef.current);
+    if (!visible) return;
+
+    let attempts = 0;
+
+    function poll() {
+      const el = document.querySelector(`[data-cursor-target="${target}"]`);
+      if (!el) {
+        if (attempts++ < 120) rafRef.current = requestAnimationFrame(poll);
+        return;
+      }
+
+      const rect = el.getBoundingClientRect();
+      const newX = rect.left + rect.width / 2;
+      const newY = rect.top + rect.height / 2;
+
+      setPos(prev => {
+        if (!prev || Math.abs(prev.x - newX) > 2 || Math.abs(prev.y - newY) > 2) {
+          return { x: newX, y: newY };
+        }
+        return prev;
+      });
+    }
+
+    poll();
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, visible]);
 
   return (
     <AnimatePresence>
-      {visible && (
+      {visible && pos && (
         <motion.div
           key={name}
-          className="absolute pointer-events-none"
-          style={{ zIndex: 50 }}
+          className="pointer-events-none"
+          style={{ position: 'fixed', zIndex: 9999, left: 0, top: 0 }}
           initial={{ x: pos.x, y: pos.y, opacity: 0, scale: 0.5 }}
           animate={{ x: pos.x, y: pos.y, opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import { createUserClient } from '../supabase';
 import { supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
@@ -77,12 +78,31 @@ workspacesRouter.post('/', validateBody(CreateWorkspaceBodySchema), async (req, 
 
   const teamSlug = 'general';
   const teamShortId = await nextShortId(supabaseAdmin, 'teams', 'T', 'workspace_id', workspace.id);
-  const { error: teamError } = await supabaseAdmin
+  const { data: team, error: teamError } = await supabaseAdmin
     .from('teams')
-    .insert({ workspace_id: workspace.id, name: 'General', slug: teamSlug, short_id: teamShortId, created_by: userId });
+    .insert({ workspace_id: workspace.id, name: 'General', slug: teamSlug, short_id: teamShortId, created_by: userId })
+    .select('id')
+    .single();
 
   if (teamError) {
     console.error('[ERROR] [workspaces:create] Failed to create default team', JSON.stringify({ workspaceId: workspace.id, error: teamError.message }));
+  }
+
+  if (team) {
+    const { error: projectError } = await supabaseAdmin
+      .from('projects')
+      .insert({
+        id: randomUUID(),
+        name: 'My Project',
+        short_id: 'P01',
+        workspace_id: workspace.id,
+        team_id: team.id,
+        user_id: userId,
+      });
+
+    if (projectError) {
+      console.error('[ERROR] [workspaces:create] Failed to create default project', JSON.stringify({ workspaceId: workspace.id, error: projectError.message }));
+    }
   }
 
   res.status(201).json(workspace);
