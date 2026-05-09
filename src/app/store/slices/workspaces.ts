@@ -116,6 +116,8 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
     log.info('setActiveWorkspace', 'Switching workspace', { id });
     set({
       activeWorkspaceId: id,
+      projects: [],
+      projectsDataState: { status: 'idle' },
       teams: [],
       teamsDataState: { status: 'idle' },
       members: [],
