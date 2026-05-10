@@ -370,7 +370,7 @@ export function AdminArticleFormPage() {
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               className={`rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
-              placeholder="Author name"
+              placeholder={generating ? 'Arvid is thinking\u2026' : 'Author name'}
             />
           </FieldGroup>
 
@@ -380,7 +380,7 @@ export function AdminArticleFormPage() {
               onChange={(e) => setExcerpt(e.target.value)}
               rows={3}
               className={`resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
-              placeholder="Short description for listing cards"
+              placeholder={generating ? 'Arvid is thinking\u2026' : 'Short description for listing cards'}
             />
           </FieldGroup>
 
@@ -390,7 +390,7 @@ export function AdminArticleFormPage() {
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               className={`rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
-              placeholder="requirements, engineering, knowledge-graph"
+              placeholder={generating ? 'Arvid is thinking\u2026' : 'requirements, engineering, knowledge-graph'}
             />
           </FieldGroup>
 
@@ -401,7 +401,7 @@ export function AdminArticleFormPage() {
               rows={2}
               maxLength={155}
               className={`resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
-              placeholder="SEO description for Google search results (max 155 chars)"
+              placeholder={generating ? 'Arvid is thinking\u2026' : 'SEO description for Google search results (max 155 chars)'}
             />
             <span className="text-tiny text-text-quaternary">
               {metaDescription.length}/155
@@ -443,7 +443,7 @@ export function AdminArticleFormPage() {
                 onChange={(e) => setContent(e.target.value)}
                 rows={14}
                 className={`min-h-[200px] resize-y rounded-comfortable border border-border-default bg-surface-panel p-3 font-mono text-caption text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none md:min-h-[400px] ${generating ? 'field-generating' : ''}`}
-                placeholder="Write your article in Markdown..."
+                placeholder={generating ? 'Arvid is thinking\u2026' : 'Write your article in Markdown...'}
               />
             ) : (
               <div
