@@ -1,65 +1,29 @@
-import React from 'react';
-import type { ArticleBlock } from '../../../../shared/schemas/article';
+import React, { useMemo } from 'react';
+import { marked } from 'marked';
 
-export type { ArticleBlock };
+const renderer = new marked.Renderer();
+const originalLinkRenderer = renderer.link.bind(renderer);
+renderer.link = function (token) {
+  const html = originalLinkRenderer(token);
+  return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+};
 
-interface ArticleBlockRendererProps {
-  block: ArticleBlock;
+marked.setOptions({ renderer });
+
+interface ArticleContentProps {
+  content: string;
 }
 
-export function ArticleBlockRenderer({ block }: ArticleBlockRendererProps) {
-  switch (block.type) {
-    case 'paragraph':
-      return (
-        <p className="text-body text-text-tertiary">
-          {block.content}
-        </p>
-      );
+export function ArticleContent({ content }: ArticleContentProps) {
+  const html = useMemo(() => {
+    if (!content) return '';
+    return marked.parse(content) as string;
+  }, [content]);
 
-    case 'image':
-      if (block.src) {
-        return (
-          <img
-            src={block.src}
-            alt={block.alt ?? ''}
-            className="w-full rounded-card"
-          />
-        );
-      }
-      return (
-        <div className="h-100 w-full rounded-card bg-surface-frost-10" />
-      );
-
-    case 'heading': {
-      const level = block.level ?? 2;
-      const Tag = `h${Math.min(Math.max(level, 1), 6)}` as keyof JSX.IntrinsicElements;
-      const headingClass = level <= 2 ? 'text-h2' : 'text-h3';
-      return (
-        <Tag className={`${headingClass} text-text-primary`}>
-          {block.content}
-        </Tag>
-      );
-    }
-
-    case 'code':
-      return (
-        <pre className="overflow-x-auto rounded-card bg-surface-panel p-4">
-          <code className="text-caption text-text-secondary">
-            {block.content}
-          </code>
-        </pre>
-      );
-
-    case 'list':
-      return (
-        <ul className="flex list-disc flex-col gap-1 pl-6 text-body text-text-tertiary">
-          {block.items?.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      );
-
-    default:
-      return null;
-  }
+  return (
+    <div
+      className="flex flex-col gap-6 text-body text-text-tertiary [&_h1]:text-h1 [&_h1]:text-text-primary [&_h2]:text-h2 [&_h2]:text-text-primary [&_h2]:mt-4 [&_h3]:text-h3 [&_h3]:text-text-primary [&_h3]:mt-2 [&_p]:leading-relaxed [&_strong]:text-text-primary [&_a]:text-accent [&_a]:underline [&_a]:decoration-accent/30 [&_a]:hover:text-accent-hover [&_a]:hover:decoration-accent-hover/50 [&_code]:rounded-standard [&_code]:bg-surface-panel [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-caption [&_pre]:rounded-card [&_pre]:bg-surface-panel [&_pre]:p-4 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_img]:rounded-card [&_blockquote]:border-l-2 [&_blockquote]:border-border-default [&_blockquote]:pl-4 [&_blockquote]:text-text-quaternary [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_ul]:pl-6 [&_ul]:list-disc [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-1 [&_ol]:pl-6 [&_ol]:list-decimal"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }

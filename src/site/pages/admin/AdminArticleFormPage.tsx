@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
+import { marked } from 'marked';
 import { ICON_SIZE } from '../../../constants/icons';
 import { adminRequest } from '../../lib/api';
 import { MDA_OPTIONS } from '../../lib/mdaRegistry';
@@ -13,6 +14,8 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, '');
 }
 
+type EditorTab = 'write' | 'preview';
+
 export function AdminArticleFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -24,12 +27,16 @@ export function AdminArticleFormPage() {
   const [type, setType] = useState<'article' | 'feature' | 'docs'>('article');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [excerpt, setExcerpt] = useState('');
+  const [tags, setTags] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
   const [miniDemoId, setMiniDemoId] = useState('');
   const [author, setAuthor] = useState('');
-  const [contentRaw, setContentRaw] = useState('[]');
+  const [content, setContent] = useState('');
+  const [editorTab, setEditorTab] = useState<EditorTab>('write');
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,9 +51,11 @@ export function AdminArticleFormPage() {
         setType(data.type);
         setStatus(data.status);
         setExcerpt(data.excerpt ?? '');
+        setTags((data.tags ?? []).join(', '));
+        setMetaDescription(data.meta_description ?? '');
         setMiniDemoId(data.mini_demo_id ?? '');
         setAuthor(data.author ?? '');
-        setContentRaw(JSON.stringify(data.content, null, 2));
+        setContent(data.content);
       })
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Failed to load article';
@@ -68,19 +77,49 @@ export function AdminArticleFormPage() {
     setSlug(value);
   }, []);
 
+  const previewHtml = useMemo(() => {
+    if (editorTab !== 'preview' || !content) return '';
+    return marked.parse(content) as string;
+  }, [editorTab, content]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!title.trim()) {
+      setError('Enter a title first so Arvid knows what to write about.');
+      return;
+    }
+
+    setError(null);
+    setGenerating(true);
+
+    try {
+      const result = await adminRequest<{ content: string; excerpt: string; tags: string[]; meta_description: string }>(
+        'POST',
+        '/api/cms/articles/generate',
+        { title, type },
+      );
+      setContent(result.content);
+      if (result.excerpt && !excerpt) {
+        setExcerpt(result.excerpt);
+      }
+      if (result.tags?.length > 0 && !tags) {
+        setTags(result.tags.join(', '));
+      }
+      if (result.meta_description && !metaDescription) {
+        setMetaDescription(result.meta_description);
+      }
+      setEditorTab('preview');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Generation failed';
+      setError(message);
+      console.error('[error] [admin:articleForm:generate]', { message });
+    } finally {
+      setGenerating(false);
+    }
+  }, [title, type, excerpt, tags, metaDescription]);
+
   const handleSave = useCallback(async () => {
     setError(null);
     setSaving(true);
-
-    let content: unknown[];
-    try {
-      content = JSON.parse(contentRaw);
-      if (!Array.isArray(content)) throw new Error('Content must be a JSON array');
-    } catch {
-      setError('Content must be valid JSON (array of blocks)');
-      setSaving(false);
-      return;
-    }
 
     const body = {
       title,
@@ -89,6 +128,8 @@ export function AdminArticleFormPage() {
       status,
       content,
       excerpt: excerpt || null,
+      tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      meta_description: metaDescription || null,
       mini_demo_id: miniDemoId || null,
       author: author || null,
     };
@@ -107,7 +148,7 @@ export function AdminArticleFormPage() {
     } finally {
       setSaving(false);
     }
-  }, [title, slug, type, status, contentRaw, excerpt, miniDemoId, author, isEditing, id, navigate]);
+  }, [title, slug, type, status, content, excerpt, miniDemoId, author, isEditing, id, navigate]);
 
   if (loading) {
     return (
@@ -149,16 +190,6 @@ export function AdminArticleFormPage() {
             />
           </FieldGroup>
 
-          <FieldGroup label="Slug">
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => handleSlugChange(e.target.value)}
-              className="rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
-              placeholder="url-slug"
-            />
-          </FieldGroup>
-
           <div className="grid grid-cols-2 gap-4">
             <FieldGroup label="Type">
               <select
@@ -184,6 +215,16 @@ export function AdminArticleFormPage() {
             </FieldGroup>
           </div>
 
+          <FieldGroup label="Slug">
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              className="rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
+              placeholder="url-slug"
+            />
+          </FieldGroup>
+
           <FieldGroup label="Mini Demo App">
             <select
               value={miniDemoId}
@@ -197,12 +238,22 @@ export function AdminArticleFormPage() {
             </select>
           </FieldGroup>
 
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating || !title.trim()}
+            className="btn-primary flex w-full items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Sparkles size={ICON_SIZE.md} />
+            {generating ? 'Arvid is writing...' : 'Write with Arvid'}
+          </button>
+
           <FieldGroup label="Author">
             <input
               type="text"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
-              className="rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
+              className={`rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
               placeholder="Author name"
             />
           </FieldGroup>
@@ -212,20 +263,79 @@ export function AdminArticleFormPage() {
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               rows={3}
-              className="resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
+              className={`resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
               placeholder="Short description for listing cards"
             />
           </FieldGroup>
 
-          <FieldGroup label="Content (JSON blocks)">
-            <textarea
-              value={contentRaw}
-              onChange={(e) => setContentRaw(e.target.value)}
-              rows={16}
-              className="resize-y rounded-comfortable border border-border-default bg-surface-panel p-3 font-mono text-caption text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
-              placeholder='[{"type":"paragraph","content":"..."}]'
+          <FieldGroup label="Tags (comma-separated)">
+            <input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className={`rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
+              placeholder="requirements, engineering, knowledge-graph"
             />
           </FieldGroup>
+
+          <FieldGroup label="Meta Description (SEO)">
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              rows={2}
+              maxLength={155}
+              className={`resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
+              placeholder="SEO description for Google search results (max 155 chars)"
+            />
+            <span className="text-tiny text-text-quaternary">
+              {metaDescription.length}/155
+            </span>
+          </FieldGroup>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-label text-text-quaternary">Content</span>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setEditorTab('write')}
+                  className={`rounded-comfortable px-3 py-1 text-tiny transition-colors ${
+                    editorTab === 'write'
+                      ? 'bg-surface-frost-08 text-text-primary'
+                      : 'text-text-tertiary hover:text-text-primary'
+                  }`}
+                >
+                  Write
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorTab('preview')}
+                  className={`rounded-comfortable px-3 py-1 text-tiny transition-colors ${
+                    editorTab === 'preview'
+                      ? 'bg-surface-frost-08 text-text-primary'
+                      : 'text-text-tertiary hover:text-text-primary'
+                  }`}
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+
+            {editorTab === 'write' ? (
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={20}
+                className={`resize-y rounded-comfortable border border-border-default bg-surface-panel p-3 font-mono text-caption text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
+                placeholder="Write your article in Markdown..."
+              />
+            ) : (
+              <div
+                className="flex min-h-[400px] flex-col gap-6 rounded-comfortable border border-border-default bg-surface-panel p-4 text-body text-text-secondary [&_p]:leading-relaxed [&_strong]:text-text-primary [&_h2]:text-h2 [&_h2]:text-text-primary [&_h3]:text-h3 [&_h3]:text-text-primary [&_code]:rounded-standard [&_code]:bg-surface-frost-04 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-caption [&_pre]:rounded-card [&_pre]:bg-surface-frost-04 [&_pre]:p-4 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-2 [&_blockquote]:border-border-default [&_blockquote]:pl-4 [&_blockquote]:text-text-quaternary [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_ul]:pl-6 [&_ul]:list-disc [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-1 [&_ol]:pl-6 [&_ol]:list-decimal"
+                dangerouslySetInnerHTML={{ __html: previewHtml || '<p class="text-text-empty">Nothing to preview</p>' }}
+              />
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

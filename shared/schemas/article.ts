@@ -6,26 +6,16 @@ export type ArticleStatus = z.infer<typeof ArticleStatusEnum>;
 export const ArticleTypeEnum = z.enum(['article', 'feature', 'docs']);
 export type ArticleType = z.infer<typeof ArticleTypeEnum>;
 
-export const ArticleBlockSchema = z.object({
-  type: z.enum(['paragraph', 'image', 'heading', 'code', 'list']),
-  content: z.string().optional(),
-  src: z.string().optional(),
-  alt: z.string().optional(),
-  level: z.number().optional(),
-  language: z.string().optional(),
-  items: z.array(z.string()).optional(),
-});
-
-export type ArticleBlock = z.infer<typeof ArticleBlockSchema>;
-
 export const ArticleRowSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   slug: z.string(),
   type: ArticleTypeEnum,
   status: ArticleStatusEnum,
-  content: z.array(ArticleBlockSchema).default([]),
+  content: z.string().default(''),
   excerpt: z.string().nullable().optional(),
+  tags: z.array(z.string()).default([]),
+  meta_description: z.string().nullable().optional(),
   mini_demo_id: z.string().nullable().optional(),
   author: z.string().nullable().optional(),
   cover_image_url: z.string().nullable().optional(),
@@ -43,6 +33,8 @@ export const ArticleSchema = ArticleRowSchema.transform((row) => ({
   status: row.status,
   content: row.content,
   excerpt: row.excerpt ?? undefined,
+  tags: row.tags,
+  metaDescription: row.meta_description ?? undefined,
   miniDemoId: row.mini_demo_id ?? undefined,
   author: row.author ?? undefined,
   coverImageUrl: row.cover_image_url ?? undefined,
@@ -57,8 +49,10 @@ export const CreateArticleBodySchema = z.object({
   slug: z.string().min(1).optional(),
   type: ArticleTypeEnum,
   status: ArticleStatusEnum.optional(),
-  content: z.array(ArticleBlockSchema).optional(),
+  content: z.string().optional(),
   excerpt: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  meta_description: z.string().nullable().optional(),
   mini_demo_id: z.string().nullable().optional(),
   author: z.string().nullable().optional(),
   cover_image_url: z.string().nullable().optional(),
@@ -69,8 +63,10 @@ export const UpdateArticleBodySchema = z.object({
   slug: z.string().min(1).optional(),
   type: ArticleTypeEnum.optional(),
   status: ArticleStatusEnum.optional(),
-  content: z.array(ArticleBlockSchema).optional(),
+  content: z.string().optional(),
   excerpt: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  meta_description: z.string().nullable().optional(),
   mini_demo_id: z.string().nullable().optional(),
   author: z.string().nullable().optional(),
   cover_image_url: z.string().nullable().optional(),

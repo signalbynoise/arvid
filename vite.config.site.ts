@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    envDir: path.resolve(__dirname),
     define: {
       'import.meta.env.VITE_APP_URL': JSON.stringify(env.VITE_APP_URL || 'http://localhost:5173'),
       'import.meta.env.VITE_API_BASE': JSON.stringify(env.VITE_API_BASE || ''),

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateArticleBodySchema, UpdateArticleBodySchema } from '../../shared/schemas';
+import { generateArticle } from '../openrouter';
 
 const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
 
@@ -96,8 +97,10 @@ cmsArticlesRouter.post('/', validateBody(CreateArticleBodySchema), async (req, r
       slug,
       type: req.body.type,
       status: req.body.status ?? 'draft',
-      content: req.body.content ?? [],
+      content: req.body.content ?? '',
       excerpt: req.body.excerpt ?? null,
+      tags: req.body.tags ?? [],
+      meta_description: req.body.meta_description ?? null,
       mini_demo_id: req.body.mini_demo_id ?? null,
       author: req.body.author ?? null,
       cover_image_url: req.body.cover_image_url ?? null,
@@ -141,6 +144,8 @@ cmsArticlesRouter.patch('/:id', validateBody(UpdateArticleBodySchema), async (re
   if (req.body.type !== undefined) updates.type = req.body.type;
   if (req.body.content !== undefined) updates.content = req.body.content;
   if (req.body.excerpt !== undefined) updates.excerpt = req.body.excerpt;
+  if (req.body.tags !== undefined) updates.tags = req.body.tags;
+  if (req.body.meta_description !== undefined) updates.meta_description = req.body.meta_description;
   if (req.body.mini_demo_id !== undefined) updates.mini_demo_id = req.body.mini_demo_id;
   if (req.body.author !== undefined) updates.author = req.body.author;
   if (req.body.cover_image_url !== undefined) updates.cover_image_url = req.body.cover_image_url;
@@ -176,6 +181,27 @@ cmsArticlesRouter.patch('/:id', validateBody(UpdateArticleBodySchema), async (re
 
   console.info('[info] [cms:articles:update] Article updated', { id: req.params.id });
   res.json(data);
+});
+
+cmsArticlesRouter.post('/generate', async (req, res) => {
+  const { title, type } = req.body;
+
+  if (!title || typeof title !== 'string') {
+    return res.status(400).json({ error: 'title is required' });
+  }
+
+  const articleType = type === 'feature' || type === 'docs' ? type : 'article';
+
+  try {
+    console.info('[info] [cms:articles:generate] Starting AI article generation', { title, type: articleType });
+    const result = await generateArticle({ title, type: articleType });
+    console.info('[info] [cms:articles:generate] Article generated', { title, contentLength: result.content.length });
+    res.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Generation failed';
+    console.error('[error] [cms:articles:generate] Failed', { title, message });
+    res.status(500).json({ error: message });
+  }
 });
 
 cmsArticlesRouter.delete('/:id', async (req, res) => {

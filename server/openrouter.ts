@@ -1384,3 +1384,167 @@ Respond ONLY with the JSON object, no markdown fences, no explanation.`,
 
   return result.data;
 }
+
+// --- Article Generation ---
+
+export interface GenerateArticleInput {
+  title: string;
+  type: 'article' | 'feature' | 'docs';
+  repoContext?: RepoAnalysis;
+  dbContext?: DbAnalysis;
+}
+
+export interface GenerateArticleResult {
+  content: string;
+  excerpt: string;
+  tags: string[];
+  meta_description: string;
+}
+
+const ARTICLE_FRAMEWORK = `## Voice & Tone
+- Third-person when describing the product ("Arvid does X", "Arvid understands Y"). First-person plural ("we") sparingly when speaking as the team.
+- Authoritative and clear. Like a well-reasoned essay by someone who deeply understands both the problem and the product.
+- Plain language. No buzzwords ("leverage", "synergy", "cutting-edge", "revolutionary", "game-changer").
+- Vary sentence length naturally. Mix short declarative sentences with longer explanatory ones. Let the prose flow.
+- Active voice always.
+- No exclamation marks.
+
+## Structure (for type 'article')
+Write as a cohesive long-form essay. Do NOT use markdown headings (## or ###) to break sections. The article should flow as continuous prose with clear paragraph breaks between ideas. Structure the argument as:
+
+1. Opening (1-2 paragraphs) — Establish the problem space. Set context the reader recognizes. No preamble, no "In today's world..." — start with substance.
+2. Industry framing (1-2 paragraphs) — What exists today. What other tools do. Why the current approach falls short. Be specific about the gap.
+3. Core thesis (1-2 paragraphs) — How Arvid fundamentally differs. State the key insight clearly. This is the pivot point of the article.
+4. Deep explanation (3-5 paragraphs) — Unpack the thesis with concrete specifics. How does Arvid actually work? Reference real capabilities: knowledge graphs, repository analysis, code awareness, connected tools (GitHub, Linear, Slack, Supabase), question generation, structured requirements. Use concrete examples — describe what happens when a user does something.
+5. Implications (2-3 paragraphs) — What this means at organizational scale. Why it matters beyond the immediate feature. Connect to real problems: organizational amnesia, context loss, knowledge fragmentation, onboarding, decision tracing.
+6. Closing (1 paragraph) — Land the argument cleanly. Restate the core distinction. No call-to-action. No "the future is bright." Just a sharp final thought.
+
+## Structure (for type 'feature')
+Same essay format but 60%+ focused on the deep explanation of the specific feature. Open with the user problem this feature solves.
+
+## Structure (for type 'docs')
+Direct instructional format: what it is, how to use it, configuration, examples. Written for developers. Headings are allowed for docs.
+
+## Formatting
+- NO markdown headings (## or ###) in article or feature types. The article reads as continuous prose.
+- Each paragraph should be 3-6 sentences. Long enough to develop an idea, short enough to stay focused.
+- Separate every paragraph with a blank line in the markdown output.
+- Bold (**word**) for key terms on first introduction and for emphasis on critical concepts. Use naturally, not excessively.
+- Inline code for technical terms, file names, or commands when relevant.
+- Lists: almost never. Prefer prose. If absolutely necessary, max 3 items.
+- No image references. No hyperlinks.
+- Target 1000-1800 words. Longer is fine if every paragraph earns its place.
+
+## Quality
+- Every paragraph must advance the argument. No filler, no repetition, no padding.
+- At least 40% of the article should reference specific Arvid capabilities grounded in what the product actually does.
+- Never claim Arvid does something it doesn't.
+- Assume the reader is a senior engineer, engineering manager, or technical leader.
+- The article should be compelling enough that someone would share it with their team.`;
+
+export async function generateArticle(input: GenerateArticleInput): Promise<GenerateArticleResult> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  console.info(
+    `[INFO] [openrouter:generateArticle] Calling ${OPENROUTER_MODEL}`,
+    JSON.stringify({ title: input.title, type: input.type }),
+  );
+
+  let contextBlock = '';
+  if (input.repoContext) {
+    contextBlock += buildCodebaseContextBlock(input.repoContext);
+  }
+  if (input.dbContext) {
+    contextBlock += buildDbContextBlock(input.dbContext);
+  }
+
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://arvid.work',
+      'X-Title': 'Arvid',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      plugins: [{ id: 'web', max_results: 5 }],
+      messages: [
+        {
+          role: 'system',
+          content: `You are Arvid's article writer. You write marketing articles for arvid.work — a product that helps engineering teams build comprehensive knowledge graphs from requirements, questions, answers, and connected tools (GitHub, Linear, Slack, Supabase).
+
+${ARTICLE_FRAMEWORK}
+
+## Research & Citations
+You have web search available. Use it to research the topic before writing. Find relevant industry articles, blog posts, research, or technical writing that supports or contextualizes the article's argument. This grounds the article in the broader conversation and makes it more authoritative.
+
+Rules for citations:
+- Search for 2-4 relevant sources: industry blog posts, engineering articles, research, or authoritative technical writing related to the topic.
+- Weave references naturally into the prose using markdown links: [source name](url). Don't dump a bibliography at the end.
+- Good: "As Martin Fowler has argued in his writing on [evolutionary architecture](https://url), systems that preserve decision context age better."
+- Bad: "Sources: [1] https://... [2] https://..."
+- Only cite sources that genuinely strengthen the argument. Don't cite for the sake of citing.
+- Prefer authoritative sources: engineering blogs from respected companies, well-known technical authors, peer-reviewed content, official documentation.
+- Never fabricate URLs. Only cite URLs returned by web search.
+
+Your output MUST be valid JSON with exactly these keys:
+- "content": The full article body in Markdown. Do NOT include the title as an H1 — it's set separately.
+- "excerpt": A 1-2 sentence summary for listing cards (max 160 characters).
+- "tags": An array of 4-8 lowercase tags for search and SEO. Mix broad discovery tags ("requirements", "engineering", "project-management") with specific long-tail tags ("knowledge-graph", "specification-management"). Tags should help the article rank on Google for terms engineers actually search.
+- "meta_description": An SEO meta description (max 155 characters). Written for Google snippets — include the primary keyword naturally, describe the value the reader gets, create curiosity. No clickbait.
+
+Respond ONLY with the JSON object, no markdown fences.`,
+        },
+        {
+          role: 'user',
+          content: `Write a ${input.type} article with this title: "${input.title}"
+
+Research the topic using web search to find relevant industry context, then write the article grounded in both Arvid's capabilities and the broader engineering conversation.
+
+${contextBlock ? `Use this product context to ground the article in real capabilities:\n\n${contextBlock}` : ''}`,
+        },
+      ],
+      temperature: 0.6,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      '[ERROR] [openrouter:generateArticle] API call failed',
+      JSON.stringify({ status: response.status, body: errorBody }),
+    );
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    console.error('[ERROR] [openrouter:generateArticle] No content in response', JSON.stringify(data));
+    throw new Error('OpenRouter returned empty content');
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error('[ERROR] [openrouter:generateArticle] Failed to parse JSON', JSON.stringify({ content }));
+    return { content: content.trim(), excerpt: '' };
+  }
+
+  const result = parsed as Record<string, unknown>;
+  const articleContent = typeof result.content === 'string' ? result.content : content.trim();
+  const excerpt = typeof result.excerpt === 'string' ? result.excerpt : '';
+  const tags = Array.isArray(result.tags)
+    ? (result.tags as unknown[]).filter((t): t is string => typeof t === 'string')
+    : [];
+  const metaDescription = typeof result.meta_description === 'string' ? result.meta_description : '';
+
+  console.info('[INFO] [openrouter:generateArticle] Article generated', JSON.stringify({ contentLength: articleContent.length, tagCount: tags.length }));
+  return { content: articleContent, excerpt, tags, meta_description: metaDescription };
+}

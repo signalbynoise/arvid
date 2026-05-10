@@ -449,10 +449,20 @@
   .card-hint {
     animation: card-hint-nudge 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }
+
+  .field-generating {
+    animation: field-shimmer 2s ease-in-out infinite;
+  }
 }
 
 @keyframes card-hint-nudge {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.015); }
   100% { transform: scale(1); }
+}
+
+@keyframes field-shimmer {
+  0%   { border-color: rgba(255,255,255,0.08); }
+  50%  { border-color: rgba(255,255,255,0.16); }
+  100% { border-color: rgba(255,255,255,0.08); }
 }

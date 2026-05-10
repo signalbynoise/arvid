@@ -203,7 +203,6 @@ export type { SupabaseConnectionRow, SupabaseConnection, SupabaseProjectRef } fr
 export {
   ArticleStatusEnum,
   ArticleTypeEnum,
-  ArticleBlockSchema,
   ArticleRowSchema,
   ArticleSchema,
   CreateArticleBodySchema,
@@ -213,7 +212,6 @@ export {
 export type {
   ArticleStatus,
   ArticleType,
-  ArticleBlock,
   ArticleRow,
   Article,
 } from './article';

@@ -7,7 +7,7 @@ import { CtaSection } from '../components/CtaSection';
 import { PopularArticlesSidebar } from '../components/article/PopularArticlesSidebar';
 import { ShareSidebar } from '../components/article/ShareSidebar';
 import { ArticleReadMore } from '../components/article/ArticleReadMore';
-import { ArticleBlockRenderer } from '../components/article/ArticleBlockRenderer';
+import { ArticleContent } from '../components/article/ArticleBlockRenderer';
 import { publicGet } from '../lib/api';
 import { MDA_REGISTRY } from '../lib/mdaRegistry';
 import type { ArticleRow } from '../../../shared/schemas/article';
@@ -114,9 +114,7 @@ export function ArticlePage() {
           </div>
 
           <article className="flex w-full max-w-article-content flex-col gap-10">
-            {article.content.map((block, index) => (
-              <ArticleBlockRenderer key={index} block={block} />
-            ))}
+            <ArticleContent content={article.content} />
 
             <button
               type="button"
