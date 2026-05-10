@@ -4,6 +4,7 @@ import { useRenameEntity } from '../machines/mutations/useRenameEntity';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface Props {
   isOpen: boolean;
@@ -62,9 +63,7 @@ export function RenameTeamModal({ isOpen, onClose, teamId, currentName }: Props)
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={onClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
+          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Save" loadingLabel="Saving..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

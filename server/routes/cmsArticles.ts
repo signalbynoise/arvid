@@ -1,9 +1,22 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateArticleBodySchema, UpdateArticleBodySchema } from '../../shared/schemas';
 
+const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
+
+function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.id !== CMS_SUPER_ADMIN_ID) {
+    console.warn('[warn] [cms:auth] Non-admin user attempted CMS access', { userId: req.user?.id });
+    res.status(403).json({ error: 'CMS access restricted to super admin' });
+    return;
+  }
+  next();
+}
+
 export const cmsArticlesRouter = Router();
+
+cmsArticlesRouter.use(requireSuperAdmin);
 
 function slugify(text: string): string {
   return text

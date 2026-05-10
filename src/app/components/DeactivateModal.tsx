@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useDeleteEntity } from '../machines/mutations/useDeleteEntity';
 import type { DeleteEntityType } from '../machines/mutations/deleteEntity.machine';
 import { BaseModal } from './BaseModal';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface DeactivateModalProps {
   isOpen: boolean;
@@ -22,6 +23,20 @@ export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entity
     deleteEntity: onConfirm,
     onClose,
   });
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !isSubmitting) {
+      e.preventDefault();
+      confirm();
+    }
+  }, [isSubmitting, confirm]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Deactivate ${entityType}`} size="sm">
@@ -45,9 +60,7 @@ export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entity
           <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
-          <button onClick={confirm} disabled={isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Deactivating...' : 'Deactivate'}
-          </button>
+          <SubmitButton onClick={confirm} label="Deactivate" loadingLabel="Deactivating..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

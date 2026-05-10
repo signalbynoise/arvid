@@ -4,6 +4,7 @@ import { ICON_SIZE } from '../../constants/icons';
 import { useStore } from '../store';
 import { api } from '../api';
 import { toast } from 'sonner';
+import { SubmitButton } from './ui/SubmitButton';
 
 function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query.trim()) {
@@ -392,9 +393,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
             <ArrowLeft size={ICON_SIZE.sm} />
             <span>Back to messages</span>
           </button>
-          <button onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} className="btn-primary">
-            Create {suggestions.filter(s => s.selected).length} Requirement{suggestions.filter(s => s.selected).length !== 1 ? 's' : ''}
-          </button>
+          <SubmitButton onClick={handleCreate} disabled={suggestions.filter(s => s.selected).length === 0} label={`Create ${suggestions.filter(s => s.selected).length} Requirement${suggestions.filter(s => s.selected).length !== 1 ? 's' : ''}`} />
         </div>
       </div>
     );
@@ -449,9 +448,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
           <ArrowLeft size={ICON_SIZE.sm} />
           <span>Back</span>
         </button>
-        <button onClick={handleExtract} disabled={!selectedChannelId} className="btn-primary">
-          Load Messages
-        </button>
+        <SubmitButton onClick={handleExtract} disabled={!selectedChannelId} label="Load Messages" />
       </div>
     </div>
   );

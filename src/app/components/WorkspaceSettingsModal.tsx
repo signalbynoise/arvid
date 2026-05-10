@@ -9,6 +9,7 @@ import { PendingInvitationList } from './PendingInvitationList';
 import { supabase } from '../lib/supabase';
 import { logger } from '../logger';
 import type { WorkspaceRole } from '../types';
+import { SubmitButton } from './ui/SubmitButton';
 
 const settingsLog = logger.create('WorkspaceSettings');
 
@@ -221,9 +222,7 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
                 autoFocus
                 className={`flex-1 bg-surface-frost-02 border rounded-comfortable px-3 py-2 text-[14px] text-text-primary focus:outline-none transition-all ${nameError ? 'border-status-error' : 'border-border-default focus:border-border-focus'}`}
               />
-              <button onClick={handleSaveName} className="btn-primary">
-                Save
-              </button>
+              <SubmitButton onClick={handleSaveName} label="Save" />
               <button onClick={() => { setEditingName(false); setNameError(null); }} className="btn-ghost">
                 Cancel
               </button>

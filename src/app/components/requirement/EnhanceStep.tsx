@@ -4,6 +4,7 @@ import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextInput } from '../ui/TextInput';
 import { TextArea } from '../ui/TextArea';
+import { SubmitButton } from '../ui/SubmitButton';
 
 interface Props {
   isEnhancing: boolean;
@@ -70,9 +71,7 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, o
           <ArrowLeft size={ICON_SIZE.sm} />
           <span>Back</span>
         </button>
-        <button onClick={onCreate} disabled={!description.trim()} className="btn-primary">
-          Create
-        </button>
+        <SubmitButton onClick={onCreate} disabled={!description.trim()} label="Create" />
       </div>
     </div>
   );

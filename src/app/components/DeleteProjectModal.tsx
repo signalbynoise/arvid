@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore } from '../store';
 import { BaseModal } from './BaseModal';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface Props {
   isOpen: boolean;
@@ -16,12 +17,26 @@ export function DeleteProjectModal({ isOpen, onClose, projectId, projectName, ha
   const deleteProject = useStore(s => s.deleteProject);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     await deleteProject(projectId);
     setIsDeleting(false);
     onClose();
-  };
+  }, [deleteProject, projectId, onClose]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !isDeleting) {
+      e.preventDefault();
+      handleDelete();
+    }
+  }, [isDeleting, handleDelete]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Delete Project" size="sm">
@@ -49,13 +64,7 @@ export function DeleteProjectModal({ isOpen, onClose, projectId, projectName, ha
           <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="btn-primary"
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
+          <SubmitButton onClick={handleDelete} label="Delete" loadingLabel="Deleting..." isLoading={isDeleting} />
         </div>
       </div>
     </BaseModal>

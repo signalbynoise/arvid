@@ -4,6 +4,7 @@ import { useCreateWorkspace } from '../machines/mutations/useCreateWorkspace';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface Props {
   isOpen: boolean;
@@ -58,9 +59,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Creating...' : 'Create'}
-          </button>
+          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Create" loadingLabel="Creating..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

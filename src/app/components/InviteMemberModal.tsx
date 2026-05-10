@@ -5,6 +5,7 @@ import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { DropdownPanel } from './ui/DropdownPanel';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface UserSuggestion {
   id: string;
@@ -113,9 +114,7 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSubmit} disabled={!email.trim() || isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Adding...' : 'Add new user'}
-          </button>
+          <SubmitButton onClick={handleSubmit} disabled={!email.trim()} label="Add new user" loadingLabel="Adding..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

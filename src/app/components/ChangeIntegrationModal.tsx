@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface ChangeIntegrationModalProps {
   isOpen: boolean;
@@ -18,10 +19,24 @@ export function ChangeIntegrationModal({
   integrationName,
   currentValue,
 }: ChangeIntegrationModalProps) {
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     onConfirm();
     onClose();
-  };
+  }, [onConfirm, onClose]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleConfirm();
+    }
+  }, [handleConfirm]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Change ${integrationName}`} size="sm">
@@ -42,9 +57,7 @@ export function ChangeIntegrationModal({
           <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
-          <button onClick={handleConfirm} className="btn-primary">
-            Change {integrationName}
-          </button>
+          <SubmitButton onClick={handleConfirm} label="Confirm" />
         </div>
       </div>
     </BaseModal>

@@ -5,6 +5,7 @@ import { useCreateEntity } from '../machines/mutations/useCreateEntity';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextArea } from './ui/TextArea';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface Props {
   isOpen: boolean;
@@ -76,9 +77,7 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSubmit} disabled={!text.trim() || isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </button>
+          <SubmitButton onClick={handleSubmit} disabled={!text.trim()} label="Submit" loadingLabel="Submitting..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

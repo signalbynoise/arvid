@@ -3,6 +3,7 @@ import { useCreateTeam } from '../machines/mutations/useCreateTeam';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
+import { SubmitButton } from './ui/SubmitButton';
 
 interface Props {
   isOpen: boolean;
@@ -57,9 +58,7 @@ export function CreateTeamModal({ isOpen, onClose, workspaceId, workspaceName }:
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Creating...' : 'Create new team'}
-          </button>
+          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Create new team" loadingLabel="Creating..." isLoading={isSubmitting} />
         </div>
       </div>
     </BaseModal>

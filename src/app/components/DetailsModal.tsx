@@ -7,6 +7,7 @@ import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { TextArea } from './ui/TextArea';
+import { SubmitButton } from './ui/SubmitButton';
 
 type DetailsTab = 'general' | 'users' | 'details';
 
@@ -191,13 +192,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
         </button>
         <div className="flex items-center gap-3">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges || !title.trim() || isSaving}
-            className="btn-primary"
-          >
-            {isSaving ? 'Saving...' : 'Save'}
-          </button>
+          <SubmitButton onClick={handleSave} disabled={!hasChanges || !title.trim()} label="Save" loadingLabel="Saving..." isLoading={isSaving} />
         </div>
       </div>
     </div>
