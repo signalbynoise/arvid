@@ -1495,6 +1495,11 @@ function stripNativeCitations(text: string): string {
 const ARTICLE_FALLBACK_MODEL = 'anthropic/claude-sonnet-4';
 
 async function callArticleModel(model: string, messages: { role: string; content: string }[]): Promise<{ content: string; data: unknown }> {
+  const useOnlineVariant = !model.includes(':online');
+  const modelSlug = useOnlineVariant ? `${model}:online` : model;
+
+  console.info(`[INFO] [openrouter:callArticleModel] Requesting ${modelSlug} with web search`);
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -1504,8 +1509,7 @@ async function callArticleModel(model: string, messages: { role: string; content
       'X-Title': 'Arvid',
     },
     body: JSON.stringify({
-      model,
-      plugins: [{ id: 'web', max_results: 5 }],
+      model: modelSlug,
       messages,
       temperature: 0.6,
       response_format: { type: 'json_object' },
@@ -1519,6 +1523,14 @@ async function callArticleModel(model: string, messages: { role: string; content
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
+  const annotations = data.choices?.[0]?.message?.annotations;
+
+  console.info(`[INFO] [openrouter:callArticleModel] Response received`, JSON.stringify({
+    model: data.model,
+    hasContent: Boolean(content),
+    annotationCount: Array.isArray(annotations) ? annotations.length : 0,
+    finishReason: data.choices?.[0]?.finish_reason,
+  }));
 
   if (!content) {
     throw new Error(`Model returned empty content`);
