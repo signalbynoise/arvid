@@ -1482,9 +1482,13 @@ Formatting for docs:
 
 function stripNativeCitations(text: string): string {
   return text
-    .replace(/<grok:render[^>]*>[^<]*(?:<\/grok:render>)?/g, '')
+    .replace(/<grok:render[^>]*>[\s\S]*?(?:<\/grok:render>|(?=<grok:render))/g, '')
+    .replace(/<grok:render[^>]*>[^<]*/g, '')
     .replace(/\[\^\d+\]/g, '')
-    .replace(/\s{2,}/g, ' ')
+    .replace(/\[\d+\]/g, '')
+    .replace(/(?<=\w[.!?")'])\s*\d{1,3}(?:\s+\d{1,3})+(?=\s)/g, '')
+    .replace(/(?<=\w[.!?")'])\s*\d{1,3}(?=\s+[A-Z])/g, '')
+    .replace(/ {2,}/g, ' ')
     .trim();
 }
 
@@ -1558,7 +1562,13 @@ Rules for citations:
 - Only cite sources that genuinely strengthen the argument. Don't cite for the sake of citing.
 - Prefer authoritative sources: engineering blogs from respected companies, well-known technical authors, peer-reviewed content, official documentation.
 - Never fabricate URLs. Only cite URLs returned by web search.
-- CRITICAL: Do NOT use native citation syntax like <grok:render>, [^1], or numbered reference markers. Use ONLY standard markdown links inline: [visible text](url). No footnotes, no endnotes, no XML tags.
+- CRITICAL CITATION FORMAT: The ONLY acceptable way to cite a source is a standard markdown link inline in the prose: [visible text](url). The following are ALL FORBIDDEN and must NEVER appear in your output:
+  - Bare numbers after sentences (e.g. "...productivity.60 63")
+  - Superscript or footnote markers ([^1], [1], ¹)
+  - XML citation tags (<grok:render> or similar)
+  - Numbered reference lists at the end
+  - Any citation format other than [text](url)
+- CRITICAL PARAGRAPH FORMAT: Every paragraph MUST be separated by a blank line (two newlines: \\n\\n). The article must have clear paragraph breaks. Never output a wall of text with single newlines between paragraphs.
 
 ## Catalog Deduplication
 If an "Existing Article Catalog" is provided in the user message, you MUST NOT repeat topics, core arguments, angles, or examples from those articles. Each new article must cover fresh territory. You may reference or build on existing articles, but never restate them.
