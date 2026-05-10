@@ -31,11 +31,7 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
 
   loadProjects: async (workspaceId?: string) => {
     set({
-      projects: [],
       projectsDataState: { status: 'loading' },
-      selectedProjectId: null,
-      selectedReqId: null,
-      selectedQuestionId: null,
     });
     log.info('loadProjects', 'Fetching projects', { workspaceId });
 
