@@ -28,6 +28,7 @@ const ALLOWED_ORIGINS = [
   process.env.SITE_ORIGIN,
   process.env.APP_ORIGIN,
   'http://localhost:5173',
+  'http://localhost:5174',
 ].filter(Boolean) as string[];
 
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));

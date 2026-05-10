@@ -71,7 +71,7 @@ services:
     branch: main
     autoDeploy: true
     buildCommand: npm ci
-    startCommand: npx tsx server/index.ts
+    startCommand: node --import tsx server/index.ts
     healthCheckPath: /api/health
     buildFilter:
       paths:
