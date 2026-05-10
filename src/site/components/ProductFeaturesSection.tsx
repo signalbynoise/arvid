@@ -1,6 +1,6 @@
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
 import { PageGrid } from './PageGrid';
 
 const FEATURES = [
@@ -40,13 +40,12 @@ export function ProductFeaturesSection() {
         </div>
       ))}
 
-      <a
-        href="#"
-        className="col-span-full flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
-      >
-        <span>Browse all product features</span>
-        <ArrowUpRight size={ICON_SIZE.xs} />
-      </a>
+      <AnimateIcon animateOnHover asChild>
+        <a href="#" className="site-btn-secondary col-span-full">
+          Browse all product features
+          <ChevronRight size={16} />
+        </a>
+      </AnimateIcon>
     </PageGrid>
   );
 }

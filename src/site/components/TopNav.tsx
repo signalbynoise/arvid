@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
 import { ICON_SIZE } from '../../constants/icons';
 import { PageGrid } from './PageGrid';
 import { NavDropdown } from './NavDropdown';
@@ -22,11 +24,14 @@ export function TopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <PageGrid as="header" className="w-full pt-6">
+    <PageGrid as="header" className="sticky top-0 z-50 w-full bg-surface-base/80 pt-6 pb-4 backdrop-blur-md">
       <div className="col-span-full flex items-center justify-between">
-        <a href="/" className="flex items-center shrink-0">
-          <img src="/logo_wide.svg" alt="Arvid" className="h-6" />
-        </a>
+        <AnimateIcon animateOnHover asChild>
+          <a href="/" className="flex items-center gap-2 shrink-0 text-text-primary">
+            <LoaderPinwheel size={20} />
+            <span className="text-body-md">Arvid</span>
+          </a>
+        </AnimateIcon>
 
         <nav className="hidden md:flex items-center gap-6">
           {NAV_LINKS.map(({ label, href }) => (
@@ -43,7 +48,7 @@ export function TopNav() {
 
         <a
           href={`${APP_URL}/login`}
-          className="hidden md:flex h-9 items-center rounded-pill bg-btn-primary px-4 text-btn text-text-on-primary transition-colors hover:bg-btn-primary-hover"
+          className="site-btn-primary hidden md:flex"
         >
           Open App
         </a>
@@ -82,7 +87,7 @@ export function TopNav() {
           ))}
           <a
             href={`${APP_URL}/login`}
-            className="flex h-10 items-center justify-center rounded-pill bg-btn-primary text-caption-lg text-text-on-primary"
+            className="site-btn-primary justify-center"
           >
             Open App
           </a>

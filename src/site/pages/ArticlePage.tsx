@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
 import { TopNav } from '../components/TopNav';
+import { PageGrid } from '../components/PageGrid';
 import { CtaSection } from '../components/CtaSection';
 import { PopularArticlesSidebar } from '../components/article/PopularArticlesSidebar';
 import { ShareSidebar } from '../components/article/ShareSidebar';
@@ -56,7 +57,7 @@ export function ArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-text-primary antialiased">
+      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
         <TopNav />
         <div className="flex items-center justify-center pt-40">
           <p className="text-body text-text-tertiary">Loading...</p>
@@ -67,11 +68,11 @@ export function ArticlePage() {
 
   if (error || !article) {
     return (
-      <div className="min-h-screen bg-black text-text-primary antialiased">
+      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
         <TopNav />
         <div className="flex flex-col items-center justify-center gap-4 pt-40">
           <p className="text-body text-text-tertiary">{error ?? 'Article not found'}</p>
-          <a href="/articles" className="text-caption text-accent hover:text-accent-hover">
+          <a href="/articles" className="text-caption link-default">
             Browse all articles
           </a>
         </div>
@@ -82,31 +83,11 @@ export function ArticlePage() {
   const MdaComponent = article.mini_demo_id ? MDA_REGISTRY[article.mini_demo_id]?.component : null;
 
   return (
-    <div className="min-h-screen bg-black text-text-primary antialiased">
+    <div className="min-h-screen bg-surface-base text-text-primary antialiased">
       <TopNav />
 
-      <div className="mx-auto max-w-article-content px-6 pt-30 lg:max-w-grid lg:px-10">
-        <header className="flex max-w-article-content flex-col gap-6">
-          <h1 className="text-h2 text-text-primary">
-            {article.title}
-          </h1>
-          <p className="text-btn text-text-tertiary">
-            {article.published_at
-              ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-              : ''}
-            {article.author ? ` by ${article.author}` : ''}
-          </p>
-        </header>
-
-        {MdaComponent && (
-          <div className="mt-10 overflow-hidden rounded-card">
-            <Suspense fallback={<div className="h-100 w-full rounded-card bg-surface-frost-10" />}>
-              <MdaComponent />
-            </Suspense>
-          </div>
-        )}
-
-        <div className="mt-10 flex items-stretch justify-between gap-10">
+      <PageGrid className="pt-30">
+        <div className="col-span-full flex items-stretch justify-between gap-10">
           <div className="hidden lg:block">
             <PopularArticlesSidebar
               articles={popular.map((a) => ({ title: a.title, slug: a.slug }))}
@@ -114,16 +95,38 @@ export function ArticlePage() {
           </div>
 
           <article className="flex w-full max-w-article-content flex-col gap-10">
+            <header className="flex flex-col gap-6">
+              <h1 className="text-h2 text-text-primary">
+                {article.title}
+              </h1>
+              <p className="text-btn text-text-tertiary">
+                {article.published_at
+                  ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                  : ''}
+                {article.author ? ` by ${article.author}` : ''}
+              </p>
+            </header>
+
+            {MdaComponent && (
+              <div className="overflow-hidden rounded-card">
+                <Suspense fallback={<div className="h-100 w-full rounded-card bg-surface-frost-10" />}>
+                  <MdaComponent />
+                </Suspense>
+              </div>
+            )}
+
             <ArticleContent content={article.content} />
 
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
-            >
-              Copy article link
-              <ArrowUpRight size={ICON_SIZE.xs} />
-            </button>
+            <AnimateIcon animateOnHover asChild>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="site-btn-secondary"
+              >
+                Copy article link
+                <ChevronRight size={16} />
+              </button>
+            </AnimateIcon>
 
             <p className="text-btn text-text-tertiary">
               {article.published_at
@@ -137,17 +140,19 @@ export function ArticlePage() {
             <ShareSidebar articleUrl={articleUrl} />
           </div>
         </div>
-      </div>
+      </PageGrid>
 
-      <div className="mx-auto max-w-article-content px-6 pt-60 lg:max-w-grid lg:px-10">
-        <ArticleReadMore
-          articles={readMore.map((a) => ({
-            title: a.title,
-            description: a.excerpt ?? '',
-            slug: a.slug,
-          }))}
-        />
-      </div>
+      <PageGrid className="pt-60">
+        <div className="col-span-full">
+          <ArticleReadMore
+            articles={readMore.map((a) => ({
+              title: a.title,
+              description: a.excerpt ?? '',
+              slug: a.slug,
+            }))}
+          />
+        </div>
+      </PageGrid>
 
       <div className="pt-30">
         <CtaSection />

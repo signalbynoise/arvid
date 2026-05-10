@@ -205,6 +205,104 @@ All button variants share the same padding (`--space-2` / `--space-4`) and radiu
 
 ---
 
+## Marketing Buttons
+
+Marketing pages use exactly **two** pill-shaped button variants defined as component classes in `theme.css`. These are distinct from the app button variants (`.btn-primary`, `.btn-ghost`, `.btn-subtle`) which use `rounded-comfortable` and `text-btn` sizing.
+
+### Variant Classes
+
+| Class | Background | Text | Hover | Use |
+|-------|-----------|------|-------|-----|
+| `.site-btn-primary` | White (`--btn-primary-bg`) | Black (`--text-on-primary`) | `--btn-primary-hover` | Primary CTAs: "Launch Arvid", "Open App" |
+| `.site-btn-secondary` | `--surface-frost-10` | White (`--text-primary`) | `--surface-frost-15` | Secondary actions: "Explore Features", "Browse all", "Copy link" |
+
+### Shared Properties
+
+Both variants share: `rounded-pill`, `px-5 py-[10px]`, `text-caption-lg` (14px/510), `gap-1`, `flex items-center`, `width: fit-content`, `transition: background-color 150ms`.
+
+### Animated Icons
+
+Marketing buttons use animated icons from `@animate-ui/icons-*`. Icons are always `size={16}` and animate when the **entire button** is hovered, not just the icon.
+
+| Icon | Component | Use |
+|------|-----------|-----|
+| `LoaderPinwheel` | `@/components/animate-ui/icons/loader-pinwheel` | Primary CTAs ("Launch Arvid", "Open App") and TopNav logo |
+| `ChevronRight` | `@/components/animate-ui/icons/chevron-right` | Secondary buttons ("Browse all", "Copy link") |
+| `ChevronDown` | `@/components/animate-ui/icons/chevron-down` | Scroll-to-section buttons ("Explore Features") |
+
+### Button-level hover animation
+
+Wrap the button element with `<AnimateIcon animateOnHover asChild>` so hovering **anywhere on the button** triggers the icon animation. Do **not** put `animateOnHover` on individual icons — that only triggers when hovering over the icon itself.
+
+```tsx
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+
+// Primary button with Arvid pinwheel
+<AnimateIcon animateOnHover asChild>
+  <a href="/login" className="site-btn-primary">
+    Launch Arvid
+    <LoaderPinwheel size={16} />
+  </a>
+</AnimateIcon>
+
+// Secondary button with chevron right
+<AnimateIcon animateOnHover asChild>
+  <a href="/articles" className="site-btn-secondary">
+    Browse all articles
+    <ChevronRight size={16} />
+  </a>
+</AnimateIcon>
+```
+
+### Anti-patterns
+
+- **`animateOnHover` on the icon** — put it on `<AnimateIcon asChild>` wrapping the button instead, so the full button area triggers animation
+- **Inline button classes** (`rounded-pill bg-btn-primary px-5 py-2.5 text-caption-lg ...`) — use `.site-btn-primary` or `.site-btn-secondary`
+- **Mixing app and marketing variants** — app pages use `.btn-primary` / `.btn-ghost`; marketing pages use `.site-btn-primary` / `.site-btn-secondary`
+- **Custom padding/typography on marketing buttons** — the class owns all sizing
+- **Static lucide icons** (ArrowUpRight, ArrowDown) on marketing buttons — use the animated icon equivalents
+- **A third button variant** — if it doesn't look like primary or secondary, it shouldn't exist on marketing pages
+
+---
+
+## Links
+
+All inline content links on marketing pages must use the `.link-default` class. This is a component class defined in `theme.css`.
+
+### Specification
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Color | `--text-primary` (`#f7f8f8`) | White text, not accent purple |
+| Underline style | `dashed` | Subtle distinction from body text |
+| Underline color | `--border-default` (`rgba(255,255,255,0.08)`) | Barely visible at rest |
+| Underline hover | `--border-hover` (`rgba(255,255,255,0.12)`) | Slightly brighter on hover |
+| Underline offset | 3px | Space between text and underline |
+| Underline thickness | 1px | Thin line |
+| Transition | 150ms on underline color | Smooth hover feedback |
+
+### Usage
+
+```tsx
+// Standalone link
+<a href="/articles" className="text-caption link-default">Browse all articles</a>
+
+// Inside rendered markdown (ArticleBlockRenderer)
+// Applied via Tailwind child selector:
+<div className="[&_a]:link-default" dangerouslySetInnerHTML={{ __html: html }} />
+```
+
+### Anti-patterns
+
+- **`text-accent` on content links** — accent purple is reserved for UI controls (buttons, interactive elements), not reading content links
+- **`underline decoration-accent/30`** — use `.link-default` which centralizes all underline properties
+- **Inline link styling** (`text-text-primary underline decoration-dashed ...`) — use the class token instead
+- **No underline on content links** — links must be visually distinguishable from surrounding text
+
+---
+
 ## Border Radius
 
 | Token | Tailwind class | Value | Use |
@@ -252,6 +350,71 @@ Spacing tokens are registered in Tailwind as `--spacing-{N}` and used via standa
 | `--space-16` | `p-16`, `gap-16`, `m-16` | 64px | Page-level vertical spacing |
 | `--space-20` | `p-20`, `gap-20`, `m-20` | 80px | Large page-level spacing |
 | `--space-24` | `p-24`, `gap-24`, `m-24` | 96px | Maximum page-level spacing |
+
+---
+
+## Page Layout (Marketing Site)
+
+All public-facing pages (`src/site/`) must use the `PageGrid` component for every content container. `PageGrid` renders a CSS grid with the `.page-grid` class, which is the **single source of truth** for page width, margins, columns, and gutters.
+
+### Tokens (defined in `theme.css`)
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--grid-columns` | 12 | Column count |
+| `--grid-gutter` | 16px → 20px → 24px | Responsive column gap |
+| `--grid-margin` | 24px → 40px → 0px | Responsive inline padding |
+| `--grid-max-width` | 1300px | Maximum content width |
+
+### Responsive behavior
+
+| Breakpoint | Gutter | Margin | Width behavior |
+|------------|--------|--------|----------------|
+| Default (< 48rem) | 16px | 24px | Fluid, full viewport minus margins |
+| `md` (48rem+) | 20px | 40px | Fluid, full viewport minus margins |
+| `lg` (75rem+) | 20px | 0px | Capped at 1300px, auto-centered |
+| `xl` (90rem+) | 24px | 0px | Capped at 1300px, auto-centered |
+
+### Usage
+
+Every top-level content section on a marketing page must be wrapped in `PageGrid`:
+
+```tsx
+import { PageGrid } from '../components/PageGrid';
+
+// Section content — children must use col-span-* to place into the grid
+<PageGrid className="pt-30">
+  <h1 className="col-span-full text-h1 text-text-primary">Title</h1>
+  <div className="col-span-full">
+    {/* section content */}
+  </div>
+</PageGrid>
+```
+
+The `TopNav` already uses `PageGrid` internally — it does not need an additional wrapper.
+
+### Anti-patterns
+
+- **Manual containers** (`mx-auto max-w-grid px-6 lg:px-10`) — these approximate the grid but use different padding values at different breakpoints, causing width mismatches. Always use `PageGrid`.
+- **`max-w-article-content` as a page container** — this token (600px) is for constraining the article body column within a `PageGrid`, not for replacing it.
+- **Hardcoded `max-width`** on page sections — the grid max-width comes from `--grid-max-width` via `.page-grid`.
+- **Mixing `PageGrid` pages with manual-container pages** — every marketing page must use the same layout primitive so widths are consistent across nav, content, and footer.
+
+### Article page layout
+
+Article pages use `PageGrid` for the outer container and a flexbox layout inside `col-span-full` for the three-column structure (sidebar / article / share). The article body column is constrained to `max-w-article-content` (600px) within this flex layout:
+
+```tsx
+<PageGrid className="pt-30">
+  <div className="col-span-full flex items-stretch justify-between gap-10">
+    <div className="hidden lg:block">{/* Popular articles sidebar */}</div>
+    <article className="flex w-full max-w-article-content flex-col gap-10">
+      {/* Title, content, footer */}
+    </article>
+    <div className="hidden lg:block">{/* Share sidebar */}</div>
+  </div>
+</PageGrid>
+```
 
 ---
 

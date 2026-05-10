@@ -1,6 +1,6 @@
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
 
 export interface PopularArticle {
   title: string;
@@ -28,13 +28,12 @@ export function PopularArticlesSidebar({ articles }: PopularArticlesSidebarProps
         </a>
       ))}
 
-      <a
-        href="/articles"
-        className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
-      >
-        All articles
-        <ArrowUpRight size={ICON_SIZE.xs} />
-      </a>
+      <AnimateIcon animateOnHover asChild>
+        <a href="/articles" className="site-btn-secondary">
+          All articles
+          <ChevronRight size={16} />
+        </a>
+      </AnimateIcon>
     </aside>
   );
 }

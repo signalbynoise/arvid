@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArticleCard } from './ArticleCard';
 
 export interface ReadMoreArticle {
   title: string;
@@ -19,34 +20,24 @@ export function ArticleReadMore({ articles }: ArticleReadMoreProps) {
         Read more about Arvid
       </h2>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
-          <a
+          <ArticleCard
             key={article.slug}
-            href={`/articles/${article.slug}`}
-            className="group flex flex-col gap-10 overflow-hidden rounded-card bg-surface-panel pt-10"
-          >
-            <div className="flex flex-col gap-2 px-6">
-              <p className="text-caption-lg text-text-primary">
-                {article.title}
-              </p>
-              <p className="text-caption-lg text-text-tertiary">
-                {article.description}
-              </p>
-            </div>
-
-            <div className="mt-auto h-65 w-full rounded-t-card bg-surface-frost-10 transition-colors group-hover:bg-surface-frost-12" />
-          </a>
+            title={article.title}
+            excerpt={article.description}
+            slug={article.slug}
+            variant="compact"
+          />
         ))}
       </div>
 
-      <a
-        href="/articles"
-        className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
-      >
-        Browse all articles about Arvid
-        <ArrowUpRight size={ICON_SIZE.xs} />
-      </a>
+      <AnimateIcon animateOnHover asChild>
+        <a href="/articles" className="site-btn-secondary">
+          Browse all articles about Arvid
+          <ChevronRight size={16} />
+        </a>
+      </AnimateIcon>
     </section>
   );
 }

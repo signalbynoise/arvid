@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
 import { PageGrid } from './PageGrid';
+import { ArticleCard } from './article/ArticleCard';
 import { publicGet } from '../lib/api';
 import type { ArticleRow } from '../../../shared/schemas/article';
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
 export function LearnMoreSection() {
   const [articles, setArticles] = useState<ArticleRow[]>([]);
@@ -26,32 +36,26 @@ export function LearnMoreSection() {
         Learn more about Arvid
       </h2>
 
-      {articles.map((article) => (
-        <a
-          key={article.slug}
-          href={`/articles/${article.slug}`}
-          className="col-span-full md:col-span-6 lg:col-span-4 group relative flex h-100 flex-col gap-8 overflow-hidden rounded-card bg-surface-panel px-5 pt-10"
-        >
-          <div className="flex flex-col gap-2">
-            <p className="text-btn text-text-primary">
-              {article.title}
-            </p>
-            <p className="text-btn text-text-tertiary">
-              {article.excerpt ?? ''}
-            </p>
-          </div>
+      <div className="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {articles.map((article) => (
+          <ArticleCard
+            key={article.slug}
+            title={article.title}
+            excerpt={article.excerpt ?? ''}
+            slug={article.slug}
+            date={formatDate(article.published_at)}
+            author={article.author ?? undefined}
+            variant="featured"
+          />
+        ))}
+      </div>
 
-          <div className="mt-auto h-65 w-full rounded-t-card bg-surface-frost-10 transition-colors group-hover:bg-surface-frost-12" />
+      <AnimateIcon animateOnHover asChild>
+        <a href="/articles" className="site-btn-secondary col-span-full">
+          Browse all articles about Arvid
+          <ChevronRight size={16} />
         </a>
-      ))}
-
-      <a
-        href="/articles"
-        className="col-span-full flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
-      >
-        Browse all articles about Arvid
-        <ArrowUpRight size={ICON_SIZE.xs} />
-      </a>
+      </AnimateIcon>
     </PageGrid>
   );
 }

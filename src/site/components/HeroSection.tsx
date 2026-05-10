@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowUpRight, ArrowDown } from 'lucide-react';
-import { ICON_SIZE } from '../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
+import { ChevronDown } from '@/components/animate-ui/icons/chevron-down';
 import Grainient from '@/components/Grainient';
 import { AppDemo } from './app-demo';
 import { PageGrid } from './PageGrid';
@@ -17,20 +18,18 @@ export function HeroSection() {
       </h1>
 
       <div className="col-span-full flex items-center gap-4">
-        <a
-          href={`${APP_URL}/login`}
-          className="flex items-center gap-1 rounded-pill bg-btn-primary px-5 py-2.5 text-caption-lg text-text-on-primary transition-colors hover:bg-btn-primary-hover"
-        >
-          Launch Arvid
-          <ArrowUpRight size={ICON_SIZE.md} />
-        </a>
-        <a
-          href="#product"
-          className="flex items-center gap-1 rounded-pill bg-surface-frost-10 px-5 py-2.5 text-caption-lg text-text-primary transition-colors hover:bg-surface-frost-15"
-        >
-          Explore Features
-          <ArrowDown size={ICON_SIZE.md} />
-        </a>
+        <AnimateIcon animateOnHover asChild>
+          <a href={`${APP_URL}/login`} className="site-btn-primary">
+            Launch Arvid
+            <LoaderPinwheel size={16} />
+          </a>
+        </AnimateIcon>
+        <AnimateIcon animateOnHover asChild>
+          <a href="#product" className="site-btn-secondary">
+            Explore Features
+            <ChevronDown size={16} />
+          </a>
+        </AnimateIcon>
       </div>
 
       <div data-cursor-boundary="hero" className="col-span-full relative mt-15 h-[680px] w-full overflow-hidden rounded-card bg-surface-frost-08">

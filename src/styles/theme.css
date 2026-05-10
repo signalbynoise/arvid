@@ -446,6 +446,45 @@
     }
   }
 
+  /* --- Marketing Button Variants --- */
+  .site-btn-primary, .site-btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    border-radius: var(--radius-pill);
+    padding: 10px var(--space-5);
+    font-size: 14px;
+    font-weight: var(--fw-medium);
+    line-height: 1.5;
+    letter-spacing: -0.182px;
+    transition: background-color 150ms;
+    width: fit-content;
+  }
+
+  .site-btn-primary {
+    color: var(--text-on-primary);
+    background: var(--btn-primary-bg);
+    &:hover { background: var(--btn-primary-hover); }
+  }
+
+  .site-btn-secondary {
+    color: var(--text-primary);
+    background: var(--surface-frost-10);
+    &:hover { background: var(--surface-frost-15); }
+  }
+
+  /* --- Link --- */
+  .link-default {
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: var(--border-default);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: text-decoration-color 150ms;
+    &:hover { text-decoration-color: var(--border-hover); }
+  }
+
   .card-hint {
     animation: card-hint-nudge 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }

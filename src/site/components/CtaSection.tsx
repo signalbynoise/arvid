@@ -1,6 +1,6 @@
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ICON_SIZE } from '../../constants/icons';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
 import { PageGrid } from './PageGrid';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
@@ -13,13 +13,12 @@ export function CtaSection() {
           Build with Arvid today.
         </h2>
 
-        <a
-          href={`${APP_URL}/login`}
-          className="flex items-center gap-1 rounded-pill bg-btn-primary px-5 py-2.5 text-caption-lg text-text-on-primary transition-colors hover:bg-btn-primary-hover"
-        >
-          Launch Arvid
-          <ArrowUpRight size={ICON_SIZE.md} />
-        </a>
+        <AnimateIcon animateOnHover asChild>
+          <a href={`${APP_URL}/login`} className="site-btn-primary">
+            Launch Arvid
+            <LoaderPinwheel size={16} />
+          </a>
+        </AnimateIcon>
       </div>
     </PageGrid>
   );
