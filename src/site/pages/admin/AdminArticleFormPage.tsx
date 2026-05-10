@@ -21,6 +21,13 @@ interface GenerationJobRef {
   jobId: string;
   title: string;
   startedAt: number;
+  formSnapshot?: {
+    slug: string;
+    type: 'article' | 'feature' | 'docs';
+    status: 'draft' | 'published';
+    miniDemoId: string;
+    author: string;
+  };
 }
 
 function saveJobToStorage(job: GenerationJobRef): void {
@@ -137,6 +144,17 @@ export function AdminArticleFormPage() {
     const pendingJob = loadJobFromStorage();
     if (pendingJob) {
       console.info('[info] [admin:articleForm] Resuming generation job', { jobId: pendingJob.jobId, title: pendingJob.title });
+      setTitle(pendingJob.title);
+      if (!slugManual) setSlug(slugify(pendingJob.title));
+      if (pendingJob.formSnapshot) {
+        const s = pendingJob.formSnapshot;
+        setSlug(s.slug);
+        setSlugManual(true);
+        setType(s.type);
+        setStatus(s.status);
+        setMiniDemoId(s.miniDemoId);
+        setAuthor(s.author);
+      }
       startPolling(pendingJob.jobId);
     }
     return stopPolling;
@@ -200,7 +218,12 @@ export function AdminArticleFormPage() {
         '/api/cms/articles/generate',
         { title, type },
       );
-      saveJobToStorage({ jobId, title, startedAt: Date.now() });
+      saveJobToStorage({
+        jobId,
+        title,
+        startedAt: Date.now(),
+        formSnapshot: { slug, type, status, miniDemoId, author },
+      });
       startPolling(jobId);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Generation failed';
@@ -208,7 +231,7 @@ export function AdminArticleFormPage() {
       setGenerating(false);
       console.error('[error] [admin:articleForm:generate]', { message });
     }
-  }, [title, type, startPolling]);
+  }, [title, slug, type, status, miniDemoId, author, startPolling]);
 
   const handleSave = useCallback(async () => {
     setError(null);
