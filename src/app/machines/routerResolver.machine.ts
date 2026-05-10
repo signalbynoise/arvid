@@ -31,6 +31,8 @@ export interface ResolverActions {
   selectRequirement: (id: string | null) => void;
   selectQuestion: (id: string | null) => void;
   buildProjectPath: (workspace: Workspace, teams: Team[], project: Project) => string | null;
+  getProjects: () => Project[];
+  getTeams: () => Team[];
 }
 
 function findWorkspace(workspaces: Workspace[], shortId: string | undefined): Workspace | undefined {
@@ -112,6 +114,8 @@ export function createRouterResolverMachine(actions: ResolverActions) {
             projectShortId: event.projectShortId,
             reqShortId: event.reqShortId,
             questionShortId: event.questionShortId,
+            projects: actions.getProjects(),
+            teams: actions.getTeams(),
             requirements: [],
             questions: [],
           })),

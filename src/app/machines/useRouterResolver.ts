@@ -44,6 +44,8 @@ export function useRouterResolver() {
     selectRequirement: setReqId,
     selectQuestion: setQuestionId,
     buildProjectPath: buildProjectPathFromEntities,
+    getProjects: () => useStore.getState().projects,
+    getTeams: () => useStore.getState().teams,
   });
   actionsRef.current = {
     navigate: (path: string) => navigateRef.current(path, { replace: true }),
@@ -54,6 +56,8 @@ export function useRouterResolver() {
     selectRequirement: setReqId,
     selectQuestion: setQuestionId,
     buildProjectPath: buildProjectPathFromEntities,
+    getProjects: () => useStore.getState().projects,
+    getTeams: () => useStore.getState().teams,
   };
 
   const machine = useMemo(
