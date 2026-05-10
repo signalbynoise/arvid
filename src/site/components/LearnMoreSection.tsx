@@ -1,37 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { PageGrid } from './PageGrid';
-
-const ARTICLES = [
-  {
-    title: 'Arvid knows your code',
-    description:
-      'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
-    slug: 'knows-your-code',
-  },
-  {
-    title: 'Arvid knows your code',
-    description:
-      'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
-    slug: 'knows-your-code-2',
-  },
-  {
-    title: 'Arvid knows your code',
-    description:
-      'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
-    slug: 'knows-your-code-3',
-  },
-];
+import { publicGet } from '../lib/api';
+import type { ArticleRow } from '../../../shared/schemas/article';
 
 export function LearnMoreSection() {
+  const [articles, setArticles] = useState<ArticleRow[]>([]);
+
+  useEffect(() => {
+    publicGet<ArticleRow[]>('/api/articles?type=article&limit=3')
+      .then(setArticles)
+      .catch((err) => {
+        console.warn('[warn] [LearnMoreSection] Failed to fetch articles', {
+          message: err instanceof Error ? err.message : String(err),
+        });
+      });
+  }, []);
+
+  if (articles.length === 0) return null;
+
   return (
     <PageGrid as="section" className="w-full">
       <h2 className="col-span-full text-h2 text-text-primary">
         Learn more about Arvid
       </h2>
 
-      {ARTICLES.map((article) => (
+      {articles.map((article) => (
         <a
           key={article.slug}
           href={`/articles/${article.slug}`}
@@ -42,7 +37,7 @@ export function LearnMoreSection() {
               {article.title}
             </p>
             <p className="text-btn text-text-tertiary">
-              {article.description}
+              {article.excerpt ?? ''}
             </p>
           </div>
 

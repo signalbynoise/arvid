@@ -128,11 +128,30 @@ Each entity has:
 
 ## API Endpoints
 
-All endpoints (except `/api/health`) require `Authorization: Bearer <jwt>`.
+All endpoints (except `/api/health` and `/api/articles`) require `Authorization: Bearer <jwt>`.
+
+### Public Endpoints (no auth)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/health` | Health check (no auth) |
+| GET | `/api/health` | Health check |
+| GET | `/api/articles` | List published articles (filterable by `?type=&limit=`) |
+| GET | `/api/articles/:slug` | Get single published article by slug |
+
+### CMS Admin Endpoints (auth required)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/cms/articles` | List all articles (any status, filterable by type/status) |
+| GET | `/api/cms/articles/:id` | Get article by UUID |
+| POST | `/api/cms/articles` | Create article |
+| PATCH | `/api/cms/articles/:id` | Update article |
+| DELETE | `/api/cms/articles/:id` | Hard delete article |
+
+### Dashboard Endpoints (auth required)
+
+| Method | Path | Description |
+|--------|------|-------------|
 | GET | `/api/workspaces` | List workspaces for current user |
 | GET | `/api/workspaces/:id` | Get one workspace |
 | POST | `/api/workspaces` | Create workspace (+ default team + owner membership) |
@@ -169,7 +188,9 @@ All endpoints (except `/api/health`) require `Authorization: Bearer <jwt>`.
 
 ## Database
 
-Eight core tables with RLS enabled, scoped via workspace membership:
+Nine core tables with RLS enabled.
+
+### Dashboard tables (workspace-scoped via membership)
 
 - **workspaces** — id, name, slug, created_by, created_at, is_deleted, deleted_at
 - **workspace_memberships** — id, workspace_id (FK), user_id (FK to auth.users), role (owner/admin/member), joined_at
@@ -181,6 +202,12 @@ Eight core tables with RLS enabled, scoped via workspace membership:
 - **summaries** — id, requirement_id (unique FK), synthesis, core_objective, architecture, constraints, unverified_risks, model, generated_at
 
 RLS policies enforce workspace-based isolation: `workspaces`, `teams`, and `projects` check membership via `workspace_memberships`. Child tables (requirements, questions, answers, summaries) still join back to `projects` to verify ownership. Soft-delete is enforced via `is_deleted` + `deleted_at` on workspaces, teams, and projects.
+
+### CMS table (marketing site content)
+
+- **articles** — id, title, slug (unique), type (article/feature/docs), status (draft/published), content (jsonb blocks), excerpt, mini_demo_id, author, cover_image_url, published_at, created_at, updated_at, created_by (FK auth.users)
+
+RLS: anon can SELECT where `status = 'published'`. Authenticated users have full CRUD. Public endpoints on the BFF use the service-role client with a hard filter to `status = 'published'`. Admin endpoints use per-request user clients for RLS enforcement.
 
 ## Environment Variables
 
@@ -196,6 +223,9 @@ RLS policies enforce workspace-based isolation: `workspaces`, `teams`, and `proj
 | `VITE_SUPABASE_URL` | Dashboard build | Yes |
 | `VITE_SUPABASE_ANON_KEY` | Dashboard build | Yes |
 | `VITE_APP_URL` | Marketing site build | No (default `http://localhost:5173`) |
+| `VITE_API_BASE` | Marketing site build | No (default empty, proxied in dev) |
+| `VITE_SUPABASE_URL` | Marketing site build | Yes (admin auth only) |
+| `VITE_SUPABASE_ANON_KEY` | Marketing site build | Yes (admin auth only) |
 
 Locally: set in `.env` (loaded via `--env-file`). On Render: set in Dashboard per `render.yaml`.
 
@@ -215,6 +245,8 @@ server/
     workspaces.ts     Workspace CRUD + default team/membership creation
     teams.ts          Team CRUD
     memberships.ts    Workspace membership CRUD
+    articles.ts       Public article read endpoints (no auth)
+    cmsArticles.ts    Protected CMS admin endpoints (auth required)
 src/app/
   lib/
     supabase.ts       Frontend Supabase client
@@ -230,8 +262,19 @@ src/app/
   components/         UI layer
 src/site/
   main.tsx            Marketing site entry
-  pages/              Landing page
-  components/         TopNav, HeroSection
+  lib/
+    supabase.ts       Auth-only Supabase client (JWT acquisition)
+    api.ts            Fetch wrapper (public + admin BFF calls)
+    mdaRegistry.ts    MDA component lazy-load registry
+  auth/
+    AdminAuthProvider.tsx  Admin auth context
+    AdminAuthGuard.tsx     Admin route guard
+  pages/
+    LandingPage.tsx        Landing page
+    ArticlePage.tsx        Single article (fetches from BFF)
+    ArticlesListPage.tsx   Published articles listing
+    admin/                 CMS admin pages (list, create, edit)
+  components/         TopNav, HeroSection, article renderers
 render.yaml           Render Blueprint (3 services)
 vite.config.ts        Dashboard app build
 vite.config.site.ts   Marketing site build

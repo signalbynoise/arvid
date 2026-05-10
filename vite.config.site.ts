@@ -21,8 +21,17 @@ export default defineConfig(({ mode }) => {
       outDir: path.resolve(__dirname, 'dist-site'),
       emptyOutDir: true,
     },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      },
+    },
     define: {
       'import.meta.env.VITE_APP_URL': JSON.stringify(env.VITE_APP_URL || 'http://localhost:5173'),
+      'import.meta.env.VITE_API_BASE': JSON.stringify(env.VITE_API_BASE || ''),
     },
     assetsInclude: ['**/*.svg'],
   }

@@ -18,6 +18,8 @@ import { teamMembershipsRouter } from './routes/teamMemberships';
 import { projectMembershipsRouter } from './routes/projectMemberships';
 import { cardAssigneesRouter } from './routes/cardAssignees';
 import { supabaseConnectRouter, supabaseConnectCallbackRouter } from './routes/supabaseConnect';
+import { articlesPublicRouter } from './routes/articles';
+import { cmsArticlesRouter } from './routes/cmsArticles';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -47,6 +49,7 @@ app.use('/api/github/callback', githubCallbackRouter);
 app.use('/api/linear/callback', linearCallbackRouter);
 app.use('/api/slack/callback', slackCallbackRouter);
 app.use('/api/supabase-connect/callback', supabaseConnectCallbackRouter);
+app.use('/api/articles', articlesPublicRouter);
 
 app.use('/api', requireAuth);
 
@@ -66,6 +69,7 @@ app.use('/api/github', githubRouter);
 app.use('/api/linear', linearRouter);
 app.use('/api/slack', slackRouter);
 app.use('/api/supabase-connect', supabaseConnectRouter);
+app.use('/api/cms/articles', cmsArticlesRouter);
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`BFF server running on http://0.0.0.0:${PORT}`);

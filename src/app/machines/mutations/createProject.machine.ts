@@ -97,9 +97,23 @@ export function createCreateProjectMachine(actions: CreateProjectActions) {
           if (context.created) {
             const state = actions.getState();
             const ws = state.workspaces.find(w => w.id === state.activeWorkspaceId);
+            log.debug('success', 'Building navigation path', {
+              hasWorkspace: !!ws,
+              teamsCount: state.teams.length,
+              projectTeamId: context.created.teamId,
+              projectShortId: context.created.shortId,
+            });
             if (ws) {
               const path = actions.buildProjectPath(ws, state.teams, context.created);
-              if (path) actions.navigate(path);
+              if (path) {
+                log.info('success', 'Navigating to new project', { path });
+                actions.navigate(path);
+              } else {
+                log.error('success', 'Failed to build project path — team not found in store', {
+                  teamId: context.created.teamId,
+                  availableTeamIds: state.teams.map(t => t.id),
+                });
+              }
             }
           }
           actions.onClose();
