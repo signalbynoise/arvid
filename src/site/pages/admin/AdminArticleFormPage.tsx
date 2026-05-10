@@ -152,15 +152,15 @@ export function AdminArticleFormPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-base">
+      <div className="flex min-h-screen items-center justify-center bg-surface-base px-6 md:px-10">
         <p className="text-caption text-text-tertiary">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-base px-6 py-10">
-      <div className="mx-auto flex max-w-2xl flex-col gap-8">
+    <div className="min-h-screen bg-surface-base px-6 py-6 md:px-10 md:py-10">
+      <div className="mx-auto flex max-w-article-content flex-col gap-6 md:gap-8 lg:max-w-2xl">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -168,9 +168,9 @@ export function AdminArticleFormPage() {
             className="btn-ghost flex items-center gap-1 px-2 py-1"
           >
             <ArrowLeft size={ICON_SIZE.sm} />
-            Back
+            <span className="hidden md:inline">Back</span>
           </button>
-          <h1 className="text-h2 text-text-primary">
+          <h1 className="text-h3 text-text-primary md:text-h2">
             {isEditing ? 'Edit article' : 'New article'}
           </h1>
         </div>
@@ -190,7 +190,7 @@ export function AdminArticleFormPage() {
             />
           </FieldGroup>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FieldGroup label="Type">
               <select
                 value={type}
@@ -325,32 +325,32 @@ export function AdminArticleFormPage() {
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={20}
-                className={`resize-y rounded-comfortable border border-border-default bg-surface-panel p-3 font-mono text-caption text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none ${generating ? 'field-generating' : ''}`}
+                rows={14}
+                className={`min-h-[200px] resize-y rounded-comfortable border border-border-default bg-surface-panel p-3 font-mono text-caption text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none md:min-h-[400px] ${generating ? 'field-generating' : ''}`}
                 placeholder="Write your article in Markdown..."
               />
             ) : (
               <div
-                className="flex min-h-[400px] flex-col gap-6 rounded-comfortable border border-border-default bg-surface-panel p-4 text-body text-text-secondary [&_p]:leading-relaxed [&_strong]:text-text-primary [&_h2]:text-h2 [&_h2]:text-text-primary [&_h3]:text-h3 [&_h3]:text-text-primary [&_code]:rounded-standard [&_code]:bg-surface-frost-04 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-caption [&_pre]:rounded-card [&_pre]:bg-surface-frost-04 [&_pre]:p-4 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-2 [&_blockquote]:border-border-default [&_blockquote]:pl-4 [&_blockquote]:text-text-quaternary [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_ul]:pl-6 [&_ul]:list-disc [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-1 [&_ol]:pl-6 [&_ol]:list-decimal"
+                className="flex min-h-[200px] flex-col gap-6 overflow-x-auto rounded-comfortable border border-border-default bg-surface-panel p-3 text-body text-text-secondary md:min-h-[400px] md:p-4 [&_p]:leading-relaxed [&_strong]:text-text-primary [&_h2]:text-h3 [&_h2]:text-text-primary md:[&_h2]:text-h2 [&_h3]:text-h3 [&_h3]:text-text-primary [&_code]:rounded-standard [&_code]:bg-surface-frost-04 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-caption [&_pre]:overflow-x-auto [&_pre]:rounded-card [&_pre]:bg-surface-frost-04 [&_pre]:p-3 md:[&_pre]:p-4 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-2 [&_blockquote]:border-border-default [&_blockquote]:pl-4 [&_blockquote]:text-text-quaternary [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_ul]:pl-6 [&_ul]:list-disc [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-1 [&_ol]:pl-6 [&_ol]:list-decimal"
                 dangerouslySetInnerHTML={{ __html: previewHtml || '<p class="text-text-empty">Nothing to preview</p>' }}
               />
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving || !title.trim() || !slug.trim()}
-            className="btn-primary disabled:opacity-50"
+            className="btn-primary w-full disabled:opacity-50 md:w-auto"
           >
             {saving ? 'Saving...' : isEditing ? 'Save changes' : 'Create article'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin/articles')}
-            className="btn-ghost"
+            className="btn-ghost w-full md:w-auto"
           >
             Cancel
           </button>

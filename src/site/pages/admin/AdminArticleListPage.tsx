@@ -57,10 +57,10 @@ export function AdminArticleListPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface-base px-6 py-10">
-      <div className="mx-auto flex max-w-4xl flex-col gap-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-h2 text-text-primary">Articles</h1>
+    <div className="min-h-screen bg-surface-base px-6 py-6 md:px-10 md:py-10">
+      <div className="mx-auto flex max-w-article-content flex-col gap-6 md:gap-8 lg:max-w-4xl">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-h3 text-text-primary md:text-h2">Articles</h1>
           <div className="flex items-center gap-3">
             <Link
               to="/admin/articles/new"
@@ -80,7 +80,7 @@ export function AdminArticleListPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <label className="text-label text-text-quaternary" htmlFor="filter-status">Status</label>
             <select
@@ -120,14 +120,14 @@ export function AdminArticleListPage() {
         ) : articles.length === 0 ? (
           <p className="text-caption text-text-tertiary">No articles found.</p>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2 md:gap-1">
             {articles.map((article) => (
               <div
                 key={article.id}
-                className="flex items-center justify-between gap-4 rounded-card border border-border-default bg-surface-panel px-4 py-3"
+                className="flex flex-col gap-3 rounded-card border border-border-default bg-surface-panel px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-4"
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-caption-lg text-text-primary">
                       {article.title}
                     </span>

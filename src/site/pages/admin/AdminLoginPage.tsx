@@ -40,11 +40,11 @@ export function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-base px-6">
+    <div className="flex min-h-screen items-center justify-center bg-surface-base px-6 md:px-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-h2 text-text-primary">CMS Admin</h1>
-          <p className="text-sm text-text-tertiary">
+          <h1 className="text-h3 text-text-primary md:text-h2">CMS Admin</h1>
+          <p className="text-caption text-text-tertiary md:text-sm">
             Sign in to manage articles.
           </p>
         </div>
