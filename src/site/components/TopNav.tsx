@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { PageGrid } from './PageGrid';
+import { NavDropdown } from './NavDropdown';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 const NAV_LINKS = [
   { label: 'Product', href: '#product' },
-  { label: 'Enterprise', href: '#enterprise' },
+  { label: 'Features', href: '#features' },
   { label: 'Pricing', href: '#pricing' },
-  { label: 'Resources', href: '#resources' },
+];
+
+const RESOURCES_ITEMS = [
+  { label: 'Articles', href: '/articles' },
+  { label: 'Features', href: '#features' },
+  { label: 'Docs', href: '#docs' },
 ];
 
 export function TopNav() {
@@ -27,16 +33,17 @@ export function TopNav() {
             <a
               key={label}
               href={href}
-              className="text-[14px] font-[var(--fw-medium)] text-text-primary transition-colors hover:text-text-secondary"
+              className="text-caption-lg text-text-primary transition-colors hover:text-text-secondary"
             >
               {label}
             </a>
           ))}
+          <NavDropdown trigger="Resources" items={RESOURCES_ITEMS} />
         </nav>
 
         <a
           href={`${APP_URL}/login`}
-          className="hidden md:flex h-[36px] items-center rounded-pill bg-btn-primary px-4 text-[12px] font-[var(--fw-medium)] text-text-on-primary transition-colors hover:bg-btn-primary-hover"
+          className="hidden md:flex h-9 items-center rounded-pill bg-btn-primary px-4 text-btn text-text-on-primary transition-colors hover:bg-btn-primary-hover"
         >
           Open App
         </a>
@@ -58,14 +65,24 @@ export function TopNav() {
               key={label}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-[var(--fw-medium)] text-text-secondary transition-colors hover:text-text-primary"
+              className="text-sm-md text-text-secondary transition-colors hover:text-text-primary"
+            >
+              {label}
+            </a>
+          ))}
+          {RESOURCES_ITEMS.map(({ label, href }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setMobileOpen(false)}
+              className="text-sm-md text-text-secondary transition-colors hover:text-text-primary"
             >
               {label}
             </a>
           ))}
           <a
             href={`${APP_URL}/login`}
-            className="flex h-10 items-center justify-center rounded-pill bg-btn-primary text-[14px] font-[var(--fw-medium)] text-text-on-primary"
+            className="flex h-10 items-center justify-center rounded-pill bg-btn-primary text-caption-lg text-text-on-primary"
           >
             Open App
           </a>

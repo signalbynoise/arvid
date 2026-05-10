@@ -8,7 +8,6 @@ import { PopularArticlesSidebar } from '../components/article/PopularArticlesSid
 import { ShareSidebar } from '../components/article/ShareSidebar';
 import { ArticleReadMore } from '../components/article/ArticleReadMore';
 import { ArticleBlockRenderer } from '../components/article/ArticleBlockRenderer';
-import { ARTICLE_LAYOUT } from '../constants/article';
 import type { ArticleBlock } from '../components/article/ArticleBlockRenderer';
 import type { PopularArticle } from '../components/article/PopularArticlesSidebar';
 import type { ReadMoreArticle } from '../components/article/ArticleReadMore';
@@ -115,12 +114,12 @@ export function ArticlePage() {
     <div className="min-h-screen bg-black text-text-primary antialiased">
       <TopNav />
 
-      <div className="mx-auto max-w-[var(--grid-max-width)] px-[var(--grid-margin)] pt-[120px]">
-        <header className="flex flex-col gap-6" style={{ maxWidth: ARTICLE_LAYOUT.contentMaxWidth }}>
-          <h1 className="text-[24px] font-[var(--fw-medium)] leading-normal text-text-primary">
+      <div className="mx-auto max-w-article-content px-6 pt-30 lg:max-w-grid lg:px-10">
+        <header className="flex max-w-article-content flex-col gap-6">
+          <h1 className="text-h2 text-text-primary">
             {article.title}
           </h1>
-          <p className="text-[12px] font-[var(--fw-regular)] leading-[24px] text-text-tertiary">
+          <p className="text-btn text-text-tertiary">
             {article.date} by {article.author}, {article.location}
           </p>
         </header>
@@ -130,10 +129,7 @@ export function ArticlePage() {
             <PopularArticlesSidebar articles={POPULAR_ARTICLES} />
           </div>
 
-          <article
-            className="flex w-full flex-col gap-10"
-            style={{ maxWidth: ARTICLE_LAYOUT.contentMaxWidth }}
-          >
+          <article className="flex w-full max-w-article-content flex-col gap-10">
             {article.blocks.map((block, index) => (
               <ArticleBlockRenderer key={index} block={block} />
             ))}
@@ -141,13 +137,13 @@ export function ArticlePage() {
             <button
               type="button"
               onClick={handleCopyLink}
-              className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
+              className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
             >
               Copy article link
               <ArrowUpRight size={ICON_SIZE.xs} />
             </button>
 
-            <p className="text-[12px] font-[var(--fw-regular)] leading-[24px] text-text-tertiary">
+            <p className="text-btn text-text-tertiary">
               {article.date} by {article.author}, {article.location}
             </p>
           </article>
@@ -158,11 +154,11 @@ export function ArticlePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[var(--grid-max-width)] px-[var(--grid-margin)] pt-[240px]">
+      <div className="mx-auto max-w-article-content px-6 pt-60 lg:max-w-grid lg:px-10">
         <ArticleReadMore articles={READ_MORE_ARTICLES} />
       </div>
 
-      <div className="pt-[120px]">
+      <div className="pt-30">
         <CtaSection />
       </div>
     </div>

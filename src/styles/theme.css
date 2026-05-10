@@ -142,11 +142,18 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-9: 36px;
   --space-10: 40px;
   --space-12: 48px;
+  --space-15: 60px;
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
+  --space-30: 120px;
+  --space-40: 160px;
+  --space-60: 240px;
+  --space-65: 260px;
+  --space-100: 400px;
 
   /* --- Sidebar --- */
   --sidebar-width: 250px;
@@ -156,6 +163,10 @@
   --grid-gutter: 16px;
   --grid-margin: 24px;
   --grid-max-width: 1300px;
+
+  /* --- Article Layout --- */
+  --article-content-max-w: 600px;
+  --article-sidebar-w: 160px;
 
   /* --- Font Size --- */
   --font-size: 16px;
@@ -295,11 +306,23 @@
   --spacing-5: var(--space-5);
   --spacing-6: var(--space-6);
   --spacing-8: var(--space-8);
+  --spacing-9: var(--space-9);
   --spacing-10: var(--space-10);
   --spacing-12: var(--space-12);
+  --spacing-15: var(--space-15);
   --spacing-16: var(--space-16);
   --spacing-20: var(--space-20);
   --spacing-24: var(--space-24);
+  --spacing-30: var(--space-30);
+  --spacing-40: var(--space-40);
+  --spacing-60: var(--space-60);
+  --spacing-65: var(--space-65);
+  --spacing-100: var(--space-100);
+
+  /* Article Layout */
+  --max-width-grid: var(--grid-max-width);
+  --max-width-article-content: var(--article-content-max-w);
+  --width-article-sidebar: var(--article-sidebar-w);
 }
 
 /* ============================================================
@@ -343,6 +366,7 @@
   /* --- Typography Presets --- */
   .text-display-xl { font-size: 72px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.584px; }
   .text-display-lg { font-size: 64px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.408px; }
+  .text-display-md { font-size: 56px; font-weight: var(--fw-regular); line-height: 1.00; letter-spacing: -1.232px; }
   .text-display    { font-size: 48px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.056px; }
   .text-h1         { font-size: 32px; font-weight: var(--fw-regular); line-height: 1.13; letter-spacing: -0.704px; }
   .text-h2         { font-size: 24px; font-weight: var(--fw-regular); line-height: 1.33; letter-spacing: -0.288px; }

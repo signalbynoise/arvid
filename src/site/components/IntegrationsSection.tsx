@@ -15,7 +15,7 @@ const INTEGRATIONS = [
 export function IntegrationsSection() {
   return (
     <PageGrid as="section" className="w-full">
-      <h2 className="col-span-full text-center text-[24px] font-[var(--fw-regular)] leading-normal text-text-primary">
+      <h2 className="col-span-full text-center text-h2 text-text-primary">
         Arvid works with everyone. In and out.
       </h2>
       <div className="col-span-full lg:col-start-3 lg:col-span-8 flex flex-wrap items-center justify-center gap-8 md:gap-10 lg:justify-between">

@@ -39,11 +39,11 @@ export function LandingPage() {
       <TopNav />
       <HeroSection />
 
-      <div className="pt-[120px]">
+      <div className="pt-30">
         <IntegrationsSection />
       </div>
 
-      <div className="flex flex-col gap-[120px] pt-[120px]">
+      <div className="flex flex-col gap-30 pt-30">
         {FEATURES.map((feature, index) => (
           <FeatureSection
             key={index}
@@ -58,15 +58,15 @@ export function LandingPage() {
         ))}
       </div>
 
-      <div className="pt-[120px]">
+      <div className="pt-30">
         <RequirementGridSection />
       </div>
 
-      <div className="pt-[120px]">
+      <div className="pt-30">
         <ProductFeaturesSection />
       </div>
 
-      <div className="pt-[120px]">
+      <div className="pt-30">
         <LearnMoreSection />
       </div>
 

@@ -14,12 +14,12 @@ interface ArticleBlockRendererProps {
 export function ArticleBlockRenderer({ block }: ArticleBlockRendererProps) {
   if (block.type === 'image') {
     return (
-      <div className="h-[400px] w-full rounded-card bg-surface-frost-10" />
+      <div className="h-100 w-full rounded-card bg-surface-frost-10" />
     );
   }
 
   return (
-    <p className="text-[16px] font-[var(--fw-regular)] leading-[24px] text-text-tertiary">
+    <p className="text-body text-text-tertiary">
       {block.content}
     </p>
   );

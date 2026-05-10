@@ -1,7 +1,6 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { ICON_SIZE } from '../../../constants/icons';
-import { ARTICLE_LAYOUT } from '../../constants/article';
 
 export interface PopularArticle {
   title: string;
@@ -14,14 +13,8 @@ interface PopularArticlesSidebarProps {
 
 export function PopularArticlesSidebar({ articles }: PopularArticlesSidebarProps) {
   return (
-    <aside
-      className="sticky flex flex-col gap-6"
-      style={{
-        top: ARTICLE_LAYOUT.stickyOffsetTop,
-        width: ARTICLE_LAYOUT.sidebarWidth,
-      }}
-    >
-      <p className="text-[14px] font-[var(--fw-regular)] text-text-tertiary">
+    <aside className="sticky top-40 flex w-article-sidebar flex-col gap-6">
+      <p className="text-caption-lg text-text-tertiary">
         Popular Articles
       </p>
 
@@ -29,7 +22,7 @@ export function PopularArticlesSidebar({ articles }: PopularArticlesSidebarProps
         <a
           key={article.slug}
           href={`/articles/${article.slug}`}
-          className="text-[12px] font-[var(--fw-medium)] leading-normal text-text-primary transition-colors hover:text-text-secondary"
+          className="text-btn leading-normal text-text-primary transition-colors hover:text-text-secondary"
         >
           {article.title}
         </a>
@@ -37,7 +30,7 @@ export function PopularArticlesSidebar({ articles }: PopularArticlesSidebarProps
 
       <a
         href="/articles"
-        className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
+        className="flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-btn text-text-primary transition-colors hover:bg-surface-frost-15"
       >
         All articles
         <ArrowUpRight size={ICON_SIZE.xs} />
