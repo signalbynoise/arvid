@@ -1,11 +1,40 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import crypto from 'node:crypto';
 import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateArticleBodySchema, UpdateArticleBodySchema } from '../../shared/schemas';
 import { generateArticle } from '../openrouter';
+import type { GenerateArticleResult } from '../openrouter';
 import { supabase } from '../supabase';
 
 const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
+
+// --- Generation job tracking ---
+
+type GenerationJobStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+interface GenerationJob {
+  id: string;
+  title: string;
+  type: string;
+  status: GenerationJobStatus;
+  result: GenerateArticleResult | null;
+  error: string | null;
+  createdAt: number;
+}
+
+const generationJobs = new Map<string, GenerationJob>();
+
+const JOB_TTL_MS = 30 * 60 * 1000;
+
+function pruneStaleJobs(): void {
+  const cutoff = Date.now() - JOB_TTL_MS;
+  for (const [id, job] of generationJobs) {
+    if (job.createdAt < cutoff) {
+      generationJobs.delete(id);
+    }
+  }
+}
 
 function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.user?.id !== CMS_SUPER_ADMIN_ID) {
@@ -26,6 +55,114 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
+
+// --- Generate routes (must be registered before /:id catch-all) ---
+
+cmsArticlesRouter.post('/generate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { title, type } = req.body;
+
+  if (!title || typeof title !== 'string') {
+    return res.status(400).json({ error: 'title is required' });
+  }
+
+  pruneStaleJobs();
+
+  const articleType = type === 'feature' || type === 'docs' ? type : 'article';
+  const jobId = crypto.randomUUID();
+
+  const job: GenerationJob = {
+    id: jobId,
+    title,
+    type: articleType,
+    status: 'pending',
+    result: null,
+    error: null,
+    createdAt: Date.now(),
+  };
+  generationJobs.set(jobId, job);
+
+  res.status(202).json({ jobId });
+
+  job.status = 'running';
+
+  try {
+    const { data: existingArticles } = await db
+      .from('articles')
+      .select('title, slug, type, excerpt, tags')
+      .order('created_at', { ascending: false });
+
+    const catalog = (existingArticles ?? []).map((a) => ({
+      title: a.title,
+      slug: a.slug,
+      type: a.type,
+      excerpt: a.excerpt,
+      tags: a.tags,
+    }));
+
+    const { data: repoRow } = await supabase
+      .from('repo_contexts')
+      .select('analysis')
+      .eq('status', 'ready')
+      .order('fetched_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const { data: dbRow } = await supabase
+      .from('db_contexts')
+      .select('analysis')
+      .eq('status', 'ready')
+      .order('fetched_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    console.info('[info] [cms:articles:generate] Starting AI article generation', {
+      jobId, title, type: articleType, existingCount: catalog.length,
+      hasRepoContext: Boolean(repoRow?.analysis), hasDbContext: Boolean(dbRow?.analysis),
+    });
+
+    const result = await generateArticle({
+      title,
+      type: articleType,
+      existingArticles: catalog,
+      repoContext: repoRow?.analysis ?? undefined,
+      dbContext: dbRow?.analysis ?? undefined,
+    });
+
+    job.status = 'completed';
+    job.result = result;
+    console.info('[info] [cms:articles:generate] Article generated', { jobId, title, contentLength: result.content.length });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Generation failed';
+    job.status = 'failed';
+    job.error = message;
+    console.error('[error] [cms:articles:generate] Failed', { jobId, title, message });
+  }
+});
+
+cmsArticlesRouter.get('/generate/:jobId', (req, res) => {
+  const job = generationJobs.get(req.params.jobId);
+
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found or expired' });
+  }
+
+  if (job.status === 'completed') {
+    res.json({ status: job.status, result: job.result });
+    generationJobs.delete(job.id);
+    return;
+  }
+
+  if (job.status === 'failed') {
+    res.json({ status: job.status, error: job.error });
+    generationJobs.delete(job.id);
+    return;
+  }
+
+  res.json({ status: job.status });
+});
+
+// --- CRUD routes ---
 
 cmsArticlesRouter.get('/', async (req, res) => {
   const db = createUserClient(req.accessToken!);
@@ -182,66 +319,6 @@ cmsArticlesRouter.patch('/:id', validateBody(UpdateArticleBodySchema), async (re
 
   console.info('[info] [cms:articles:update] Article updated', { id: req.params.id });
   res.json(data);
-});
-
-cmsArticlesRouter.post('/generate', async (req, res) => {
-  const db = createUserClient(req.accessToken!);
-  const { title, type } = req.body;
-
-  if (!title || typeof title !== 'string') {
-    return res.status(400).json({ error: 'title is required' });
-  }
-
-  const articleType = type === 'feature' || type === 'docs' ? type : 'article';
-
-  const { data: existingArticles } = await db
-    .from('articles')
-    .select('title, slug, type, excerpt, tags')
-    .order('created_at', { ascending: false });
-
-  const catalog = (existingArticles ?? []).map((a) => ({
-    title: a.title,
-    slug: a.slug,
-    type: a.type,
-    excerpt: a.excerpt,
-    tags: a.tags,
-  }));
-
-  const { data: repoRow } = await supabase
-    .from('repo_contexts')
-    .select('analysis')
-    .eq('status', 'ready')
-    .order('fetched_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  const { data: dbRow } = await supabase
-    .from('db_contexts')
-    .select('analysis')
-    .eq('status', 'ready')
-    .order('fetched_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  try {
-    console.info('[info] [cms:articles:generate] Starting AI article generation', {
-      title, type: articleType, existingCount: catalog.length,
-      hasRepoContext: Boolean(repoRow?.analysis), hasDbContext: Boolean(dbRow?.analysis),
-    });
-    const result = await generateArticle({
-      title,
-      type: articleType,
-      existingArticles: catalog,
-      repoContext: repoRow?.analysis ?? undefined,
-      dbContext: dbRow?.analysis ?? undefined,
-    });
-    console.info('[info] [cms:articles:generate] Article generated', { title, contentLength: result.content.length });
-    res.json(result);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Generation failed';
-    console.error('[error] [cms:articles:generate] Failed', { title, message });
-    res.status(500).json({ error: message });
-  }
 });
 
 cmsArticlesRouter.delete('/:id', async (req, res) => {

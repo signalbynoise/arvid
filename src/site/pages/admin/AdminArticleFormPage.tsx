@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { marked } from 'marked';
@@ -12,6 +12,47 @@ function slugify(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+const GENERATION_JOB_KEY = 'arvid_cms_generation_job';
+const POLL_INTERVAL_MS = 3000;
+
+interface GenerationJobRef {
+  jobId: string;
+  title: string;
+  startedAt: number;
+}
+
+function saveJobToStorage(job: GenerationJobRef): void {
+  try { localStorage.setItem(GENERATION_JOB_KEY, JSON.stringify(job)); } catch { /* storage full */ }
+}
+
+function loadJobFromStorage(): GenerationJobRef | null {
+  try {
+    const raw = localStorage.getItem(GENERATION_JOB_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as GenerationJobRef;
+    const MAX_AGE_MS = 30 * 60 * 1000;
+    if (Date.now() - parsed.startedAt > MAX_AGE_MS) {
+      localStorage.removeItem(GENERATION_JOB_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem(GENERATION_JOB_KEY);
+    return null;
+  }
+}
+
+function clearJobFromStorage(): void {
+  try { localStorage.removeItem(GENERATION_JOB_KEY); } catch { /* ignore */ }
+}
+
+interface GenerationResult {
+  content: string;
+  excerpt: string;
+  tags: string[];
+  meta_description: string;
 }
 
 type EditorTab = 'write' | 'preview';
@@ -38,6 +79,68 @@ export function AdminArticleFormPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const applyGenerationResult = useCallback((result: GenerationResult) => {
+    setContent(result.content);
+    if (result.excerpt) setExcerpt(result.excerpt);
+    if (result.tags?.length > 0) setTags(result.tags.join(', '));
+    if (result.meta_description) setMetaDescription(result.meta_description);
+    setEditorTab('preview');
+    setGenerating(false);
+    clearJobFromStorage();
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback((jobId: string) => {
+    stopPolling();
+    setGenerating(true);
+    setError(null);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const response = await adminRequest<{ status: string; result?: GenerationResult; error?: string }>(
+          'GET',
+          `/api/cms/articles/generate/${jobId}`,
+        );
+
+        if (response.status === 'completed' && response.result) {
+          stopPolling();
+          applyGenerationResult(response.result);
+        } else if (response.status === 'failed') {
+          stopPolling();
+          setGenerating(false);
+          setError(response.error ?? 'Generation failed');
+          clearJobFromStorage();
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to check generation status';
+        if (message.includes('404') || message.includes('not found') || message.includes('expired')) {
+          stopPolling();
+          setGenerating(false);
+          clearJobFromStorage();
+        } else {
+          console.warn('[warn] [admin:articleForm:poll] Poll failed, will retry', { jobId, message });
+        }
+      }
+    }, POLL_INTERVAL_MS);
+  }, [stopPolling, applyGenerationResult]);
+
+  useEffect(() => {
+    const pendingJob = loadJobFromStorage();
+    if (pendingJob) {
+      console.info('[info] [admin:articleForm] Resuming generation job', { jobId: pendingJob.jobId, title: pendingJob.title });
+      startPolling(pendingJob.jobId);
+    }
+    return stopPolling;
+  }, [startPolling, stopPolling]);
 
   useEffect(() => {
     if (!id) return;
@@ -92,30 +195,20 @@ export function AdminArticleFormPage() {
     setGenerating(true);
 
     try {
-      const result = await adminRequest<{ content: string; excerpt: string; tags: string[]; meta_description: string }>(
+      const { jobId } = await adminRequest<{ jobId: string }>(
         'POST',
         '/api/cms/articles/generate',
         { title, type },
       );
-      setContent(result.content);
-      if (result.excerpt && !excerpt) {
-        setExcerpt(result.excerpt);
-      }
-      if (result.tags?.length > 0 && !tags) {
-        setTags(result.tags.join(', '));
-      }
-      if (result.meta_description && !metaDescription) {
-        setMetaDescription(result.meta_description);
-      }
-      setEditorTab('preview');
+      saveJobToStorage({ jobId, title, startedAt: Date.now() });
+      startPolling(jobId);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Generation failed';
       setError(message);
-      console.error('[error] [admin:articleForm:generate]', { message });
-    } finally {
       setGenerating(false);
+      console.error('[error] [admin:articleForm:generate]', { message });
     }
-  }, [title, type, excerpt, tags, metaDescription]);
+  }, [title, type, startPolling]);
 
   const handleSave = useCallback(async () => {
     setError(null);
