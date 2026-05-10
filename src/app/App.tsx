@@ -50,6 +50,11 @@ export default function App() {
   const requestModal = useStore(s => s.requestModal);
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
   const loadProjects = useStore(s => s.loadProjects);
+  const bootApp = useStore(s => s.bootApp);
+
+  useEffect(() => {
+    bootApp();
+  }, [bootApp]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

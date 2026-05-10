@@ -80,11 +80,12 @@ export function Sidebar({ isOpen }: SidebarProps) {
     }
   }, [slackConnection.status, loadSlackChannels]);
 
+  const teamsDataState = useStore(s => s.teamsDataState);
   useEffect(() => {
-    if (activeWorkspaceId) {
+    if (activeWorkspaceId && projectsDataState.status === 'ready' && teamsDataState.status === 'ready') {
       loadDeactivationMap(activeWorkspaceId);
     }
-  }, [activeWorkspaceId, teams.length, projects.length, loadDeactivationMap]);
+  }, [activeWorkspaceId, projectsDataState.status, teamsDataState.status, loadDeactivationMap]);
 
   useEffect(() => {
     if (pendingModal?.type === 'createProject') {

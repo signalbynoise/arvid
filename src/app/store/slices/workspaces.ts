@@ -13,6 +13,8 @@ export interface WorkspacesDataState {
   error?: string;
 }
 
+export type BootStatus = 'idle' | 'booting' | 'ready';
+
 export interface WorkspacesSlice {
   workspaces: Workspace[];
   workspacesDataState: WorkspacesDataState;
@@ -23,6 +25,9 @@ export interface WorkspacesSlice {
 
   members: Membership[];
   membersDataState: WorkspacesDataState;
+
+  bootStatus: BootStatus;
+  bootApp: () => void;
 
   loadWorkspaces: () => Promise<void>;
   setActiveWorkspace: (id: string) => void;
@@ -69,6 +74,19 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
 
   members: [],
   membersDataState: { status: 'idle' },
+
+  bootStatus: 'idle' as BootStatus,
+
+  bootApp: () => {
+    if (get().bootStatus !== 'idle') return;
+    set({ bootStatus: 'booting' });
+    log.info('bootApp', 'Starting app boot');
+
+    get().acceptPendingInvitations();
+    get().loadWorkspaces().then(() => {
+      set({ bootStatus: 'ready' });
+    });
+  },
 
   deactivationMap: { isOwner: false, workspace: false, teams: {}, projects: {} },
 

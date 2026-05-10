@@ -22,8 +22,6 @@ export function useRouterResolver() {
   const loadProjects = useStore(s => s.loadProjects);
   const loadTeams = useStore(s => s.loadTeams);
   const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
-  const acceptPendingInvitations = useStore(s => s.acceptPendingInvitations);
-  const loadWorkspaces = useStore(s => s.loadWorkspaces);
 
   const setReqId = (id: string | null) => {
     useStore.setState({
@@ -66,20 +64,6 @@ export function useRouterResolver() {
   );
 
   const [state, send] = useMachine(machine);
-
-  // Boot: accept invitations then load workspaces
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      useStore.setState({ acceptInvitationsState: { status: 'idle' } });
-      async function init() {
-        await acceptPendingInvitations();
-        loadWorkspaces();
-      }
-      init();
-    }
-  }, [acceptPendingInvitations, loadWorkspaces]);
 
   // Workspaces ready → send to machine
   const workspaces = useStore(selectWorkspaces);

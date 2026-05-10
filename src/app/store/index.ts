@@ -32,7 +32,7 @@ export type { GitHubConnectionState, GitHubRepo, RepoFetchStatus } from './slice
 export type { LinearConnectionState, LinearTeam, LinearProject, LinearLinkStatus, SendToLinearStatus } from './slices/linear';
 export type { SlackConnectionState, SlackChannel, ExtractionStatus } from './slices/slack';
 export type { SupabaseConnectionState, SupabaseProject, DbFetchStatus } from './slices/supabaseConnect';
-export type { WorkspacesSlice, WorkspacesDataState, WorkspacesDataStatus } from './slices/workspaces';
+export type { WorkspacesSlice, WorkspacesDataState, WorkspacesDataStatus, BootStatus } from './slices/workspaces';
 export {
   selectRequirements,
   selectQuestions,
