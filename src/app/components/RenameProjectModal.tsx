@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { ProjectNameSchema } from '../../../shared/schemas';
+import { useRenameEntity } from '../machines/mutations/useRenameEntity';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -14,67 +15,66 @@ interface Props {
 
 export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: Props) {
   const updateProject = useStore(s => s.updateProject);
+  const { error, isSubmitting, submit, reset } = useRenameEntity({
+    entityType: 'project',
+    entityId: projectId,
+    currentName,
+    rename: updateProject,
+    onClose,
+  });
 
   const [name, setName] = useState(currentName);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setName(currentName);
       setValidationError(null);
+      reset();
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
       }, 50);
     }
-  }, [isOpen, currentName]);
+  }, [isOpen, currentName, reset]);
 
-  const handleSave = async () => {
+  const handleSubmit = () => {
     const trimmed = name.trim();
-    if (trimmed === currentName) {
-      onClose();
-      return;
-    }
+    if (trimmed === currentName) { onClose(); return; }
 
     const result = ProjectNameSchema.safeParse({ name: trimmed });
     if (!result.success) {
       setValidationError(result.error.issues[0].message);
       return;
     }
-
     setValidationError(null);
-    setIsSaving(true);
-    await updateProject(projectId, result.data.name);
-    setIsSaving(false);
-    onClose();
+    submit(result.data.name);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSave();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); }
   };
+
+  const displayError = validationError || error;
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Project" size="sm">
       <div className="flex flex-col gap-6">
-        <FormField label="Name" error={validationError}>
+        <FormField label="Name" error={displayError}>
           <TextInput
             value={name}
             onChange={(v) => { setName(v); setValidationError(null); }}
             onKeyDown={handleKeyDown}
             inputRef={inputRef}
-            hasError={!!validationError}
+            hasError={!!displayError}
           />
         </FormField>
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={onClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSave} disabled={!name.trim() || isSaving} className="btn-primary">
-            {isSaving ? 'Saving...' : 'Save'}
+          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

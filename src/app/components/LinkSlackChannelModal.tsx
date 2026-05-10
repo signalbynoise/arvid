@@ -3,9 +3,7 @@ import { LoaderPinwheel, Hash, Lock } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
-import { logger } from '../logger';
-
-const log = logger.create('LinkSlackChannelModal');
+import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
 interface LinkSlackChannelModalProps {
   isOpen: boolean;
@@ -18,8 +16,15 @@ export function LinkSlackChannelModal({ isOpen, onClose, projectId }: LinkSlackC
   const loadSlackChannels = useStore(s => s.loadSlackChannels);
   const setNotificationChannel = useStore(s => s.setNotificationChannel);
 
+  const { error, isLinking, link } = useLinkIntegration({
+    integrationType: 'slack',
+    link: async (payload) => {
+      await setNotificationChannel(projectId, payload.channelId as string);
+    },
+    onClose,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,20 +33,8 @@ export function LinkSlackChannelModal({ isOpen, onClose, projectId }: LinkSlackC
     }
   }, [isOpen, loadSlackChannels]);
 
-  const handleSelect = async (channelId: string) => {
-    setIsSaving(true);
-    log.info('select', 'Setting notification channel', { projectId, channelId });
-
-    try {
-      await setNotificationChannel(projectId, channelId);
-      onClose();
-    } catch (err) {
-      log.error('select', 'Failed to set notification channel', {
-        error: err instanceof Error ? err.message : 'Unknown',
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSelect = (channelId: string) => {
+    link({ channelId });
   };
 
   const nonImChannels = slackChannels.filter(ch => !ch.isIm);
@@ -58,11 +51,12 @@ export function LinkSlackChannelModal({ isOpen, onClose, projectId }: LinkSlackC
         </p>
       ) : (
         <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-0.5">
+          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
           {nonImChannels.map(ch => (
             <button
               key={ch.id}
               type="button"
-              disabled={isSaving}
+              disabled={isLinking}
               onClick={() => handleSelect(ch.id)}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
             >

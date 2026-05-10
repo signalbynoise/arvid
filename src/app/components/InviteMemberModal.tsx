@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../store';
 import { api } from '../api';
+import { useSendInvitation } from '../machines/mutations/useSendInvitation';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -27,12 +27,9 @@ const SCOPE_TITLES: Record<Props['scope'], string> = {
 };
 
 export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId, scopeName }: Props) {
-  const sendInvitation = useStore(s => s.sendInvitation);
+  const { error, isSubmitting, submit, reset } = useSendInvitation(onClose);
 
   const [email, setEmail] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
@@ -59,24 +56,10 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
 
   const selectSuggestion = (s: UserSuggestion) => { setEmail(s.email); setShowSuggestions(false); setSuggestions([]); };
 
-  const handleSend = async () => {
+  const handleSubmit = () => {
     const trimmed = email.trim();
     if (!trimmed || !workspaceId) return;
-    setError(null);
-    setIsSending(true);
-
-    const payload: { email: string; role: 'member'; scope: typeof scope; teamId?: string; projectId?: string } = {
-      email: trimmed,
-      role: 'member',
-      scope,
-    };
-
-    if (scope === 'team') payload.teamId = scopeId;
-    if (scope === 'project') payload.projectId = scopeId;
-
-    const result = await sendInvitation(workspaceId, payload);
-    setIsSending(false);
-    if (result) { handleClose(); } else { setError('Failed to send invitation. The email may already be invited.'); }
+    submit(trimmed, workspaceId, scope, scope !== 'workspace' ? scopeId : undefined);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,13 +69,14 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
       if (e.key === 'Enter' && activeSuggestionIndex >= 0) { e.preventDefault(); selectSuggestion(suggestions[activeSuggestionIndex]); return; }
       if (e.key === 'Escape') { setShowSuggestions(false); return; }
     }
-    if (e.key === 'Enter' && email.trim() && !showSuggestions) { e.preventDefault(); handleSend(); }
+    if (e.key === 'Enter' && email.trim() && !showSuggestions) { e.preventDefault(); handleSubmit(); }
   };
 
   const handleClose = () => {
     onClose();
-    setEmail(''); setError(null); setIsSending(false);
+    setEmail('');
     setSuggestions([]); setShowSuggestions(false);
+    reset();
   };
 
   return (
@@ -106,7 +90,7 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
           >
             <TextInput
               value={email}
-              onChange={(v) => { setEmail(v); setError(null); }}
+              onChange={(v) => setEmail(v)}
               onKeyDown={handleKeyDown}
               onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
               placeholder="name@mail.com"
@@ -129,8 +113,8 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSend} disabled={!email.trim() || isSending} className="btn-primary">
-            {isSending ? 'Adding...' : 'Add new user'}
+          <button onClick={handleSubmit} disabled={!email.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Adding...' : 'Add new user'}
           </button>
         </div>
       </div>

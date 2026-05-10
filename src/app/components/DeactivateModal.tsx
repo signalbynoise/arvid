@@ -1,21 +1,27 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
+import { useDeleteEntity } from '../machines/mutations/useDeleteEntity';
+import type { DeleteEntityType } from '../machines/mutations/deleteEntity.machine';
 import { BaseModal } from './BaseModal';
 
 interface DeactivateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  entityType: 'workspace' | 'team' | 'project';
+  onConfirm: () => Promise<void>;
+  entityType: DeleteEntityType;
   entityName: string;
+  entityId?: string;
 }
 
-export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entityName }: DeactivateModalProps) {
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
-  };
+export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entityName, entityId = '' }: DeactivateModalProps) {
+  const { error, isSubmitting, confirm } = useDeleteEntity({
+    entityType,
+    entityId,
+    entityName,
+    deleteEntity: onConfirm,
+    onClose,
+  });
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Deactivate ${entityType}`} size="sm">
@@ -29,6 +35,9 @@ export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entity
             <p className="text-caption-lg text-text-tertiary">
               This will archive the {entityType} and all its contents. Nothing is permanently deleted — you can restore it from the archive.
             </p>
+            {error && (
+              <p className="text-caption-lg text-status-error">{error}</p>
+            )}
           </div>
         </div>
 
@@ -36,8 +45,8 @@ export function DeactivateModal({ isOpen, onClose, onConfirm, entityType, entity
           <button onClick={onClose} className="btn-ghost">
             Cancel
           </button>
-          <button onClick={handleConfirm} className="btn-primary">
-            Deactivate
+          <button onClick={confirm} disabled={isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Deactivating...' : 'Deactivate'}
           </button>
         </div>
       </div>

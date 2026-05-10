@@ -3,9 +3,7 @@ import { LoaderPinwheel, Globe, Lock } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
-import { logger } from '../logger';
-
-const log = logger.create('LinkRepoModal');
+import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
 interface LinkRepoModalProps {
   isOpen: boolean;
@@ -20,8 +18,17 @@ export function LinkRepoModal({ isOpen, onClose, projectId, onLinked }: LinkRepo
   const linkRepoToProject = useStore(s => s.linkRepoToProject);
   const fetchRepoContext = useStore(s => s.fetchRepoContext);
 
+  const { error, isLinking, link } = useLinkIntegration({
+    integrationType: 'github',
+    link: async (payload) => {
+      await linkRepoToProject(projectId, payload.repoFullName as string, payload.defaultBranch as string);
+      fetchRepoContext(projectId);
+    },
+    onLinked,
+    onClose,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
 
   const publicRepos = useMemo(() => githubRepos.filter(r => !r.isPrivate), [githubRepos]);
   const privateRepos = useMemo(() => githubRepos.filter(r => r.isPrivate), [githubRepos]);
@@ -33,22 +40,8 @@ export function LinkRepoModal({ isOpen, onClose, projectId, onLinked }: LinkRepo
     }
   }, [isOpen, loadGitHubRepos]);
 
-  const handleSelect = async (repoFullName: string, defaultBranch: string) => {
-    setIsLinking(true);
-    log.info('select', 'Linking repository', { projectId, repoFullName });
-
-    try {
-      await linkRepoToProject(projectId, repoFullName, defaultBranch);
-      fetchRepoContext(projectId);
-      onLinked();
-      onClose();
-    } catch (err) {
-      log.error('select', 'Failed to link repository', {
-        error: err instanceof Error ? err.message : 'Unknown',
-      });
-    } finally {
-      setIsLinking(false);
-    }
+  const handleSelect = (repoFullName: string, defaultBranch: string) => {
+    link({ repoFullName, defaultBranch });
   };
 
   const renderRepoItem = (repo: typeof githubRepos[number]) => (
@@ -76,6 +69,7 @@ export function LinkRepoModal({ isOpen, onClose, projectId, onLinked }: LinkRepo
         <p className="text-[13px] text-text-quaternary text-center py-8">No repositories found.</p>
       ) : (
         <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-4">
+          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
           {publicRepos.length > 0 && (
             <div>
               <p className="text-label-upper text-text-empty px-3 mb-1">Public</p>

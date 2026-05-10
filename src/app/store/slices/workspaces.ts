@@ -228,6 +228,7 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('updateTeam', 'Failed to update team, rolling back', { error: message });
       set({ teams: previous });
+      throw err;
     }
   },
 

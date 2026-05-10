@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
 import { ProjectNameSchema } from '../../../shared/schemas';
-import { buildProjectPathFromEntities } from '../domain/paths';
+import { useCreateProject } from '../machines/mutations/useCreateProject';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -18,47 +16,29 @@ interface Props {
 }
 
 export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName, parentId, parentName }: Props) {
-  const navigate = useNavigate();
-  const createProject = useStore(s => s.createProject);
-
+  const { error, isSubmitting, submit, reset } = useCreateProject(onClose);
   const [name, setName] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
   }, [isOpen]);
 
-  const handleCreate = async () => {
+  const handleSubmit = () => {
     const result = ProjectNameSchema.safeParse({ name: name.trim() });
     if (!result.success) {
       setValidationError(result.error.issues[0].message);
       return;
     }
     setValidationError(null);
-    setIsCreating(true);
-    const created = await createProject(result.data.name, parentId, workspaceId, teamId);
-    setIsCreating(false);
-    if (created) {
-      const state = useStore.getState();
-      const ws = state.workspaces.find(w => w.id === state.activeWorkspaceId);
-      if (ws) {
-        const path = buildProjectPathFromEntities(ws, state.teams, created);
-        if (path) {
-          navigate(path);
-          handleClose();
-          return;
-        }
-      }
-    }
-    handleClose();
+    submit(result.data.name, workspaceId, teamId, parentId);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && name.trim()) {
       e.preventDefault();
-      handleCreate();
+      handleSubmit();
     }
   };
 
@@ -66,9 +46,10 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
     onClose();
     setName('');
     setValidationError(null);
-    setIsCreating(false);
+    reset();
   };
 
+  const displayError = validationError || error;
   const isSubProject = !!parentId;
   const title = isSubProject ? 'Create new sub project' : 'Create new project';
   const fieldLabel = isSubProject ? 'Sub Project Name' : 'Project Name';
@@ -80,21 +61,21 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
       <div className="flex flex-col gap-6">
-        <FormField label={fieldLabel} error={validationError} hint={hint}>
+        <FormField label={fieldLabel} error={displayError} hint={hint}>
           <TextInput
             value={name}
             onChange={(v) => { setName(v); setValidationError(null); }}
             onKeyDown={handleKeyDown}
             placeholder="Project name"
             inputRef={inputRef}
-            hasError={!!validationError}
+            hasError={!!displayError}
           />
         </FormField>
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleCreate} disabled={!name.trim() || isCreating} className="btn-primary">
-            {isCreating ? 'Creating...' : submitLabel}
+          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Creating...' : submitLabel}
           </button>
         </div>
       </div>

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
 import { generateSlug } from '../domain/workspaces';
-import { buildWorkspacePath } from '../domain/paths';
+import { useCreateWorkspace } from '../machines/mutations/useCreateWorkspace';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -13,12 +11,8 @@ interface Props {
 }
 
 export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
-  const navigate = useNavigate();
-  const createWorkspace = useStore(s => s.createWorkspace);
-
+  const { error, isSubmitting, submit, reset } = useCreateWorkspace(onClose);
   const [name, setName] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -27,36 +21,21 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
 
   const slug = name.trim() ? generateSlug(name) : '';
 
-  const handleCreate = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-
-    setError(null);
-    setIsCreating(true);
-
-    const result = await createWorkspace(trimmed);
-    setIsCreating(false);
-
-    if (result) {
-      handleClose();
-      navigate(buildWorkspacePath(result.slug));
-    } else {
-      setError('Failed to create workspace. The name may already be taken.');
-    }
+  const handleSubmit = () => {
+    if (name.trim()) submit(name);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && name.trim()) {
       e.preventDefault();
-      handleCreate();
+      handleSubmit();
     }
   };
 
   const handleClose = () => {
     onClose();
     setName('');
-    setError(null);
-    setIsCreating(false);
+    reset();
   };
 
   const hint = slug
@@ -69,7 +48,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
         <FormField label="Name" error={error} hint={hint}>
           <TextInput
             value={name}
-            onChange={(v) => { setName(v); setError(null); }}
+            onChange={(v) => setName(v)}
             onKeyDown={handleKeyDown}
             placeholder="e.g. Acme Corp"
             inputRef={inputRef}
@@ -79,8 +58,8 @@ export function CreateWorkspaceModal({ isOpen, onClose }: Props) {
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleCreate} disabled={!name.trim() || isCreating} className="btn-primary">
-            {isCreating ? 'Creating...' : 'Create'}
+          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Creating...' : 'Create'}
           </button>
         </div>
       </div>

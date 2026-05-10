@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore, selectSelectedQuestionId } from '../store';
 import { useAuth } from '../auth/AuthProvider';
+import { useCreateEntity } from '../machines/mutations/useCreateEntity';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextArea } from './ui/TextArea';
@@ -15,21 +16,28 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
   const selectedQuestionId = useStore(selectSelectedQuestionId);
   const { user } = useAuth();
 
+  const authorName = user?.user_metadata?.full_name
+    || user?.user_metadata?.name
+    || user?.email
+    || 'Unknown';
+
+  const { error, isSubmitting, submit, reset } = useCreateEntity({
+    entityType: 'answer',
+    create: async (payload) => {
+      await createAnswer(payload.text as string, payload.questionId as string, payload.authorName as string);
+    },
+    onClose,
+  });
+
   const [text, setText] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (isOpen) setTimeout(() => textareaRef.current?.focus(), 50);
   }, [isOpen]);
 
-  const authorName = user?.user_metadata?.full_name
-    || user?.user_metadata?.name
-    || user?.email
-    || 'Unknown';
-
-  const handleCreate = async () => {
+  const handleSubmit = () => {
     if (!selectedQuestionId) return;
     const trimmed = text.trim();
     if (trimmed.length < 2) {
@@ -37,40 +45,39 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
       return;
     }
     setValidationError(null);
-    setIsCreating(true);
-    await createAnswer(trimmed, selectedQuestionId, authorName);
-    setIsCreating(false);
-    handleClose();
+    submit({ text: trimmed, questionId: selectedQuestionId, authorName });
   };
 
   const handleClose = () => {
     onClose();
     setText('');
     setValidationError(null);
-    setIsCreating(false);
+    reset();
   };
+
+  const displayError = validationError || error;
 
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="New Answer" size="md">
       <div className="flex flex-col gap-6">
         <FormField
           label="Answer"
-          error={validationError}
+          error={displayError}
           hint={<>Answering as <span className="text-text-secondary font-[var(--fw-medium)]">{authorName}</span></>}
         >
           <TextArea
             value={text}
             onChange={(v) => { setText(v); setValidationError(null); }}
             placeholder="Provide your answer or clarification..."
-            hasError={!!validationError}
+            hasError={!!displayError}
             textareaRef={textareaRef}
           />
         </FormField>
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleCreate} disabled={!text.trim() || isCreating} className="btn-primary">
-            {isCreating ? 'Submitting...' : 'Submit'}
+          <button onClick={handleSubmit} disabled={!text.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
       </div>

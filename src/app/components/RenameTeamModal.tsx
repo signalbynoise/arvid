@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
+import { useRenameEntity } from '../machines/mutations/useRenameEntity';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -13,46 +14,37 @@ interface Props {
 
 export function RenameTeamModal({ isOpen, onClose, teamId, currentName }: Props) {
   const updateTeam = useStore(s => s.updateTeam);
+  const { error, isSubmitting, submit, reset } = useRenameEntity({
+    entityType: 'team',
+    entityId: teamId,
+    currentName,
+    rename: updateTeam,
+    onClose,
+  });
 
   const [name, setName] = useState(currentName);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setName(currentName);
-      setError(null);
+      reset();
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
       }, 50);
     }
-  }, [isOpen, currentName]);
+  }, [isOpen, currentName, reset]);
 
-  const handleSave = async () => {
+  const handleSubmit = () => {
     const trimmed = name.trim();
-    if (!trimmed) {
-      setError('Team name is required');
-      return;
-    }
-    if (trimmed === currentName) {
-      onClose();
-      return;
-    }
-
-    setError(null);
-    setIsSaving(true);
-    await updateTeam(teamId, trimmed);
-    setIsSaving(false);
-    onClose();
+    if (!trimmed) return;
+    if (trimmed === currentName) { onClose(); return; }
+    submit(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSave();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); }
   };
 
   return (
@@ -61,7 +53,7 @@ export function RenameTeamModal({ isOpen, onClose, teamId, currentName }: Props)
         <FormField label="Team Name" error={error}>
           <TextInput
             value={name}
-            onChange={(v) => { setName(v); setError(null); }}
+            onChange={(v) => setName(v)}
             onKeyDown={handleKeyDown}
             inputRef={inputRef}
             hasError={!!error}
@@ -70,8 +62,8 @@ export function RenameTeamModal({ isOpen, onClose, teamId, currentName }: Props)
 
         <div className="flex justify-end gap-3 pt-6">
           <button onClick={onClose} className="btn-ghost">Cancel</button>
-          <button onClick={handleSave} disabled={!name.trim() || isSaving} className="btn-primary">
-            {isSaving ? 'Saving...' : 'Save'}
+          <button onClick={handleSubmit} disabled={!name.trim() || isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

@@ -88,6 +88,7 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('updateProject', 'Failed to update project, rolling back', { error: message });
       set({ projects: previous });
+      throw err;
     }
   },
 

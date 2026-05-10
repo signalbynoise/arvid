@@ -3,9 +3,7 @@ import { LoaderPinwheel, ChevronLeft } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
-import { logger } from '../logger';
-
-const log = logger.create('LinkLinearModal');
+import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
 interface LinkLinearModalProps {
   isOpen: boolean;
@@ -22,8 +20,21 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
   const linkLinearProject = useStore(s => s.linkLinearProject);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const { error, isLinking, link } = useLinkIntegration({
+    integrationType: 'linear',
+    link: async (payload) => {
+      await linkLinearProject(
+        projectId,
+        payload.linearProjectId as string,
+        payload.linearProjectName as string,
+        payload.teamId as string,
+      );
+    },
+    onLinked,
+    onClose,
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -40,22 +51,9 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
     setIsLoading(false);
   };
 
-  const handleSelectProject = async (linearProjectId: string, linearProjectName: string) => {
+  const handleSelectProject = (linearProjectId: string, linearProjectName: string) => {
     if (!selectedTeamId) return;
-    setIsLinking(true);
-    log.info('select', 'Linking Linear project', { projectId, linearProjectId });
-
-    try {
-      await linkLinearProject(projectId, linearProjectId, linearProjectName, selectedTeamId);
-      onLinked();
-      onClose();
-    } catch (err) {
-      log.error('select', 'Failed to link project', {
-        error: err instanceof Error ? err.message : 'Unknown',
-      });
-    } finally {
-      setIsLinking(false);
-    }
+    link({ linearProjectId, linearProjectName, teamId: selectedTeamId });
   };
 
   const title = selectedTeamId ? 'Select Project' : 'Select Team';
@@ -94,6 +92,7 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
             <ChevronLeft size={ICON_SIZE.sm} />
             <span>Back to teams</span>
           </button>
+          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
           <div className="space-y-0.5 mt-1">
             {linearProjects.length === 0 ? (
               <p className="text-[13px] text-text-quaternary text-center py-6">No projects in this team.</p>

@@ -220,10 +220,10 @@ export function useSidebarModals(
           onClose={() => { setIsDeactivateOpen(false); setDeactivateTarget(null); }}
           entityType={deactivateTarget.type}
           entityName={deactivateTarget.name}
-          onConfirm={() => {
-            if (deactivateTarget.type === 'workspace') deleteWorkspace(deactivateTarget.id);
-            if (deactivateTarget.type === 'team') deleteTeam(deactivateTarget.id);
-            if (deactivateTarget.type === 'project') deleteProject(deactivateTarget.id);
+          onConfirm={async () => {
+            if (deactivateTarget.type === 'workspace') await deleteWorkspace(deactivateTarget.id);
+            if (deactivateTarget.type === 'team') await deleteTeam(deactivateTarget.id);
+            if (deactivateTarget.type === 'project') await deleteProject(deactivateTarget.id);
           }}
         />
       )}

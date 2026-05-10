@@ -3,9 +3,7 @@ import { LoaderPinwheel, Database } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
 import { useStore } from '../store';
-import { logger } from '../logger';
-
-const log = logger.create('LinkDatabaseModal');
+import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
 interface LinkDatabaseModalProps {
   isOpen: boolean;
@@ -20,8 +18,17 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
   const linkSupabaseToProject = useStore(s => s.linkSupabaseToProject);
   const fetchDbContext = useStore(s => s.fetchDbContext);
 
+  const { error, isLinking, link } = useLinkIntegration({
+    integrationType: 'supabase',
+    link: async (payload) => {
+      await linkSupabaseToProject(projectId, payload.supabaseProjectRef as string);
+      fetchDbContext(projectId);
+    },
+    onLinked,
+    onClose,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,22 +37,8 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
     }
   }, [isOpen, loadSupabaseProjects]);
 
-  const handleSelect = async (supabaseProjectRef: string) => {
-    setIsLinking(true);
-    log.info('select', 'Linking Supabase project', { projectId, supabaseProjectRef });
-
-    try {
-      await linkSupabaseToProject(projectId, supabaseProjectRef);
-      fetchDbContext(projectId);
-      onLinked();
-      onClose();
-    } catch (err) {
-      log.error('select', 'Failed to link Supabase project', {
-        error: err instanceof Error ? err.message : 'Unknown',
-      });
-    } finally {
-      setIsLinking(false);
-    }
+  const handleSelect = (supabaseProjectRef: string) => {
+    link({ supabaseProjectRef });
   };
 
   return (
@@ -58,6 +51,7 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
         <p className="text-[13px] text-text-quaternary text-center py-8">No active projects found.</p>
       ) : (
         <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-0.5">
+          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
           {supabaseProjects.map(proj => (
             <button
               key={proj.id}
