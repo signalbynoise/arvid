@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore, selectSelectedProjectId, selectProjects } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
@@ -86,6 +86,19 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     createRequirement(description.trim(), ownerName, title.trim() || undefined);
     handleClose();
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.metaKey) {
+        e.preventDefault();
+        if (step === 'WRITE' && rawText.trim()) handleNext();
+        else if (step === 'ENHANCE' && description.trim() && !isEnhancing) handleCreate();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  });
 
   const handleImportComplete = (text: string) => {
     setStep('SUCCESS');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore, selectSelectedQuestionId } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { useCreateEntity } from '../machines/mutations/useCreateEntity';
@@ -38,7 +38,7 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
     if (isOpen) setTimeout(() => textareaRef.current?.focus(), 50);
   }, [isOpen]);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!selectedQuestionId) return;
     const trimmed = text.trim();
     if (trimmed.length < 2) {
@@ -47,7 +47,19 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
     }
     setValidationError(null);
     submit({ text: trimmed, questionId: selectedQuestionId, authorName });
-  };
+  }, [text, selectedQuestionId, authorName, submit]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.metaKey && !isSubmitting) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isOpen, isSubmitting, handleSubmit]);
 
   const handleClose = () => {
     onClose();

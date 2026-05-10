@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LoaderPinwheel } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSelectedReqId } from '../store';
@@ -46,7 +46,7 @@ export function NewQuestionModal({ isOpen, onClose }: Props) {
     classification.onTextChange(value);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!selectedReqId) return;
     const result = QuestionInputSchema.safeParse({ text: text.trim() });
     if (!result.success) { setValidationError(result.error.issues[0].message); return; }
@@ -57,7 +57,19 @@ export function NewQuestionModal({ isOpen, onClose }: Props) {
       importance: classification.importance,
       category: classification.category,
     });
-  };
+  }, [text, selectedReqId, classification.importance, classification.category, submit]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.metaKey && !isSubmitting) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isOpen, isSubmitting, handleSubmit]);
 
   const handleClose = () => {
     onClose();
