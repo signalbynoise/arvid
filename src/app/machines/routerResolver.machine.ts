@@ -140,6 +140,12 @@ export function createRouterResolverMachine(actions: ResolverActions) {
           workspaces: event.workspaces,
         })),
       },
+      ENTITIES_LOADED: {
+        actions: assign(({ event }) => ({
+          requirements: event.requirements,
+          questions: event.questions,
+        })),
+      },
     },
     states: {
       idle: {},

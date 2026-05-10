@@ -3,6 +3,7 @@ import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateArticleBodySchema, UpdateArticleBodySchema } from '../../shared/schemas';
 import { generateArticle } from '../openrouter';
+import { supabase } from '../supabase';
 
 const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
 
@@ -184,6 +185,7 @@ cmsArticlesRouter.patch('/:id', validateBody(UpdateArticleBodySchema), async (re
 });
 
 cmsArticlesRouter.post('/generate', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
   const { title, type } = req.body;
 
   if (!title || typeof title !== 'string') {
@@ -192,9 +194,47 @@ cmsArticlesRouter.post('/generate', async (req, res) => {
 
   const articleType = type === 'feature' || type === 'docs' ? type : 'article';
 
+  const { data: existingArticles } = await db
+    .from('articles')
+    .select('title, slug, type, excerpt, tags')
+    .order('created_at', { ascending: false });
+
+  const catalog = (existingArticles ?? []).map((a) => ({
+    title: a.title,
+    slug: a.slug,
+    type: a.type,
+    excerpt: a.excerpt,
+    tags: a.tags,
+  }));
+
+  const { data: repoRow } = await supabase
+    .from('repo_contexts')
+    .select('analysis')
+    .eq('status', 'ready')
+    .order('fetched_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  const { data: dbRow } = await supabase
+    .from('db_contexts')
+    .select('analysis')
+    .eq('status', 'ready')
+    .order('fetched_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   try {
-    console.info('[info] [cms:articles:generate] Starting AI article generation', { title, type: articleType });
-    const result = await generateArticle({ title, type: articleType });
+    console.info('[info] [cms:articles:generate] Starting AI article generation', {
+      title, type: articleType, existingCount: catalog.length,
+      hasRepoContext: Boolean(repoRow?.analysis), hasDbContext: Boolean(dbRow?.analysis),
+    });
+    const result = await generateArticle({
+      title,
+      type: articleType,
+      existingArticles: catalog,
+      repoContext: repoRow?.analysis ?? undefined,
+      dbContext: dbRow?.analysis ?? undefined,
+    });
     console.info('[info] [cms:articles:generate] Article generated', { title, contentLength: result.content.length });
     res.json(result);
   } catch (err) {

@@ -30,25 +30,54 @@ Articles are written as **cohesive long-form essays**. They do NOT use markdown 
 
 ### Feature (type: 'feature')
 
-Same essay format but the deep explanation is 60%+ of the article. Open with the user problem this feature solves.
+Short, focused product page about a **single feature**. Written to explain what the feature does and why it matters — not a tutorial, not a long essay. Think of a product marketing page that a potential user lands on from Google.
+
+1. **Problem statement** (1 paragraph) — What user pain does this feature solve? Be specific and relatable.
+2. **What it does** (1-2 paragraphs) — Describe the feature clearly. What happens when the user uses it?
+3. **How it works** (2-3 paragraphs) — The mechanism. What does Arvid do under the hood? Use a concrete walkthrough.
+4. **What makes it different** (1 paragraph) — Why is this better than alternatives? One sharp distinction.
+5. **Result** (1 paragraph) — What does the user's world look like after using this?
 
 ### Docs (type: 'docs')
 
-Direct instructional format: what it is, how to use it, configuration options, examples. Written for developers. Headings are allowed for docs.
+Technical how-to guide for a specific product capability. Written for developers and power users. Practical, direct, no marketing fluff.
+
+1. **Overview** — What this feature is in one sentence.
+2. **Prerequisites** — What the user needs before starting.
+3. **Setup / Configuration** — Step-by-step instructions.
+4. **Usage** — How to use it day-to-day with concrete examples.
+5. **How it works** — Brief technical explanation of what happens behind the scenes.
+6. **Tips & edge cases** — Limitations, gotchas, best practices.
 
 ---
 
 ## Formatting Rules
 
-- **No markdown headings** in article or feature types. The article reads as continuous prose. Headings are only allowed in docs.
-- **Paragraphs**: 3-6 sentences each. Long enough to develop an idea fully, short enough to stay focused. Every paragraph should feel like a complete thought.
-- **Paragraph breaks**: Separate every paragraph with a blank line. This is critical for readability.
-- **Bold**: Use `**bold**` for key terms on first introduction and for emphasis on critical concepts. Use naturally, not excessively.
-- **Code**: Use inline `` `code` `` for technical terms, file names, or commands when relevant. Use fenced code blocks for multi-line examples.
-- **Lists**: Almost never in articles. Prefer prose. If absolutely necessary, max 3 items.
-- **Links**: Reference Arvid concepts by name. Don't add hyperlinks — those are added editorially later.
-- **Images**: Don't reference images. Article images are added separately in the CMS.
-- **Length**: Target 1000-1800 words. Longer is fine if every paragraph earns its place. Never pad to hit a word count, but don't artificially truncate a well-flowing argument either.
+### Articles
+- **No markdown headings**. Continuous prose.
+- **Paragraphs**: 3-6 sentences each.
+- **Lists**: Almost never. Prefer prose.
+- **Length**: 1000-1800 words.
+
+### Features
+- **No markdown headings**. Continuous prose, like articles.
+- **Paragraphs**: 2-4 sentences. Punchy and scannable.
+- **Lists**: Only for concrete capability sets (max 3-4 items).
+- **Length**: 400-700 words. Concise.
+
+### Docs
+- **Use markdown headings** (`##` for sections, `###` for subsections).
+- **Numbered lists** for sequential steps, bullet lists for non-ordered items.
+- **Code blocks** for configuration, API payloads, commands.
+- **Second person**: "You can configure..." not "The user configures..."
+- **Length**: 600-1200 words.
+
+### All types
+- **Paragraph breaks**: Separate every paragraph with a blank line.
+- **Bold**: Key terms on first introduction. Use naturally.
+- **Code**: Inline `` `code` `` for technical terms. Fenced blocks for multi-line examples.
+- **Images**: Don't reference images. Added separately in the CMS.
+- **Links**: Research citations only (added by AI via web search). No manual hyperlinks.
 
 ---
 
@@ -63,6 +92,20 @@ Arvid's article writer has web search available. Every article should be grounde
 - **Quality over quantity**: Only cite sources that genuinely strengthen the argument. Don't cite for the sake of citing.
 - **Prefer authoritative sources**: Engineering blogs from respected companies (Stripe, GitHub, Netflix, Spotify, Shopify), well-known technical authors (Martin Fowler, Kelsey Hightower, Dan Abramov), peer-reviewed content, official documentation.
 - **Never fabricate URLs**: Only cite URLs that actually exist.
+
+---
+
+## Catalog Awareness & Deduplication
+
+Arvid's article writer receives the full catalog of existing articles before writing. This prevents repetition across hundreds of articles.
+
+- **No repeated topics**: If an article already covers "why context matters more than tickets", a new article must not retread the same ground. Find a fresh angle or go deeper on a specific subtopic.
+- **No repeated arguments**: If a previous article argued that "knowledge graphs beat flat backlogs", the new article must not make the same argument. It can reference it, build on it, or challenge it — but not restate it.
+- **No repeated examples**: If a previous article used the OAuth implementation example, use a different concrete scenario.
+- **Cross-reference where useful**: If a new article touches on a topic covered in depth by an existing article, reference it naturally ("As we explored in our earlier piece on knowledge graphs..."). This builds a connected body of work.
+- **Expand the surface area**: Each article should cover territory no previous article has claimed. Over time, the catalog should map the full landscape of Arvid's value proposition without gaps or overlaps.
+
+The existing article catalog is provided as structured data: title, type, excerpt, and tags. Use all of these signals to identify what's been covered and what remains unexplored.
 
 ---
 

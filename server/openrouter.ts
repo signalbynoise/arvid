@@ -1387,9 +1387,18 @@ Respond ONLY with the JSON object, no markdown fences, no explanation.`,
 
 // --- Article Generation ---
 
+export interface ExistingArticleSummary {
+  title: string;
+  slug: string;
+  type: string;
+  excerpt: string | null;
+  tags: string[];
+}
+
 export interface GenerateArticleInput {
   title: string;
   type: 'article' | 'feature' | 'docs';
+  existingArticles?: ExistingArticleSummary[];
   repoContext?: RepoAnalysis;
   dbContext?: DbAnalysis;
 }
@@ -1420,46 +1429,68 @@ Write as a cohesive long-form essay. Do NOT use markdown headings (## or ###) to
 6. Closing (1 paragraph) — Land the argument cleanly. Restate the core distinction. No call-to-action. No "the future is bright." Just a sharp final thought.
 
 ## Structure (for type 'feature')
-Same essay format but 60%+ focused on the deep explanation of the specific feature. Open with the user problem this feature solves.
+Short, focused product page about a SINGLE feature. Written to explain what the feature does and why it matters — not a tutorial, not a long essay. Think of a product marketing page that a potential user lands on from Google.
+
+1. Problem statement (1 paragraph) — What user pain does this feature solve? Be specific and relatable. Start with the frustration.
+2. What it does (1-2 paragraphs) — Describe the feature clearly. What happens when the user uses it? Be concrete — "Arvid scans your connected GitHub repository and surfaces..." not "Arvid provides intelligent insights."
+3. How it works (2-3 paragraphs) — The mechanism. What does Arvid do under the hood? Reference connected tools, knowledge graph, AI capabilities where relevant. Use a concrete walkthrough: "When you connect a Slack channel, Arvid..."
+4. What makes it different (1 paragraph) — Why is this better than alternatives? One sharp distinction.
+5. Result (1 paragraph) — What does the user's world look like after using this? End on the outcome.
+
+Formatting for features:
+- NO markdown headings. Continuous prose, like articles.
+- Shorter paragraphs: 2-4 sentences each. Punchy and scannable.
+- Target 400-700 words. Concise. Every sentence must earn its place.
+- Bold key terms on first mention.
+- No lists unless describing a set of concrete capabilities (max 3-4 items).
 
 ## Structure (for type 'docs')
-Direct instructional format: what it is, how to use it, configuration, examples. Written for developers. Headings are allowed for docs.
+Technical how-to guide for a specific product capability. Written for developers and power users who want to understand and use the feature. Practical, direct, no marketing fluff.
 
-## Formatting
-- NO markdown headings (## or ###) in article or feature types. The article reads as continuous prose.
+1. Overview — What this feature/capability is in one sentence.
+2. Prerequisites — What the user needs before starting (connected tools, permissions, etc.).
+3. Setup / Configuration — Step-by-step instructions to enable or configure the feature.
+4. Usage — How to use it day-to-day. Include concrete examples with realistic data.
+5. How it works — Brief technical explanation of what happens behind the scenes (API calls, data flow, AI processing).
+6. Tips & edge cases — Practical notes: limitations, gotchas, best practices.
+
+Formatting for docs:
+- USE markdown headings (## for sections, ### for subsections). Docs need scannable structure.
+- Use numbered lists for sequential steps, bullet lists for non-ordered items.
+- Use fenced code blocks for configuration examples, API payloads, or commands.
+- Use inline \`code\` for parameter names, field names, and technical terms.
+- Target 600-1200 words. Complete but not padded.
+- Write in second person: "You can configure..." not "The user configures..."
+
+## Formatting (for type 'article')
+- NO markdown headings (## or ###). The article reads as continuous prose.
 - Each paragraph should be 3-6 sentences. Long enough to develop an idea, short enough to stay focused.
 - Separate every paragraph with a blank line in the markdown output.
 - Bold (**word**) for key terms on first introduction and for emphasis on critical concepts. Use naturally, not excessively.
 - Inline code for technical terms, file names, or commands when relevant.
 - Lists: almost never. Prefer prose. If absolutely necessary, max 3 items.
-- No image references. No hyperlinks.
+- No image references. No hyperlinks (except research citations).
 - Target 1000-1800 words. Longer is fine if every paragraph earns its place.
 
-## Quality
-- Every paragraph must advance the argument. No filler, no repetition, no padding.
-- At least 40% of the article should reference specific Arvid capabilities grounded in what the product actually does.
+## Quality (all types)
+- Every paragraph must advance the piece. No filler, no repetition, no padding.
+- Reference specific Arvid capabilities grounded in what the product actually does.
 - Never claim Arvid does something it doesn't.
-- Assume the reader is a senior engineer, engineering manager, or technical leader.
-- The article should be compelling enough that someone would share it with their team.`;
+- Articles: assume reader is a senior engineer or engineering manager.
+- Features: assume reader is evaluating Arvid as a potential user.
+- Docs: assume reader is an active user trying to get something done.`;
 
-export async function generateArticle(input: GenerateArticleInput): Promise<GenerateArticleResult> {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
-  }
+function stripNativeCitations(text: string): string {
+  return text
+    .replace(/<grok:render[^>]*>[^<]*(?:<\/grok:render>)?/g, '')
+    .replace(/\[\^\d+\]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 
-  console.info(
-    `[INFO] [openrouter:generateArticle] Calling ${OPENROUTER_MODEL}`,
-    JSON.stringify({ title: input.title, type: input.type }),
-  );
+const ARTICLE_FALLBACK_MODEL = 'anthropic/claude-sonnet-4';
 
-  let contextBlock = '';
-  if (input.repoContext) {
-    contextBlock += buildCodebaseContextBlock(input.repoContext);
-  }
-  if (input.dbContext) {
-    contextBlock += buildDbContextBlock(input.dbContext);
-  }
-
+async function callArticleModel(model: string, messages: { role: string; content: string }[]): Promise<{ content: string; data: unknown }> {
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -1469,17 +1500,55 @@ export async function generateArticle(input: GenerateArticleInput): Promise<Gene
       'X-Title': 'Arvid',
     },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model,
       plugins: [{ id: 'web', max_results: 5 }],
-      messages: [
-        {
-          role: 'system',
-          content: `You are Arvid's article writer. You write marketing articles for arvid.work — a product that helps engineering teams build comprehensive knowledge graphs from requirements, questions, answers, and connected tools (GitHub, Linear, Slack, Supabase).
+      messages,
+      temperature: 0.6,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} — ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error(`Model returned empty content`);
+  }
+
+  return { content, data };
+}
+
+export async function generateArticle(input: GenerateArticleInput): Promise<GenerateArticleResult> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  let contextBlock = '';
+  if (input.repoContext) {
+    contextBlock += buildCodebaseContextBlock(input.repoContext);
+  }
+  if (input.dbContext) {
+    contextBlock += buildDbContextBlock(input.dbContext);
+  }
+
+  const catalogBlock = input.existingArticles && input.existingArticles.length > 0
+    ? `\n\n## Existing Article Catalog (${input.existingArticles.length} published)\nThese articles already exist on arvid.work. You MUST NOT repeat their topics, arguments, angles, or examples. Find a fresh perspective that adds distinct value to the catalog.\n\n${input.existingArticles.map((a) => `- "${a.title}" (${a.type}) — ${a.excerpt || 'no excerpt'} [tags: ${(a.tags || []).join(', ') || 'none'}]`).join('\n')}`
+    : '';
+
+  const messages = [
+    {
+      role: 'system',
+      content: `You are Arvid's article writer. You write marketing articles for arvid.work — a product that helps engineering teams build comprehensive knowledge graphs from requirements, questions, answers, and connected tools (GitHub, Linear, Slack, Supabase).
 
 ${ARTICLE_FRAMEWORK}
 
 ## Research & Citations
-You have web search available. Use it to research the topic before writing. Find relevant industry articles, blog posts, research, or technical writing that supports or contextualizes the article's argument. This grounds the article in the broader conversation and makes it more authoritative.
+You have web search available. Use it to research the topic before writing. Find relevant industry articles, blog posts, research, or technical writing that supports or contextualizes the article's argument.
 
 Rules for citations:
 - Search for 2-4 relevant sources: industry blog posts, engineering articles, research, or authoritative technical writing related to the topic.
@@ -1489,6 +1558,10 @@ Rules for citations:
 - Only cite sources that genuinely strengthen the argument. Don't cite for the sake of citing.
 - Prefer authoritative sources: engineering blogs from respected companies, well-known technical authors, peer-reviewed content, official documentation.
 - Never fabricate URLs. Only cite URLs returned by web search.
+- CRITICAL: Do NOT use native citation syntax like <grok:render>, [^1], or numbered reference markers. Use ONLY standard markdown links inline: [visible text](url). No footnotes, no endnotes, no XML tags.
+
+## Catalog Deduplication
+If an "Existing Article Catalog" is provided in the user message, you MUST NOT repeat topics, core arguments, angles, or examples from those articles. Each new article must cover fresh territory. You may reference or build on existing articles, but never restate them.
 
 Your output MUST be valid JSON with exactly these keys:
 - "content": The full article body in Markdown. Do NOT include the title as an H1 — it's set separately.
@@ -1497,53 +1570,54 @@ Your output MUST be valid JSON with exactly these keys:
 - "meta_description": An SEO meta description (max 155 characters). Written for Google snippets — include the primary keyword naturally, describe the value the reader gets, create curiosity. No clickbait.
 
 Respond ONLY with the JSON object, no markdown fences.`,
-        },
-        {
-          role: 'user',
-          content: `Write a ${input.type} article with this title: "${input.title}"
+    },
+    {
+      role: 'user',
+      content: `Write a ${input.type} article with this title: "${input.title}"
 
 Research the topic using web search to find relevant industry context, then write the article grounded in both Arvid's capabilities and the broader engineering conversation.
 
-${contextBlock ? `Use this product context to ground the article in real capabilities:\n\n${contextBlock}` : ''}`,
-        },
-      ],
-      temperature: 0.6,
-      response_format: { type: 'json_object' },
-    }),
-  });
+${contextBlock ? `Use this product context to ground the article in real capabilities:\n\n${contextBlock}` : ''}${catalogBlock}`,
+    },
+  ];
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error(
-      '[ERROR] [openrouter:generateArticle] API call failed',
-      JSON.stringify({ status: response.status, body: errorBody }),
-    );
-    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-  }
+  let content: string;
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
+  try {
+    console.info(`[INFO] [openrouter:generateArticle] Trying ${OPENROUTER_MODEL}`, JSON.stringify({ title: input.title, type: input.type }));
+    const result = await callArticleModel(OPENROUTER_MODEL, messages);
+    content = result.content;
+  } catch (primaryErr) {
+    const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
+    console.warn(`[WARN] [openrouter:generateArticle] Primary model failed, falling back to ${ARTICLE_FALLBACK_MODEL}`, JSON.stringify({ error: primaryMsg }));
 
-  if (!content) {
-    console.error('[ERROR] [openrouter:generateArticle] No content in response', JSON.stringify(data));
-    throw new Error('OpenRouter returned empty content');
+    try {
+      const fallbackResult = await callArticleModel(ARTICLE_FALLBACK_MODEL, messages);
+      content = fallbackResult.content;
+      console.info(`[INFO] [openrouter:generateArticle] Fallback model succeeded`);
+    } catch (fallbackErr) {
+      const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+      console.error(`[ERROR] [openrouter:generateArticle] Both models failed`, JSON.stringify({ primary: primaryMsg, fallback: fallbackMsg }));
+      throw new Error(`Article generation failed: primary (${primaryMsg}), fallback (${fallbackMsg})`);
+    }
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
   } catch {
-    console.error('[ERROR] [openrouter:generateArticle] Failed to parse JSON', JSON.stringify({ content }));
-    return { content: content.trim(), excerpt: '' };
+    console.error('[ERROR] [openrouter:generateArticle] Failed to parse JSON', JSON.stringify({ content: content.substring(0, 200) }));
+    return { content: stripNativeCitations(content.trim()), excerpt: '', tags: [], meta_description: '' };
   }
 
   const result = parsed as Record<string, unknown>;
-  const articleContent = typeof result.content === 'string' ? result.content : content.trim();
-  const excerpt = typeof result.excerpt === 'string' ? result.excerpt : '';
+  const rawContent = typeof result.content === 'string' ? result.content : content.trim();
+  const articleContent = stripNativeCitations(rawContent);
+  const excerpt = typeof result.excerpt === 'string' ? stripNativeCitations(result.excerpt) : '';
   const tags = Array.isArray(result.tags)
     ? (result.tags as unknown[]).filter((t): t is string => typeof t === 'string')
     : [];
-  const metaDescription = typeof result.meta_description === 'string' ? result.meta_description : '';
+  const metaDescription = typeof result.meta_description === 'string' ? stripNativeCitations(result.meta_description) : '';
 
   console.info('[INFO] [openrouter:generateArticle] Article generated', JSON.stringify({ contentLength: articleContent.length, tagCount: tags.length }));
   return { content: articleContent, excerpt, tags, meta_description: metaDescription };
