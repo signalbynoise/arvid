@@ -47,7 +47,7 @@ export function LearnMoreSection() {
       ))}
 
       <a
-        href="#"
+        href="/articles"
         className="col-span-full flex w-fit items-center gap-1 rounded-pill bg-surface-frost-10 px-4 py-2 text-[12px] font-[var(--fw-medium)] text-text-primary transition-colors hover:bg-surface-frost-15"
       >
         Browse all articles about Arvid
