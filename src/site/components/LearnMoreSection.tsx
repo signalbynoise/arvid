@@ -19,7 +19,7 @@ export function LearnMoreSection() {
   const [articles, setArticles] = useState<ArticleRow[]>([]);
 
   useEffect(() => {
-    publicGet<ArticleRow[]>('/api/articles?type=article&limit=3')
+    publicGet<ArticleRow[]>('/api/articles?type=article&limit=4')
       .then(setArticles)
       .catch((err) => {
         console.warn('[warn] [LearnMoreSection] Failed to fetch articles', {
@@ -36,7 +36,7 @@ export function LearnMoreSection() {
         Learn more about Arvid
       </h2>
 
-      <div className="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
         {articles.map((article) => (
           <ArticleCard
             key={article.slug}
@@ -45,6 +45,7 @@ export function LearnMoreSection() {
             slug={article.slug}
             date={formatDate(article.published_at)}
             author={article.author ?? undefined}
+            miniDemoId={article.mini_demo_id}
             variant="featured"
           />
         ))}

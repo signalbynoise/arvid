@@ -33,6 +33,8 @@ export interface ResolverActions {
   buildProjectPath: (workspace: Workspace, teams: Team[], project: Project) => string | null;
   getProjects: () => Project[];
   getTeams: () => Team[];
+  getRequirements: () => Requirement[];
+  getQuestions: () => Question[];
 }
 
 function findWorkspace(workspaces: Workspace[], shortId: string | undefined): Workspace | undefined {
@@ -87,22 +89,13 @@ export function createRouterResolverMachine(actions: ResolverActions) {
         {
           guard: ({ context, event }) =>
             event.wsShortId === context.wsShortId
-            && event.projectShortId === context.projectShortId
-            && context.requirements.length > 0,
+            && event.projectShortId === context.projectShortId,
           target: '.resolvingRequirement',
           actions: assign(({ event }) => ({
             reqShortId: event.reqShortId,
             questionShortId: event.questionShortId,
-          })),
-        },
-        {
-          guard: ({ context, event }) =>
-            event.wsShortId === context.wsShortId
-            && event.projectShortId === context.projectShortId,
-          target: '.awaitingEntities',
-          actions: assign(({ event }) => ({
-            reqShortId: event.reqShortId,
-            questionShortId: event.questionShortId,
+            requirements: actions.getRequirements(),
+            questions: actions.getQuestions(),
           })),
         },
         {

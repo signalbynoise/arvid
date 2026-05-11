@@ -4,12 +4,13 @@ import { X } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectCommandPaletteOpen } from '../store';
 
-type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+type ModalSize = 'sm' | 'md' | 'lg' | 'wide' | 'xl';
 
 const SIZE_CLASSES: Record<ModalSize, string> = {
   sm: 'max-w-modal-sm',
   md: 'max-w-modal-md',
   lg: 'max-w-modal-lg',
+  wide: 'max-w-modal-wide',
   xl: 'max-w-modal-xl',
 };
 
@@ -21,10 +22,12 @@ interface BaseModalProps {
   onClose: () => void;
   title: string;
   size?: ModalSize;
+  aside?: React.ReactNode;
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: BaseModalProps) {
+export function BaseModal({ isOpen, onClose, title, size = 'lg', aside, footer, children }: BaseModalProps) {
   const commandPaletteOpen = useStore(selectCommandPaletteOpen);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -70,8 +73,21 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', children }: Bas
             </div>
 
             <div className={size === 'xl' ? '' : 'p-6'}>
-              {children}
+              {aside ? (
+                <div className="flex gap-10">
+                  <div className="flex-1 min-w-0">{children}</div>
+                  <div className="flex-1 min-w-0">{aside}</div>
+                </div>
+              ) : (
+                children
+              )}
             </div>
+
+            {footer && (
+              <div className="flex items-center justify-end gap-3 px-6 pb-6">
+                {footer}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

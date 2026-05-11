@@ -1,63 +1,66 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { MoreHorizontal, CircleDot } from 'lucide-react';
 import type { SampleRequirement } from '../data/sampleRequirements';
 
-const COMPLETENESS_COLOR = (v: number) =>
-  v >= 80 ? 'bg-status-success' : v >= 50 ? 'bg-status-warning' : 'bg-status-error';
+function completenessColor(v: number): string {
+  if (v >= 80) return 'border-status-success';
+  if (v >= 50) return 'border-status-warning';
+  return 'border-status-error';
+}
 
-const CLARITY_COLOR: Record<string, string> = {
-  High: 'bg-status-success',
-  Medium: 'bg-status-warning',
-  Low: 'bg-status-error',
+const IMPL_COLORS: Record<string, string> = {
+  'Implemented': 'text-status-success border-status-success-border',
+  'Partially Implemented': 'text-status-warning border-status-warning-border',
+  'Not Implemented': 'text-text-tertiary border-border-default',
 };
 
-const RISK_COLOR: Record<string, string> = {
-  Low: 'bg-status-success',
-  Medium: 'bg-status-warning',
-  High: 'bg-status-error',
+const CLARITY_DOT: Record<string, string> = {
+  High: 'bg-indicator-high',
+  Medium: 'bg-indicator-medium',
+  Low: 'bg-indicator-low',
 };
 
-export function RequirementCard({ title, description, owner, completeness, clarity, risk }: SampleRequirement) {
+const RISK_DOT: Record<string, string> = {
+  Low: 'bg-indicator-high',
+  Medium: 'bg-indicator-medium',
+  High: 'bg-indicator-low',
+};
+
+export function RequirementCard({ shortId, title, owner, completeness, clarity, risk, linearStatus, implStatus }: SampleRequirement) {
   return (
-    <div className="w-full h-full p-3 rounded-card border border-border-subtle bg-surface-frost-03 flex flex-col justify-between select-none pointer-events-none">
-      <div>
-        <h3 className="font-[var(--fw-medium)] text-text-primary text-[11px] leading-tight tracking-[-0.165px] line-clamp-1">
-          {title}
-        </h3>
-
-        <p className="text-[9px] font-[var(--fw-regular)] text-text-quaternary leading-[1.4] mt-1 line-clamp-3">
-          {description}
-        </p>
-
-        <div className="flex items-center text-[10px] text-text-tertiary mt-1.5 gap-1">
-          <User size={10} className="opacity-70 shrink-0" />
-          <span className="truncate">{owner}</span>
-        </div>
+    <div className="w-full h-full p-3 rounded-comfortable border border-border-default bg-surface-elevated flex flex-col gap-2.5 select-none pointer-events-none">
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] font-mono text-text-quaternary">{shortId}</span>
+        <MoreHorizontal size={10} className="text-text-quaternary opacity-50" />
       </div>
 
-      <div className="flex items-end justify-between text-[9px] mt-2">
-        <div className="flex flex-col gap-1">
-          <span className="text-text-quaternary font-[var(--fw-regular)]">Completeness</span>
-          <div className="flex items-center gap-1.5">
-            <div className="w-8 h-1 bg-surface-frost-10 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${COMPLETENESS_COLOR(completeness)}`}
-                style={{ width: `${completeness}%` }}
-              />
-            </div>
-            <span className="font-[var(--fw-medium)] text-text-secondary">{completeness}%</span>
-          </div>
-        </div>
+      <p className="text-[11px] font-[var(--fw-medium)] text-text-primary leading-tight line-clamp-2">
+        {title}
+      </p>
 
-        <div className="flex gap-2">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-text-quaternary font-[var(--fw-regular)]">Clarity</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${CLARITY_COLOR[clarity]}`} />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-text-quaternary font-[var(--fw-regular)]">Risk</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${RISK_COLOR[risk]}`} />
-          </div>
+      <div className="flex flex-wrap items-center gap-1">
+        <span className={`text-[8px] font-[var(--fw-medium)] text-text-tertiary px-1.5 py-0.5 rounded-micro border ${completenessColor(completeness)}`}>
+          {completeness}%
+        </span>
+        {linearStatus && (
+          <span className="flex items-center gap-0.5 text-[8px] font-[var(--fw-medium)] text-text-tertiary px-1.5 py-0.5 rounded-micro border border-dashed border-border-default">
+            <CircleDot size={7} className="text-text-quaternary" />
+            {linearStatus}
+          </span>
+        )}
+        {implStatus && (
+          <span className={`flex items-center gap-0.5 text-[8px] font-[var(--fw-medium)] px-1.5 py-0.5 rounded-micro border border-dashed ${IMPL_COLORS[implStatus]}`}>
+            <img src="/github.svg" alt="" className="w-[8px] h-[8px] shrink-0" />
+            {implStatus}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between mt-auto">
+        <span className="text-[9px] text-text-quaternary truncate">{owner}</span>
+        <div className="flex items-center gap-1 shrink-0">
+          <div className={`w-1.5 h-1.5 rounded-full ${CLARITY_DOT[clarity]}`} />
+          <div className={`w-1.5 h-1.5 rounded-full ${RISK_DOT[risk]}`} />
         </div>
       </div>
     </div>

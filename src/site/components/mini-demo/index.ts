@@ -31,6 +31,11 @@ export { MiniSidebarFooter } from './MiniSidebarFooter';
 export { MiniCursor } from './MiniCursor';
 export { MiniModal } from './MiniModal';
 export { MiniConfirmation } from './MiniConfirmation';
+export { MiniDmcModal } from './MiniDmcModal';
 export { DemoShellView } from './DemoShell';
 
 export type { MiniTeam, MiniProject, MiniSidebarFooterItemData, BreadcrumbSegment, Step, CursorPosition, DemoState, Transition, Actor, Rule, ContentPool, Direction, EngineOutput } from './types';
+
+export { useDmcEngine } from './useDmcEngine';
+export type { DmcTransition, DmcRule, DmcDirection, DmcEngineOutput } from './dmc-types';
+export { ARVID, SARAH, DAVID, ERIK, JAMES, EMILY, MARIA, ALEX, PRIYA, JONAS, LISA, MARCUS, NINA } from './actors';

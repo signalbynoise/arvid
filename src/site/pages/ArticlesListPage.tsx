@@ -7,7 +7,7 @@ import { CtaSection } from '../components/CtaSection';
 import { publicGet } from '../lib/api';
 import type { ArticleRow } from '../../../shared/schemas/article';
 
-const FEATURED_COUNT = 3;
+const FEATURED_COUNT = 4;
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '';
@@ -69,7 +69,7 @@ export function ArticlesListPage() {
           </p>
         ) : (
           <>
-            <div className="col-span-full mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="col-span-full mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
               {featured.map((article) => (
                 <ArticleCard
                   key={article.slug}
@@ -78,6 +78,7 @@ export function ArticlesListPage() {
                   slug={article.slug}
                   date={formatDate(article.published_at)}
                   author={article.author ?? undefined}
+                  miniDemoId={article.mini_demo_id}
                   variant="featured"
                 />
               ))}
@@ -93,6 +94,7 @@ export function ArticlesListPage() {
                     slug={article.slug}
                     date={formatDate(article.published_at)}
                     author={article.author ?? undefined}
+                    miniDemoId={article.mini_demo_id}
                     variant="compact"
                   />
                 ))}

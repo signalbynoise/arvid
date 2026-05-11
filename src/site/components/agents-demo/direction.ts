@@ -7,14 +7,13 @@ import {
   answerQuestionRule,
 } from '../mini-demo/rules';
 
-const DAVID = { id: 'david', name: 'David M.' };
-const ARVID = { id: 'arvid', name: 'Arvid' };
+import { ARVID, PRIYA } from '../mini-demo/actors';
 
 const contentPool: ContentPool = {
   requirements: [
-    { id: 'ag-r1', shortId: 'R01', title: 'User authentication with SSO support', owner: 'Sarah K.', createdAt: 'May 1', completeness: 72, clarity: 'High', risk: 'Low' },
-    { id: 'ag-r2', shortId: 'R02', title: 'Real-time notifications system', owner: 'James L.', createdAt: 'Apr 29', completeness: 45, clarity: 'Medium', risk: 'Medium' },
-    { id: 'ag-r3', shortId: 'R03', title: 'API rate limiting for public endpoints', owner: 'David M.', createdAt: 'Apr 25', completeness: 30, clarity: 'Medium', risk: 'High' },
+    { id: 'ag-r1', shortId: 'R01', title: 'User authentication with SSO support', owner: 'Sarah K.', createdAt: 'May 1', completeness: 72, clarity: 'High', risk: 'Low', status: 'In progress', implStatus: 'Implemented' },
+    { id: 'ag-r2', shortId: 'R02', title: 'Real-time notifications system', owner: 'James L.', createdAt: 'Apr 29', completeness: 45, clarity: 'Medium', risk: 'Medium', status: 'In progress', implStatus: 'Partially implemented' },
+    { id: 'ag-r3', shortId: 'R03', title: 'API rate limiting for public endpoints', owner: 'David M.', createdAt: 'Apr 25', completeness: 30, clarity: 'Medium', risk: 'High', status: 'Pre backlog', implStatus: 'Not implemented' },
   ],
   questions: {
     _default: [
@@ -35,14 +34,14 @@ const contentPool: ContentPool = {
 export const agentsDirection: Direction = {
   goal: (s) => s.acceptedQuestions.length >= 2 && Object.values(s.answers).some(answerIds => answerIds.length > 0),
 
-  actors: [DAVID, ARVID],
+  actors: [PRIYA, ARVID],
 
   rules: [
-    selectRequirementRule(DAVID.id),
+    selectRequirementRule(PRIYA.id),
     generateQuestionsRule(ARVID.id),
-    acceptQuestionRule(DAVID.id, 2),
-    selectQuestionRule(DAVID.id),
-    answerQuestionRule(DAVID.id),
+    acceptQuestionRule(PRIYA.id, 2),
+    selectQuestionRule(PRIYA.id),
+    answerQuestionRule(PRIYA.id),
   ],
 
   contentPool,

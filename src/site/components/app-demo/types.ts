@@ -9,6 +9,8 @@ export interface Requirement {
   completeness: number;
   clarity: 'High' | 'Medium' | 'Low';
   risk: 'Low' | 'Medium' | 'High';
+  status?: string;
+  implStatus?: string;
 }
 
 export interface Question {

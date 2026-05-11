@@ -166,6 +166,43 @@ If a demo feels "about right" during development, it is too fast. Slow it down b
 
 ---
 
+## Demo Mini Components (DMCs)
+
+DMCs are a smaller, focused variant of MDAs. They follow the same creative principles but are scoped to a **single feature interaction** for use in articles.
+
+### How DMC direction differs from MDA direction
+
+- **Simpler narrative:** A DMC shows one focused interaction (e.g. clicking a chip to open a modal, watching a score animate). Not a multi-column app workflow.
+- **Fewer actors:** Typically just Arvid (AI). 1-2 actors max.
+- **Shorter cycles:** 14-20s per cycle (vs 20-30s for MDAs).
+- **No app chrome:** No sidebar, no topbar, no multi-column layout. The DMC shows just the relevant UI fragment.
+- **Fixed visual container:** The DMC renders in a fixed-height container — elements must **crossfade** between states, never cause layout shift by conditionally mounting/unmounting.
+
+### DMC creative constraints
+
+- The same ambient, continuous feel applies — DMCs loop seamlessly.
+- Pacing is still unhurried. The shorter cycle comes from fewer steps, not faster steps.
+- Content Voice rules still apply — realistic, technically plausible content.
+- The DMC should communicate the feature's value within 5 seconds of glancing.
+- Duration tiers are the same: `duration-300`, `duration-500`, `duration-700` only.
+
+### DMC phase structure
+
+DMCs still follow Settle → Flow → Resolve → Drift, but compressed:
+
+| Phase | DMC Time Budget |
+|-------|----------------|
+| Settle | 10-15% (show the starting state) |
+| Flow | 50-60% (animate the feature interaction) |
+| Resolve | 15-20% (show the result) |
+| Drift | 10-20% (hold, then crossfade back to start) |
+
+### When directing a DMC
+
+Use the same Director output format as MDAs. Mark the Direction Spec as "DMC" type. The same rules apply: no code, no UI details, no timing — define capabilities and goal only.
+
+---
+
 ## Multi-Demo Page Coherence
 
 ### Viewport Behavior

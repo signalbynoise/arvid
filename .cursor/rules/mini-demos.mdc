@@ -2,16 +2,36 @@
 description: Rules for creating and editing animated mini demo components on the marketing site
 globs:
   - src/site/components/*-demo/**
+  - src/site/components/*-dmc/**
   - src/site/components/mini-demo/**
+  - src/site/lib/mdaRegistry.ts
+  - src/site/components/article/ArticleCard.tsx
+  - src/site/pages/ArticlePage.tsx
 ---
 
 # Mini Demo Components
 
 Read `docs/mini_demos.md` for the engineering spec and `docs/mda_director.md` for the creative direction rulebook before writing any demo code.
 
+## Two Systems: MDA and DMC
+
+There are two demo systems sharing the same primitives and principles:
+
+| | MDA (Mini Demo Animation) | DMC (Demo Mini Component) |
+|--|---------------------------|--------------------------|
+| **Purpose** | Full app window demo for landing page | Focused feature demo for articles |
+| **Engine** | `useDemoEngine` (hardcoded `DemoState`) | `useDmcEngine<S, P>` (generic state) |
+| **Shell** | `MiniShell` + `DemoShellView` | No shell — custom lightweight orchestrator |
+| **Container** | Absolute-positioned inside feature sections | **Fixed-height** (e.g. `h-[280px]`) — NO layout shift |
+| **Background** | Parent provides `bg-surface-frost-05` | Parent provides `bg-surface-frost-05` — DMC is transparent |
+| **Folder** | `src/site/components/<feature>-demo/` | `src/site/components/<feature>-dmc/` |
+| **Types** | `mini-demo/types.ts` | `mini-demo/dmc-types.ts` |
+
+Both must be registered in `src/site/lib/mdaRegistry.ts`.
+
 ## Mandatory Workflow
 
-Creating or redesigning an MDA **must** follow this pipeline in order:
+Creating or redesigning an MDA or DMC **must** follow this pipeline in order:
 
 1. **Director** — invoke the `mda-director` skill. Produce a Direction Spec (mood, goal, cast, capabilities, content pool requirements). No code.
 2. **Script Writer** — invoke the `mda-scriptwriter` skill. Write `direction.ts` with Direction object (goal, rules, actors, content pool). No components.
@@ -21,68 +41,153 @@ Skipping steps is forbidden. If the direction changes, go back to the Director.
 
 ## Engine Architecture
 
+### MDA Engine
+
 Demos use the **headless rule-based engine** (`useDemoEngine`). The engine:
 - Evaluates rules against abstract `DemoState` each tick
 - Emits `Transition` objects (actor + verb + subject + state update)
 - Knows nothing about UI, DOM, cursors, or components
 - Loops endlessly — when the goal is reached, a new cycle begins from the living state
 
-The **orchestrator** (AppDemo.tsx, GitHubDemo.tsx) is the only layer that maps engine transitions to cursor targets and component props. The engine is testable without React.
+The **orchestrator** (AppDemo.tsx, GitHubDemo.tsx) is the only layer that maps engine transitions to cursor targets and component props.
+
+### DMC Engine
+
+DMCs use the **generic engine** (`useDmcEngine<S, P>`). Same architecture as MDA engine but:
+- Type-parameterized over custom state `S` and pool `P` (no shared `DemoState`)
+- Direction includes explicit `initialState` and `resetCycle` function
+- Optional `tickDelay` (defaults to 1000ms)
+
+Types: `DmcDirection<S, P>`, `DmcRule<S, P>`, `DmcTransition<S>`, `DmcEngineOutput<S>` from `mini-demo/dmc-types.ts`.
+
+## DMC Container — CRITICAL
+
+DMC containers **must have a stable size**. DMCs render inside article pages and article cards. If the container auto-sizes, content appearing and disappearing causes layout shift that moves article body text.
+
+Use `aspect-square` for a square container that fills the parent width:
+
+```
+CORRECT:  className="relative aspect-square"
+WRONG:    className="relative"  (auto height — causes layout shift)
+```
+
+Use **absolute-positioned crossfade layers** with **percentage-based sizing**:
+
+```tsx
+<div className="relative aspect-square">
+  <div className={`absolute inset-0 flex items-center justify-center p-[12%] ... ${showA ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+    <div className="w-full max-w-[75%]"><CardComponent /></div>
+  </div>
+  <div className={`absolute inset-0 flex items-center justify-center p-[10%] ... ${showB ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+    <div className="w-full max-w-[85%]"><ModalComponent /></div>
+  </div>
+</div>
+```
+
+Cards: `max-w-[75%]`, modals: `max-w-[85%]`, padding: `p-[10-12%]`. Never fixed pixel widths — they don't scale.
+
+NEVER conditionally render (`{show && <Component />}`) at the top level of a DMC — use opacity crossfades with pointer-events-none instead.
+
+## DMC Background — CRITICAL
+
+DMC components must NOT set their own background color. The parent container (ArticlePage or ArticleCard) provides `bg-surface-frost-05` to match the landing page feature sections. The DMC should be transparent so the frost background shows through.
+
+```
+CORRECT:  className="relative h-[280px]"              (transparent)
+WRONG:    className="relative h-[280px] bg-surface-base"  (overrides frost bg)
+```
+
+## DMC Organic Timing — CRITICAL
+
+DMCs must feel **organic**. Multiple DMCs visible on the same page must never beat in unison.
+
+The engine has three timing controls:
+- `tickDelay` — base delay (default 1000ms)
+- `tickJitter` — random ±variance per tick (default 400ms)
+- `startDelay` — max random offset before first tick (default 2000ms)
+
+Rules:
+- DMCs that share a page (e.g. articles list) MUST use **different `tickDelay`** values (e.g. 1000 vs 1100)
+- Default jitter is always applied — never set `tickJitter: 0`
+- Use **different actors** for different DMCs — not always "Arvid". Human actions (clicking, inspecting) use human actors; AI analysis (scanning, evaluating) uses Arvid.
+
+## Article Integration
+
+### ArticlePage
+
+The MDA/DMC wrapper in `ArticlePage.tsx` MUST include `bg-surface-frost-05`:
+
+```tsx
+<div className="overflow-hidden rounded-card bg-surface-frost-05">
+```
+
+### ArticleCard
+
+`ArticleCard` accepts an optional `miniDemoId` prop. When present and the card is `featured` variant, it renders the demo lazily from `MDA_REGISTRY` with `bg-surface-frost-05` container. All callers with article data (ArticlesListPage, LearnMoreSection) MUST pass `miniDemoId={article.mini_demo_id}`.
+
+### Registry
+
+Every MDA and DMC must be registered in `mdaRegistry.ts` with a descriptive label (shown in CMS admin dropdown).
+
+## RequirementCard — Shared Base
+
+`app-demo/RequirementCard.tsx` is the **canonical requirement card for all demos** (MDA and DMC). It renders:
+- Header: short ID (mono) + ellipsis menu icon
+- Title
+- Chips row: completeness % (solid bg) + optional status chip + optional impl status chip
+- Footer: owner + date + indicator dots
+
+The `Requirement` type has optional `status` and `implStatus` fields. Cards gracefully omit chips for absent fields. When a DMC needs cursor targeting on the impl chip, pass `implChipTarget` prop.
 
 ## Architecture (enforced)
 
-1. Every demo lives in `src/site/components/<feature>-demo/` with a barrel `index.ts`.
-2. Animation uses `useSequence` from `src/site/components/mini-demo/useSequence.ts` — never write custom timer logic.
-3. Step types (`Step`) come from `src/site/components/mini-demo/types.ts`.
-4. Shared primitives live in `src/site/components/mini-demo/` — one component per file. Demo sub-components must compose these primitives with zero `className` or `style` attributes.
-5. All timing, static data, collaborators, and cursor positions live in `data.ts` — components only receive props.
-6. The orchestrator (`<Feature>Demo.tsx`) is a thin wiring layer: derives booleans from sequence state, passes down as props.
-7. Sub-components get their own files, named for their role in the feature narrative (e.g. `RequirementCard.tsx`, not `DemoCard.tsx`).
-8. Pass a container `ref` to `useSequence` for viewport-aware playback.
+1. MDAs live in `src/site/components/<feature>-demo/`, DMCs in `<feature>-dmc/`, both with barrel `index.ts`.
+2. Shared primitives live in `src/site/components/mini-demo/` — one component per file.
+3. Demo sub-components must compose primitives with zero `className` or `style` attributes on the primitives.
+4. Sub-components get their own files, named for their role in the feature narrative.
+5. The orchestrator is a thin wiring layer: derives display state from engine state, passes as props.
+6. Pass a container `ref` to the engine for viewport-aware playback.
 
 ## Animation Timing
 
-- Demos must feel **slow, ambient, and continuous** — like glancing through a window, not watching a presentation.
+- Demos must feel **slow, ambient, and continuous**.
 - Demos **loop seamlessly** — the viewer must never perceive a restart point.
-- Steps use **relative delays** (ms before firing), not absolute timestamps.
-- Standard ranges: reveals 800-1200ms, actions 1000-1400ms, fetches 1400-2000ms, reading pauses 2000-3000ms, drift hold 3000-4000ms.
-- Total cycle: 20-30 seconds (18s hard minimum).
+- MDA cycles: 20-30 seconds (18s hard minimum). DMC cycles: 14-20 seconds.
 - CSS transitions: `duration-300` (micro), `duration-500` (standard), `duration-700` (major + fade-outs). No other values.
 
 ## Visual Fidelity
 
-- Demos must visually replicate the real app — same tokens, same layout proportions, same interaction patterns.
 - All colors, weights, radii, shadows, and borders from `src/styles/theme.css` tokens.
-- Use shared primitives instead of building UI from scratch. No `className` in demo sub-components.
+- Use shared primitives instead of building UI from scratch.
 - Demo-scale text: `text-[9px]` titles, `text-[8px]` body/headers, `text-[7px]` metadata, `text-[6px]` micro labels.
-- Radius: `rounded-standard` for cards, `rounded-micro` for chips/badges. No arbitrary `rounded-[Npx]`.
+- Radius: `rounded-standard` for cards, `rounded-micro` for chips/badges, `rounded-card` for outer containers.
 - No placeholder content — all text must be realistic and meaningful.
 
-## Director Rules
+## MiniShell Positioning — CRITICAL (MDA only)
 
-Demos are **ambient and continuous**, not presentations. They cycle through phases: Settle (10-15%) -> Flow (55-65%) -> Resolve (15-20%) -> Drift (10-15%). Loops must be seamless — no visible reset. See `docs/mda_director.md` for the full creative direction spec.
+`MiniShell` uses a **two-div structure** to avoid a CSS position conflict. See `docs/mini_demos.md` § "MiniShell Positioning" for the full explanation.
 
-## MiniShell Positioning — CRITICAL
+- **NEVER** add `position: relative` to MiniShell's outer div
+- **NEVER** remove the inner `relative` wrapper div
 
-`MiniShell` uses a **two-div structure** to avoid a CSS position conflict:
-
-- **Outer div** receives `className` from the demo layout config (e.g. `absolute w-[800px] h-[600px] top-[40px] right-0`). This div sets `position: absolute` for demo anchoring (hero bottom, github right, connector left, agents right).
-- **Inner div** (`relative flex flex-1`) provides the positioning context for `MiniModal`'s `absolute inset-0` overlay scrim, scoping the dark backdrop to the app shell only.
-
-**NEVER add `position: relative` to the outer div.** In Tailwind v4, when two utilities target the same CSS property (`position`) on the same element, the one generated later in the **stylesheet** wins — not the one later in the **class attribute**. If `relative` and `absolute` coexist on the outer div, `relative` can silently win and break all demo positioning. This was a multi-hour debugging incident — the hero stopped anchoring to the bottom, side demos stopped anchoring left/right, and no class-attribute changes fixed it because the conflict was at the stylesheet level.
-
-**NEVER remove the inner div.** It is required for modal scoping — without it, the modal scrim covers the full page container instead of just the app shell.
-
-If you need a new positioning context inside MiniShell, add it **inside** the inner div.
+DMCs do not use MiniShell, so this constraint does not apply to them.
 
 ## Forbidden
 
-- Adding `relative`, `fixed`, or `sticky` to MiniShell's outer div
+- DMC container without stable size — use `aspect-square` (auto-sizing causes layout shift in articles)
+- DMC container with its own background color (must be transparent — parent provides frost bg)
+- ArticlePage or ArticleCard MDA wrapper without `bg-surface-frost-05`
+- ArticleCard callers not passing `miniDemoId` when article data is available
+- Adding `relative`, `fixed`, or `sticky` to MiniShell's outer div (MDA only)
 - Writing demo code without a Director's Treatment and a reviewed script
 - Generic component names (`DemoSidebar`, `DemoCard`, `DemoPanel`)
-- `className` or `style` attributes in demo sub-components — compose shared primitives only
-- Inline timer logic or `useEffect` with `setTimeout` in component files
+- `className` or `style` attributes on shared primitives in demo sub-components
 - Hardcoded colors, font weights, or border radii
 - Lorem ipsum or meaningless placeholder text
-- Duplicating the `useSequence` hook (import the shared one)
 - Duration values other than `duration-300`, `duration-500`, `duration-700`
+- Conditional rendering (`{show && <Component />}`) at the top level of a DMC — use opacity crossfades
+- Setting `tickJitter: 0` (removes organic feel, causes lockstep with other DMCs)
+- Using "Arvid" as actor for human actions (clicking, inspecting) — use a human name
+- Multiple DMCs with identical `tickDelay` (they'll sync up on the same page)
+- Fixed pixel widths on DMC cards/modals (`max-w-[220px]`) — use percentage-based `max-w-[75%]` / `max-w-[85%]`
+- Fixed pixel padding on DMC layers (`p-6`) — use percentage `p-[10%]` / `p-[12%]`

@@ -1,5 +1,5 @@
 import React from 'react';
-import { File, Mail, MessageSquare, LoaderPinwheel } from 'lucide-react';
+import { File, LoaderPinwheel } from 'lucide-react';
 import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextArea } from '../ui/TextArea';
@@ -30,8 +30,8 @@ export function WriteStep({ text, validationError, onTextChange, onNext, onClose
       <FormField label="External Sources">
         <div className="flex flex-col gap-2">
           <ActionRow icon={<File size={ICON_SIZE.md} />} label="Process from documents" onClick={() => onNavigate('FILE_UPLOAD')} />
-          <ActionRow icon={<Mail size={ICON_SIZE.md} />} label="Process from Gmail" onClick={() => onNavigate('EMAIL_IMPORT')} />
-          <ActionRow icon={<MessageSquare size={ICON_SIZE.md} />} label="Process from Slack" onClick={() => onNavigate('SLACK_IMPORT')} />
+          <ActionRow icon={<img src="/gmail.svg" alt="" className="w-4 h-4" />} label="Process from Gmail" onClick={() => onNavigate('EMAIL_IMPORT')} />
+          <ActionRow icon={<img src="/slack.svg" alt="" className="w-4 h-4" />} label="Process from Slack" onClick={() => onNavigate('SLACK_IMPORT')} />
         </div>
       </FormField>
 

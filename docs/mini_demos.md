@@ -251,9 +251,200 @@ Before shipping any new mini demo, verify:
 
 ---
 
+## Demo Mini Components (DMCs)
+
+DMCs are a **smaller variant** of the full MDA system. They follow the same headless rule-based principles but are scoped to a single feature, not the full app.
+
+### When to use MDA vs DMC
+
+| | MDA (Mini Demo Animation) | DMC (Demo Mini Component) |
+|--|---------------------------|--------------------------|
+| **Shows** | Full app window with sidebar, topbar, multi-column layout | A focused interaction for one feature |
+| **Shell** | `MiniShell` with `DemoShellView` orchestrator | No `MiniShell` — lightweight custom orchestrator |
+| **Engine** | `useDemoEngine` with `DemoState` | `useDmcEngine<S, P>` with custom state type |
+| **State** | Shared `DemoState` (14 fields, all demos) | Per-DMC state type (only fields that feature needs) |
+| **Container** | Absolute-positioned shell inside a `bg-surface-frost-05` panel | **Fixed-height** container (no layout shift) |
+| **Primary use** | Landing page hero + feature sections | Article pages — one DMC per article topic |
+| **Cycle length** | 20-30s | 14-20s |
+
+### DMC Architecture
+
+DMCs use the **generic engine** (`useDmcEngine`) from `src/site/components/mini-demo/useDmcEngine.ts`. It is identical to `useDemoEngine` but type-parameterized over any state shape `S` and content pool `P`.
+
+```
+src/site/components/<feature>-dmc/
+├── index.ts              — barrel export
+├── direction.ts          — state type, rules, content pool, goal, resetCycle
+├── <ComponentA>.tsx      — visual sub-component
+├── <ComponentB>.tsx      — visual sub-component
+└── <Feature>Dmc.tsx      — orchestrator (maps engine state to visuals)
+```
+
+Generic types live in `src/site/components/mini-demo/dmc-types.ts`:
+- `DmcDirection<S, P>` — goal, rules, actors, contentPool, initialState, resetCycle, tickDelay, tickJitter, startDelay
+- `DmcRule<S, P>` — actor, weight, canExecute, execute
+- `DmcTransition<S>` — actor, verb, subject, stateUpdate
+- `DmcEngineOutput<S>` — state, currentTransition, activeActor
+
+### DMC Container Rules — CRITICAL
+
+DMCs render inside article pages and article cards. Their container **must have a stable size** to prevent layout shift as elements animate in and out. Use `aspect-square` for a square container that fills the parent width.
+
+```tsx
+// CORRECT — aspect-ratio square, no bg (parent provides frost bg)
+<div ref={containerRef} data-cursor-boundary="my-dmc" className="relative aspect-square">
+  {/* crossfading layers with absolute positioning */}
+</div>
+
+// WRONG — auto height causes layout shift when content changes
+<div ref={containerRef} className="relative">
+  {state.showCard && <MyCard />}
+  {state.showModal && <MyModal />}
+</div>
+```
+
+Pattern: use **two absolute layers** inside the container with **percentage-based sizing** so content scales with the container:
+
+```tsx
+<div className="relative aspect-square">
+  <div className={`absolute inset-0 flex items-center justify-center p-[12%] transition-all duration-500 ${showA ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+    <div className="w-full max-w-[75%]">
+      <CardComponent />
+    </div>
+  </div>
+  <div className={`absolute inset-0 flex items-center justify-center p-[10%] transition-all duration-500 ${showB ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+    <div className="w-full max-w-[85%]">
+      <ModalComponent />
+    </div>
+  </div>
+</div>
+```
+
+**Responsive sizing rules:**
+- Padding: use percentage `p-[10%]` or `p-[12%]`, never fixed pixel padding like `p-6`
+- Card width: `max-w-[75%]` of container
+- Modal width: `max-w-[85%]` of container (modals show more content than cards)
+- **Never** use fixed pixel widths like `max-w-[220px]` or `max-w-[300px]` — these become tiny in large containers and don't scale
+
+### DMC Direction
+
+DMC directions follow the same pattern as MDA directions but with two additions:
+
+- **`initialState`** is required (no shared default state)
+- **`resetCycle`** is an explicit function (no hardcoded `startNewCycle`)
+
+```typescript
+export const myDirection: DmcDirection<MyState, MyPool> = {
+  goal: (s) => s.step === 'done',
+  actors: [ARVID],
+  rules: [...],
+  contentPool: { ... },
+  initialState: { step: 'idle', ... },
+  resetCycle: (state) => ({ ...INITIAL, cycleCount: state.cycleCount + 1 }),
+  tickDelay: 1000,  // base delay between ticks, default 1000ms
+  tickJitter: 400,  // random ± variance per tick, default 400ms
+  startDelay: 2000, // max random offset before first tick, default 2000ms
+};
+```
+
+### DMC Organic Timing
+
+DMCs must feel **organic and non-mechanical**. Multiple DMCs on the same page must never beat in unison.
+
+The engine enforces this via three timing controls:
+
+| Parameter | Default | Purpose |
+|-----------|---------|---------|
+| `tickDelay` | `1000` ms | Base delay between ticks |
+| `tickJitter` | `400` ms | Random ±variance added to each tick (`delay ± jitter`) |
+| `startDelay` | `2000` ms | Max random offset before the first tick fires |
+
+**Why this matters:** Without jitter, two DMCs on the articles list page tick at the exact same cadence — transitions fire simultaneously, cursors move in lockstep, and the demos feel robotic. The random start offset desynchronizes them, and per-tick jitter ensures they stay desynchronized across cycles.
+
+**Rules:**
+- Every DMC inherits default jitter — no configuration needed for organic feel
+- DMCs that share a page should use **different `tickDelay`** values (e.g. 1000 vs 1100) for additional desync
+- Jitter should be at least 30% of `tickDelay` for noticeable variation
+
+### DMC Actor Diversity
+
+DMCs must use **contextually appropriate actors**, not always "Arvid":
+
+- If the demo shows a **human action** (clicking a button, inspecting a card), use a human actor (Sarah K., David M., Erik L.)
+- If the demo shows **AI analysis** (scanning, evaluating, generating), use Arvid
+- Different DMCs on the same page should use **different actor names** to avoid the impression of a single bot driving everything
+
+### DMC Shared Components
+
+DMCs reuse the same `mini-demo/` primitives as MDAs (MiniCard, MiniCursor, MiniProgressBar, etc.). They also share the `RequirementCard` from `app-demo/` for any demo that shows a requirement.
+
+The `RequirementCard` is the **canonical requirement card for all demos** (MDA and DMC). It renders:
+- Short ID + ellipsis menu icon
+- Title
+- Chips row: completeness %, optional status chip, optional impl status chip
+- Footer: owner + date + indicator dots
+
+When a DMC needs cursor targeting on a specific chip (e.g. the implementation status chip), pass `implChipTarget` to set the `data-cursor-target`.
+
+### DMC Checklist
+
+- [ ] Uses `useDmcEngine` from `mini-demo/useDmcEngine.ts`
+- [ ] Direction has explicit `initialState` and `resetCycle`
+- [ ] Container has **stable size** (use `aspect-square`) — NO auto-sizing
+- [ ] Uses absolute-positioned crossfade layers — no conditional rendering that shifts layout
+- [ ] Container has **no background** — parent provides `bg-surface-frost-05`
+- [ ] Reuses shared primitives and `RequirementCard` where applicable
+- [ ] Registered in `src/site/lib/mdaRegistry.ts` with a descriptive label
+- [ ] Content pool has 3+ scenarios for varied cycles
+- [ ] Actor is contextually appropriate (human for clicks, Arvid for AI analysis)
+- [ ] `tickDelay` differs from other DMCs that may share a page
+- [ ] `tickJitter` is not zero (organic timing)
+
+---
+
+## Article Integration
+
+### Article Page (`ArticlePage.tsx`)
+
+When an article has `mini_demo_id`, the MDA/DMC renders at the top of the article body inside a container with `bg-surface-frost-05` and `rounded-card`:
+
+```tsx
+<div className="overflow-hidden rounded-card bg-surface-frost-05">
+  <Suspense fallback={...}>
+    <MdaComponent />
+  </Suspense>
+</div>
+```
+
+The **`bg-surface-frost-05`** background is mandatory — it matches the landing page feature section containers. DMC components must NOT set their own background (they should be transparent so the frost bg shows through).
+
+### Article Card (`ArticleCard.tsx`)
+
+Article cards in list views (`ArticlesListPage`, `LearnMoreSection`, `ArticleReadMore`) also render the mini demo when:
+- The article has a `mini_demo_id`
+- The card variant is `featured`
+
+The card lazy-loads the component from `MDA_REGISTRY` with the same frost background. Callers must pass `miniDemoId={article.mini_demo_id}` to `ArticleCard`.
+
+### Registry (`mdaRegistry.ts`)
+
+All MDAs and DMCs must be registered in `src/site/lib/mdaRegistry.ts`:
+
+```typescript
+'my-feature-dmc': {
+  label: 'My Feature Name',
+  component: lazy(() => import('../components/my-feature-dmc').then((m) => ({ default: m.MyFeatureDmc }))),
+},
+```
+
+The `label` appears in the CMS admin article form as a dropdown option. The `id` key is stored as `mini_demo_id` on the article.
+
+---
+
 ## Reference Implementations
 
-| Demo | Location | Shows |
-|------|----------|-------|
-| Hero app demo | `src/site/components/app-demo/` | Full product overview with 4-column flow |
-| GitHub code context | `src/site/components/github-demo/` | Connecting a repo and getting AI-enhanced requirements |
+| Demo | Type | Location | Shows |
+|------|------|----------|-------|
+| Hero app demo | MDA | `src/site/components/app-demo/` | Full product overview with 4-column flow |
+| GitHub code context | MDA | `src/site/components/github-demo/` | Connecting a repo and getting AI-enhanced requirements |
+| Accordance Score | DMC | `src/site/components/accordance-dmc/` | Requirement card → impl modal with score animation |

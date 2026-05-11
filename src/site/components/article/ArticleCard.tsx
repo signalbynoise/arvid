@@ -1,14 +1,19 @@
+import React, { Suspense } from 'react';
+import { MDA_REGISTRY } from '../../lib/mdaRegistry';
+
 interface ArticleCardProps {
   title: string;
   excerpt: string;
   slug: string;
   date?: string;
   author?: string;
+  miniDemoId?: string | null;
   variant?: 'featured' | 'compact';
 }
 
-export function ArticleCard({ title, excerpt, slug, date, author, variant = 'compact' }: ArticleCardProps) {
+export function ArticleCard({ title, excerpt, slug, date, author, miniDemoId, variant = 'compact' }: ArticleCardProps) {
   const isFeatured = variant === 'featured';
+  const MdaComponent = miniDemoId ? MDA_REGISTRY[miniDemoId]?.component : null;
 
   return (
     <a
@@ -26,7 +31,15 @@ export function ArticleCard({ title, excerpt, slug, date, author, variant = 'com
       <p className="line-clamp-3 text-caption-lg text-text-tertiary">{excerpt}</p>
 
       {isFeatured && (
-        <div className="mt-auto h-65 w-full rounded-t-card bg-surface-frost-10 transition-colors group-hover:bg-surface-frost-12" />
+        MdaComponent ? (
+          <div className="mt-auto w-full h-[300px] overflow-hidden rounded-t-card bg-surface-frost-05">
+            <Suspense fallback={<div className="h-full w-full bg-surface-frost-10" />}>
+              <MdaComponent />
+            </Suspense>
+          </div>
+        ) : (
+          <div className="mt-auto h-[300px] w-full rounded-t-card bg-surface-frost-10 transition-colors group-hover:bg-surface-frost-12" />
+        )
       )}
     </a>
   );

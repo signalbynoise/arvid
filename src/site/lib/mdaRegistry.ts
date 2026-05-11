@@ -22,6 +22,18 @@ export const MDA_REGISTRY: Record<string, MdaEntry> = {
     label: 'GitHub Demo',
     component: lazy(() => import('../components/github-demo').then((m) => ({ default: m.GitHubDemo }))),
   },
+  'accordance-dmc': {
+    label: 'Accordance Score & Code Drift',
+    component: lazy(() => import('../components/accordance-dmc').then((m) => ({ default: m.AccordanceDmc }))),
+  },
+  'supabase-dmc': {
+    label: 'Arvid Understands Supabase',
+    component: lazy(() => import('../components/supabase-dmc').then((m) => ({ default: m.SupabaseDmc }))),
+  },
+  'slack-dmc': {
+    label: 'Arvid Talks to Slack',
+    component: lazy(() => import('../components/slack-dmc').then((m) => ({ default: m.SlackDmc }))),
+  },
 };
 
 export const MDA_OPTIONS = Object.entries(MDA_REGISTRY).map(([id, entry]) => ({

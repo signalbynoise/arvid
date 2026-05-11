@@ -746,7 +746,55 @@ All MDAs must compose from the shared building blocks in `mini-demo/`:
 
 Shared types (`MiniTeam`, `MiniProject`, `BreadcrumbSegment`) are in `mini-demo/types.ts`.
 
-Card components (`DemoRequirementCard`, `DemoQuestionCard`, `DemoAnswerCard`) live in `app-demo/` but are imported by any demo that needs them.
+Card components (`RequirementCard`, `QuestionCard`, `AnswerCard`) live in `app-demo/` but are imported by any demo that needs them.
+
+### MiniDmcModal — Base Modal for DMCs (CRITICAL)
+
+All modals in all DMCs **must** use `MiniDmcModal` from `mini-demo/MiniDmcModal.tsx` as their base. This component owns **all** modal chrome styling — container, title bar, divider, content area, footer layout, transitions, and border/radius/shadow. Individual DMC modals are thin wrappers that pass content as children.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `visible` | `boolean` | Controls opacity + scale transition |
+| `title` | `string` | Title bar text (left-aligned) |
+| `subtitle` | `string?` | Optional subtitle below divider |
+| `cursorTarget` | `string?` | `data-cursor-target` for engine targeting |
+| `footer` | `ReactNode?` | Optional button row at bottom |
+| `children` | `ReactNode` | Modal content sections |
+
+**Rules:**
+1. **Every DMC modal must use `MiniDmcModal` as its outermost wrapper.** No custom modal containers with their own border, radius, background, or transition classes.
+2. **Content inside `MiniDmcModal` must be plain data rows.** Use text labels + values in flex rows. No custom banners, chips, badges, icons, or decorative elements that aren't part of the data being displayed.
+3. **Use `MiniProgressBar` for progress/score bars.** Do not create custom bar elements.
+4. **Footer buttons follow a fixed pattern:** ghost "Cancel" + primary action. No custom button styling.
+5. **No duplicate modal styling.** If two DMCs need modals, they both use `MiniDmcModal`. The modals must look and feel identical in their chrome — only the content rows differ.
+
+```tsx
+// CORRECT — thin wrapper passing content to shared base
+export function MyFeatureModal({ visible, data, showSection }: Props) {
+  return (
+    <MiniDmcModal visible={visible} title="Feature Analysis" cursorTarget="dmc-modal">
+      <div className={`transition-opacity duration-500 ${showSection ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center justify-between">
+          <span className="text-[8px] text-text-tertiary">Label</span>
+          <span className="text-[7px] font-mono text-text-quaternary">{data.value}</span>
+        </div>
+      </div>
+    </MiniDmcModal>
+  );
+}
+
+// WRONG — custom modal container that diverges from base styling
+export function MyFeatureModal({ visible }: Props) {
+  return (
+    <div className="w-full rounded-card border border-border-subtle bg-surface-base overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3">
+        <span className="text-[9px] font-[var(--fw-medium)]">Title</span>
+      </div>
+      {/* ... duplicated chrome styling ... */}
+    </div>
+  );
+}
+```
 
 ### Rules
 

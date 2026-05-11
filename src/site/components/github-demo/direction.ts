@@ -13,14 +13,13 @@ import {
   answerQuestionRule,
 } from '../mini-demo/rules';
 
-const SARAH = { id: 'sarah', name: 'Sarah K.' };
-const ARVID = { id: 'arvid', name: 'Arvid' };
+import { ARVID, JONAS } from '../mini-demo/actors';
 
 const contentPool: ContentPool = {
   requirements: [
-    { id: 'gh-r1', shortId: 'R01', title: 'Post-Login OAuth Profile Refresh', owner: 'Erik L.', createdAt: 'May 1', completeness: 0, clarity: 'Low', risk: 'Low' },
-    { id: 'gh-r2', shortId: 'R02', title: 'GitHub OAuth & Repository Analysis', owner: 'Erik L.', createdAt: 'Apr 28', completeness: 0, clarity: 'Low', risk: 'Low' },
-    { id: 'gh-r3', shortId: 'R03', title: 'Webhook payload validation', owner: 'Erik L.', createdAt: 'Apr 25', completeness: 0, clarity: 'Low', risk: 'Medium' },
+    { id: 'gh-r1', shortId: 'R01', title: 'Post-Login OAuth Profile Refresh', owner: 'Erik L.', createdAt: 'May 1', completeness: 0, clarity: 'Low', risk: 'Low', status: 'Pre backlog', implStatus: 'Not implemented' },
+    { id: 'gh-r2', shortId: 'R02', title: 'GitHub OAuth & Repository Analysis', owner: 'Erik L.', createdAt: 'Apr 28', completeness: 0, clarity: 'Low', risk: 'Low', status: 'Pre backlog', implStatus: 'Not implemented' },
+    { id: 'gh-r3', shortId: 'R03', title: 'Webhook payload validation', owner: 'Erik L.', createdAt: 'Apr 25', completeness: 0, clarity: 'Low', risk: 'Medium', status: 'Pre backlog', implStatus: 'Not implemented' },
   ],
   questions: {
     _default: [
@@ -47,20 +46,20 @@ const contentPool: ContentPool = {
 export const githubDirection: Direction = {
   goal: (s) => s.acceptedQuestions.length >= 2 && Object.values(s.answers).some(answerIds => answerIds.length > 0),
 
-  actors: [SARAH, ARVID],
+  actors: [JONAS, ARVID],
 
   rules: [
-    openImportModalRule(SARAH.id, 2),
-    startImportRule(SARAH.id),
+    openImportModalRule(JONAS.id, 2),
+    startImportRule(JONAS.id),
     extractRule(ARVID.id),
     showSuggestionsRule(ARVID.id),
     selectSuggestionRule(ARVID.id),
-    closeModalRule(SARAH.id),
-    selectRequirementRule(SARAH.id),
+    closeModalRule(JONAS.id),
+    selectRequirementRule(JONAS.id),
     generateQuestionsRule(ARVID.id),
-    acceptQuestionRule(SARAH.id, 2),
-    selectQuestionRule(SARAH.id),
-    answerQuestionRule(SARAH.id),
+    acceptQuestionRule(JONAS.id, 2),
+    selectQuestionRule(JONAS.id),
+    answerQuestionRule(JONAS.id),
   ],
 
   contentPool,

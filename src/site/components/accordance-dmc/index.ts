@@ -1,0 +1,1 @@
+export { AccordanceDmc } from './AccordanceDmc';

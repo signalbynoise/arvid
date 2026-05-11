@@ -108,7 +108,7 @@ export function ArticlePage() {
             </header>
 
             {MdaComponent && (
-              <div className="overflow-hidden rounded-card">
+              <div className="overflow-hidden rounded-card bg-surface-frost-05">
                 <Suspense fallback={<div className="h-100 w-full rounded-card bg-surface-frost-10" />}>
                   <MdaComponent />
                 </Suspense>

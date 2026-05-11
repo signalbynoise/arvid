@@ -44,6 +44,8 @@ export function useRouterResolver() {
     buildProjectPath: buildProjectPathFromEntities,
     getProjects: () => useStore.getState().projects,
     getTeams: () => useStore.getState().teams,
+    getRequirements: () => useStore.getState().requirements,
+    getQuestions: () => useStore.getState().questions,
   });
   actionsRef.current = {
     navigate: (path: string) => navigateRef.current(path, { replace: true }),
@@ -56,6 +58,8 @@ export function useRouterResolver() {
     buildProjectPath: buildProjectPathFromEntities,
     getProjects: () => useStore.getState().projects,
     getTeams: () => useStore.getState().teams,
+    getRequirements: () => useStore.getState().requirements,
+    getQuestions: () => useStore.getState().questions,
   };
 
   const machine = useMemo(
@@ -111,7 +115,12 @@ export function useRouterResolver() {
   // Entities readiness → ENTITIES_LOADED event
   useEffect(() => {
     return useStore.subscribe((s, prev) => {
-      if (s.dataState.status === 'ready' && prev.dataState.status !== 'ready') {
+      const becameReady = s.dataState.status === 'ready' && prev.dataState.status !== 'ready';
+      const entitiesChanged = s.dataState.status === 'ready' && (
+        s.requirements !== prev.requirements || s.questions !== prev.questions
+      );
+
+      if (becameReady || entitiesChanged) {
         send({
           type: 'ENTITIES_LOADED',
           requirements: s.requirements,

@@ -131,6 +131,7 @@
   --modal-width-sm: 400px;
   --modal-width-md: 480px;
   --modal-width-lg: 520px;
+  --modal-width-wide: 760px;
   --modal-width-xl: 896px;
   --textarea-min-h: 100px;
 
@@ -282,6 +283,7 @@
   --max-width-modal-sm: var(--modal-width-sm);
   --max-width-modal-md: var(--modal-width-md);
   --max-width-modal-lg: var(--modal-width-lg);
+  --max-width-modal-wide: var(--modal-width-wide);
   --max-width-modal-xl: var(--modal-width-xl);
   --min-height-textarea: var(--textarea-min-h);
 
@@ -377,7 +379,7 @@
   .text-body-sb    { font-size: 16px; font-weight: var(--fw-semibold); line-height: 1.50; letter-spacing: normal; }
   .text-sm         { font-size: 15px; font-weight: var(--fw-regular); line-height: 1.60; letter-spacing: -0.165px; }
   .text-sm-md      { font-size: 15px; font-weight: var(--fw-medium); line-height: 1.60; letter-spacing: -0.165px; }
-  .text-caption-lg { font-size: 14px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
+  .text-caption-lg { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
   .text-caption    { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.13px; }
   .text-btn        { font-size: var(--fs-btn); font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: normal; }
   .text-label      { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
@@ -453,7 +455,7 @@
     gap: var(--space-2);
     border-radius: var(--radius-pill);
     padding: var(--space-2) var(--space-5);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: var(--fw-medium);
     line-height: 1.5;
     letter-spacing: -0.182px;

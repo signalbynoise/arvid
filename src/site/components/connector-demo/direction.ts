@@ -13,15 +13,14 @@ import {
   answerQuestionRule,
 } from '../mini-demo/rules';
 
-const SARAH = { id: 'sarah', name: 'Sarah K.' };
-const ARVID = { id: 'arvid', name: 'Arvid' };
+import { ARVID, MARIA } from '../mini-demo/actors';
 
 const contentPool: ContentPool = {
   requirements: [
-    { id: 'con-r1', shortId: 'R01', title: 'Onboarding flow for new team members', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium' },
-    { id: 'con-r2', shortId: 'R02', title: 'Customer feedback digest pipeline', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Low' },
-    { id: 'con-r3', shortId: 'R03', title: 'Invoice PDF generation for billing', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'High' },
-    { id: 'con-r4', shortId: 'R04', title: 'Automated contract renewal alerts', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium' },
+    { id: 'con-r1', shortId: 'R01', title: 'Onboarding flow for new team members', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium', status: 'Pre backlog', implStatus: 'Not implemented' },
+    { id: 'con-r2', shortId: 'R02', title: 'Customer feedback digest pipeline', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Low', status: 'Pre backlog', implStatus: 'Not implemented' },
+    { id: 'con-r3', shortId: 'R03', title: 'Invoice PDF generation for billing', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'High', status: 'Pre backlog', implStatus: 'Not implemented' },
+    { id: 'con-r4', shortId: 'R04', title: 'Automated contract renewal alerts', owner: 'Sarah K.', createdAt: 'Today', completeness: 0, clarity: 'Low', risk: 'Medium', status: 'Pre backlog', implStatus: 'Not implemented' },
   ],
   questions: {
     _default: [
@@ -52,20 +51,20 @@ export const connectorDirection: Direction = {
     s.requirements.length >= 3 &&
     Object.values(s.answers).some(answerIds => answerIds.length > 0),
 
-  actors: [SARAH, ARVID],
+  actors: [MARIA, ARVID],
 
   rules: [
-    openImportModalRule(SARAH.id, 4),
-    startImportRule(SARAH.id),
+    openImportModalRule(MARIA.id, 4),
+    startImportRule(MARIA.id),
     extractRule(ARVID.id),
     showSuggestionsRule(ARVID.id),
     selectSuggestionRule(ARVID.id),
-    closeModalRule(SARAH.id),
-    selectRequirementRule(SARAH.id),
+    closeModalRule(MARIA.id),
+    selectRequirementRule(MARIA.id),
     generateQuestionsRule(ARVID.id),
-    acceptQuestionRule(SARAH.id, 2),
-    selectQuestionRule(SARAH.id),
-    answerQuestionRule(SARAH.id),
+    acceptQuestionRule(MARIA.id, 2),
+    selectQuestionRule(MARIA.id),
+    answerQuestionRule(MARIA.id),
   ],
 
   contentPool,

@@ -20,10 +20,10 @@ export function SuggestionAction({ icon, label, description, shortcut, onClick }
         {icon}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-[var(--fw-medium)] text-text-tertiary group-hover:text-text-secondary transition-colors">
+        <p className="text-caption text-text-tertiary group-hover:text-text-secondary transition-colors">
           {label}
         </p>
-        <p className="text-[12px] text-text-empty group-hover:text-text-quaternary transition-colors">
+        <p className="text-btn text-text-empty group-hover:text-text-quaternary transition-colors">
           {description}
         </p>
       </div>
