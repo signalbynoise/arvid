@@ -58,7 +58,7 @@ export function Chip({ border = 'solid', accent = 'default', href, onClick, grad
 
   if (onClick) {
     return (
-      <button onClick={onClick} className={`${classes} ${HOVER} cursor-pointer`}>
+      <button onClick={(e) => { e.stopPropagation(); onClick(e); }} className={`${classes} ${HOVER} cursor-pointer`}>
         {children}
       </button>
     );
