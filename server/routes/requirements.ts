@@ -5,10 +5,12 @@ import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../
 import { enhanceRequirement, classifyImplementation } from '../openrouter';
 import type { FigmaDesignContext } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
-import type { RepoAnalysis } from '../../shared/schemas/repoContext';
+import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../../shared/schemas/repoContext';
 import type { DbAnalysis } from '../../shared/schemas/dbContext';
 import { parseFigmaUrl } from '../../shared/figmaUrl';
 import { getFileNodes, getImages, extractDesignSummary } from '../lib/figmaClient';
+import { GitHubClient } from '../lib/githubClient';
+import { analyzeRepo } from '../analysis/repoAnalyzer';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
@@ -427,6 +429,75 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
       .eq('id', requirementId);
 
     return res.json({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: now });
+  }
+
+  const { data: projectFull } = await db
+    .from('projects')
+    .select('github_repo_default_branch, user_id')
+    .eq('id', requirement.project_id)
+    .single();
+
+  const branch = projectFull?.github_repo_default_branch || 'main';
+
+  const { data: ghConnection } = await supabase
+    .from('github_connections')
+    .select('access_token')
+    .eq('user_id', projectFull?.user_id ?? '')
+    .single();
+
+  if (ghConnection?.access_token) {
+    console.info('[INFO] [requirements:checkImplementation] Refreshing repo context from GitHub', JSON.stringify({ projectId: requirement.project_id }));
+    try {
+      const ghClient = new GitHubClient({ token: ghConnection.access_token });
+      const [owner, repo] = project.github_repo_full_name.split('/');
+
+      const treeData = await ghClient.request<{
+        tree: Array<{ path: string; type: string; size?: number }>;
+      }>(`/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`);
+
+      const fileTree: FileTreeEntry[] = treeData.tree.map(item => ({
+        path: item.path,
+        type: item.type === 'tree' ? 'tree' : 'blob',
+        size: item.size,
+      }));
+
+      const commitsData = await ghClient.request<Array<{
+        sha: string;
+        commit: { message: string; author: { name: string; date: string } };
+      }>>(`/repos/${owner}/${repo}/commits?per_page=50&sha=${branch}`);
+
+      const recentCommits: CommitEntry[] = commitsData.map(c => ({
+        sha: c.sha,
+        message: c.commit.message.split('\n')[0],
+        author: c.commit.author.name,
+        date: c.commit.author.date,
+      }));
+
+      const contextId = `rc-${requirement.project_id}`;
+      const existingKeyFiles = (await supabase
+        .from('repo_contexts')
+        .select('key_files')
+        .eq('project_id', requirement.project_id)
+        .single()).data?.key_files || {};
+
+      const repoAnalysis = analyzeRepo(fileTree, existingKeyFiles, recentCommits);
+
+      await supabase
+        .from('repo_contexts')
+        .upsert({
+          id: contextId,
+          project_id: requirement.project_id,
+          file_tree: fileTree,
+          recent_commits: recentCommits,
+          analysis: repoAnalysis,
+          status: 'ready',
+          fetched_at: new Date().toISOString(),
+        });
+
+      console.info('[INFO] [requirements:checkImplementation] Repo context refreshed', JSON.stringify({ projectId: requirement.project_id, files: fileTree.length, commits: recentCommits.length }));
+    } catch (refreshErr) {
+      console.warn('[WARN] [requirements:checkImplementation] Failed to refresh repo context, using cached version', JSON.stringify({ error: refreshErr instanceof Error ? refreshErr.message : 'Unknown' }));
+    }
   }
 
   const { data: repoCtx } = await db
