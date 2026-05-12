@@ -7,6 +7,7 @@ interface GitHubStatusChipProps {
   implConfidence?: number;
   implCheckedAt?: string;
   implEvidence?: string;
+  disabled?: boolean;
   onRetry?: () => void;
   onViewDetails?: () => void;
 }
@@ -29,7 +30,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const HAS_RESULT = new Set(['Implemented', 'Partially Implemented', 'Not Implemented']);
 
-function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt?: string): string {
+function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt?: string, disabled?: boolean): string {
+  if (disabled) return 'Linear task must be Done before checking implementation';
   if (implStatus === 'Checking') return 'Analyzing repository code...';
   const parts: string[] = [`Code: ${implStatus}`];
   if (implConfidence !== undefined) {
@@ -44,16 +46,16 @@ function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt
   return parts.join(' · ');
 }
 
-export function GitHubStatusChip({ implStatus, implConfidence, implCheckedAt, onRetry, onViewDetails }: GitHubStatusChipProps) {
-  const accent = STATUS_ACCENT[implStatus] ?? 'default';
+export function GitHubStatusChip({ implStatus, implConfidence, implCheckedAt, disabled, onRetry, onViewDetails }: GitHubStatusChipProps) {
+  const accent = disabled ? 'default' : (STATUS_ACCENT[implStatus] ?? 'default');
   const label = STATUS_LABEL[implStatus] ?? implStatus;
   const isRetryable = implStatus === 'Not Checked' || implStatus === 'Unknown';
   const isChecking = implStatus === 'Checking';
   const hasResult = HAS_RESULT.has(implStatus);
   const isChecked = implStatus !== 'Not Checked' && !isChecking;
-  const tooltip = buildTooltip(implStatus, implConfidence, implCheckedAt);
+  const tooltip = buildTooltip(implStatus, implConfidence, implCheckedAt, disabled);
 
-  const handleClick = isRetryable ? onRetry : hasResult ? onViewDetails : undefined;
+  const handleClick = disabled ? undefined : (isRetryable ? onRetry : hasResult ? onViewDetails : undefined);
 
   return (
     <Chip

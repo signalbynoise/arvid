@@ -78,6 +78,7 @@ export function RequirementCard({
           implStatus={req.implStatus ?? 'Not Checked'}
           implConfidence={req.implConfidence}
           implCheckedAt={req.implCheckedAt}
+          disabled={req.linearStatusType !== 'completed'}
           onRetry={() => onCheckImplementation(req.id)}
           onViewDetails={() => onViewImplDetails(req.id)}
         />
