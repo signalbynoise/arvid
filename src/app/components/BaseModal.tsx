@@ -84,7 +84,7 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', aside, footer, 
             </div>
 
             {footer && (
-              <div className="flex items-center justify-end gap-3 px-6 pb-6 shrink-0">
+              <div className="flex items-center justify-between gap-3 px-6 pb-6 shrink-0">
                 {footer}
               </div>
             )}

@@ -45,6 +45,7 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
   const allQuestions = useStore(selectQuestions);
   const selectedId = useStore(selectSelectedReqId);
   const checkImplementation = useStore(s => s.checkImplementation);
+  const checkingImplementation = useStore(s => s.checkingImplementation);
   const hintCards = useStore(selectHintRequirementCards);
 
   const [groupBy, setGroupBy] = useState('none');
@@ -148,6 +149,8 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
         isOpen={implDetailReqId !== null}
         onClose={() => setImplDetailReqId(null)}
         requirement={requirements.find(r => r.id === implDetailReqId) ?? null}
+        isChecking={implDetailReqId !== null && checkingImplementation.has(implDetailReqId)}
+        onRecheck={checkImplementation}
       />
     </ColumnShell>
   );

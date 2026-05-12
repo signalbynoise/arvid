@@ -8,6 +8,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   requirement: Requirement | null;
+  isChecking?: boolean;
+  onRecheck?: (id: string) => void;
 }
 
 function scoreBarColor(value: number): string {
@@ -23,7 +25,7 @@ const DIMENSION_LABELS: { key: keyof typeof ACCORDANCE_WEIGHTS; field: keyof Imp
   { key: 'risks', field: 'risks_addressed', label: 'Risk Mitigation' },
 ];
 
-export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
+export function ImplDetailsModal({ isOpen, onClose, requirement, isChecking, onRecheck }: Props) {
   if (!requirement) return null;
 
   const confidence = requirement.implConfidence ?? 0;
@@ -51,8 +53,25 @@ export function ImplDetailsModal({ isOpen, onClose, requirement }: Props) {
 
   const modalFooter = (
     <>
-      <button className="btn-ghost" onClick={onClose}>Cancel</button>
-      <button className="btn-primary">Share Analysis</button>
+      <div>
+        {onRecheck && (
+          <button
+            className="btn-ghost flex items-center gap-2"
+            disabled={isChecking}
+            onClick={() => onRecheck(requirement.id)}
+          >
+            <svg className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 1v4.5h4.5" />
+              <path d="M2.3 10a6 6 0 1 0 .8-4.5L1 7.5" />
+            </svg>
+            {isChecking ? 'Analyzing...' : 'Re-analyze'}
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-3">
+        <button className="btn-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn-primary">Share Analysis</button>
+      </div>
     </>
   );
 
