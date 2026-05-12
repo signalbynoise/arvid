@@ -32,8 +32,8 @@ export interface EntitiesSlice {
   refreshRequirements: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
 
-  enhanceRequirement: (text: string, projectId?: string | null) => Promise<{ title: string; description: string }>;
-  createRequirement: (text: string, owner: string, title?: string) => Promise<void>;
+  enhanceRequirement: (text: string, projectId?: string | null, figmaLinks?: string[]) => Promise<{ title: string; description: string }>;
+  createRequirement: (text: string, owner: string, title?: string, figmaLinks?: string[]) => Promise<void>;
   updateRequirement: (id: string, updates: { title?: string; description?: string; owner?: string }) => Promise<void>;
   deleteRequirement: (id: string) => Promise<void>;
   createQuestion: (text: string, requirementId: string, importance: 'Critical' | 'Important' | 'Optional', category: 'Scope' | 'Data' | 'Time' | 'Output' | 'Quality') => Promise<void>;
@@ -133,10 +133,10 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
-  enhanceRequirement: async (text: string, projectId?: string | null) => {
-    log.info('enhanceRequirement', 'Enhancing requirement via AI', { textLength: text.length });
+  enhanceRequirement: async (text: string, projectId?: string | null, figmaLinks?: string[]) => {
+    log.info('enhanceRequirement', 'Enhancing requirement via AI', { textLength: text.length, figmaLinkCount: figmaLinks?.length });
     try {
-      const result = await api.enhanceRequirement(text, projectId);
+      const result = await api.enhanceRequirement(text, projectId, figmaLinks);
       log.info('enhanceRequirement', 'Enhancement complete', { title: result.title });
       return result;
     } catch (err) {
@@ -146,12 +146,12 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
   },
 
-  createRequirement: async (text: string, owner: string, explicitTitle?: string) => {
+  createRequirement: async (text: string, owner: string, explicitTitle?: string, figmaLinks?: string[]) => {
     const title = explicitTitle || (text.length > 80 ? text.substring(0, 80) + '...' : text);
-    log.info('createRequirement', 'Creating requirement', { title });
+    log.info('createRequirement', 'Creating requirement', { title, figmaLinkCount: figmaLinks?.length });
 
     const selectedProjectId = (get() as unknown as { selectedProjectId: string | null }).selectedProjectId;
-    const newReq: Partial<Requirement> & { projectId?: string } = {
+    const newReq: Partial<Requirement> & { projectId?: string; figmaLinks?: string[] } = {
       id: `r${Date.now()}`,
       title,
       description: text,
@@ -162,6 +162,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       risk: 'Medium',
       createdAt: new Date().toISOString(),
       projectId: selectedProjectId ?? undefined,
+      figmaLinks: figmaLinks && figmaLinks.length > 0 ? figmaLinks : undefined,
     };
 
     try {

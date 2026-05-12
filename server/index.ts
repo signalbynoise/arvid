@@ -20,6 +20,8 @@ import { cardAssigneesRouter } from './routes/cardAssignees';
 import { supabaseConnectRouter, supabaseConnectCallbackRouter } from './routes/supabaseConnect';
 import { articlesPublicRouter } from './routes/articles';
 import { cmsArticlesRouter } from './routes/cmsArticles';
+import { documentsRouter } from './routes/documents';
+import { figmaRouter, figmaCallbackRouter } from './routes/figma';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -40,7 +42,14 @@ app.use('/api/webhooks', express.json({
 }));
 app.use('/api/webhooks', webhooksRouter);
 
-app.use(express.json());
+app.use((req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.startsWith('multipart/')) {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -50,6 +59,7 @@ app.use('/api/github/callback', githubCallbackRouter);
 app.use('/api/linear/callback', linearCallbackRouter);
 app.use('/api/slack/callback', slackCallbackRouter);
 app.use('/api/supabase-connect/callback', supabaseConnectCallbackRouter);
+app.use('/api/figma/callback', figmaCallbackRouter);
 app.use('/api/articles', articlesPublicRouter);
 
 app.use('/api', requireAuth);
@@ -70,7 +80,16 @@ app.use('/api/github', githubRouter);
 app.use('/api/linear', linearRouter);
 app.use('/api/slack', slackRouter);
 app.use('/api/supabase-connect', supabaseConnectRouter);
+app.use('/api/documents', documentsRouter);
+app.use('/api/figma', figmaRouter);
 app.use('/api/cms/articles', cmsArticlesRouter);
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[ERROR] [express:unhandled]', err.message, err.stack);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error', detail: err.message });
+  }
+});
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`BFF server running on http://0.0.0.0:${PORT}`);

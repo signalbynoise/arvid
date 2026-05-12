@@ -237,3 +237,38 @@ export type {
   DbContextRow,
   DbContext,
 } from './dbContext';
+
+export {
+  DocumentUploadStatusEnum,
+  DocumentUploadRowSchema,
+  DocumentUploadSchema,
+  ExtractedRequirementSchema,
+  ConfirmDocumentRequirementsBodySchema,
+} from './documentUpload';
+
+export type {
+  DocumentUploadStatus,
+  DocumentUploadRow,
+  DocumentUpload,
+  ExtractedRequirement,
+  ConfirmDocumentRequirementsBody,
+} from './documentUpload';
+
+export {
+  FigmaConnectionRowSchema,
+  FigmaConnectionSchema,
+} from './figmaConnection';
+
+export type { FigmaConnectionRow, FigmaConnection } from './figmaConnection';
+
+export {
+  FigmaDesignLinkRowSchema,
+  FigmaDesignLinkSchema,
+  CreateFigmaDesignLinkBodySchema,
+} from './figmaDesignLink';
+
+export type {
+  FigmaDesignLinkRow,
+  FigmaDesignLink,
+  CreateFigmaDesignLinkBody,
+} from './figmaDesignLink';

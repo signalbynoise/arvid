@@ -39,3 +39,4 @@ export const selectCardAssignees = (state: AppState) => state.cardAssignees;
 export const selectGitHubConnection = (state: AppState) => state.githubConnection;
 export const selectLinearConnection = (state: AppState) => state.linearConnection;
 export const selectSupabaseConnection = (state: AppState) => state.supabaseConnection;
+export const selectFigmaConnection = (state: AppState) => state.figmaConnection;

@@ -59,7 +59,9 @@ export function createCreateEntityMachine(actions: CreateEntityActions) {
           log.info('success', `${context.entityType} created`);
           actions.onClose();
         },
-        type: 'final',
+        on: {
+          RESET: { target: 'idle', actions: assign({ error: null }) },
+        },
       },
 
       failure: {

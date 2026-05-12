@@ -55,13 +55,13 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', aside, footer, 
           />
 
           <motion.div
-            className={`relative w-full ${SIZE_CLASSES[size]} bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
+            className={`relative w-full ${SIZE_CLASSES[size]} max-h-[85vh] bg-surface-panel border border-border-subtle rounded-panel shadow-modal overflow-hidden flex flex-col`}
             initial={{ opacity: 0, y: -24, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -24, scale: 0.95 }}
             transition={PANEL_TRANSITION}
           >
-            <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle">
+            <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle shrink-0">
               <h2 className="text-caption-lg text-text-primary">{title}</h2>
               <button
                 onClick={onClose}
@@ -72,11 +72,11 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', aside, footer, 
               </button>
             </div>
 
-            <div className={size === 'xl' ? '' : 'p-6'}>
+            <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${size === 'xl' ? '' : 'p-6'}`}>
               {aside ? (
-                <div className="flex gap-10">
+                <div className="flex gap-10 flex-1 min-h-0">
                   <div className="flex-1 min-w-0">{children}</div>
-                  <div className="flex-1 min-w-0">{aside}</div>
+                  <div className="flex-1 min-w-0 overflow-y-auto">{aside}</div>
                 </div>
               ) : (
                 children
@@ -84,7 +84,7 @@ export function BaseModal({ isOpen, onClose, title, size = 'lg', aside, footer, 
             </div>
 
             {footer && (
-              <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              <div className="flex items-center justify-end gap-3 px-6 pb-6 shrink-0">
                 {footer}
               </div>
             )}

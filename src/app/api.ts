@@ -296,14 +296,15 @@ export const api = {
     return parseArray(AnswerRowSchema, AnswerSchema, rows, `/answers${params}`);
   },
 
-  async enhanceRequirement(text: string, projectId?: string | null): Promise<{ title: string; description: string }> {
-    const body: Record<string, string> = { text };
+  async enhanceRequirement(text: string, projectId?: string | null, figmaLinks?: string[]): Promise<{ title: string; description: string }> {
+    const body: Record<string, unknown> = { text };
     if (projectId) body.project_id = projectId;
+    if (figmaLinks && figmaLinks.length > 0) body.figma_links = figmaLinks;
     return request<{ title: string; description: string }>('POST', '/requirements/enhance', body);
   },
 
-  async createRequirement(req: Partial<Requirement> & { projectId?: string }): Promise<Requirement> {
-    const body = {
+  async createRequirement(req: Partial<Requirement> & { projectId?: string; figmaLinks?: string[] }): Promise<Requirement> {
+    const body: Record<string, unknown> = {
       id: req.id,
       title: req.title,
       source: req.source || 'Unknown',
@@ -317,6 +318,7 @@ export const api = {
       risk: req.risk || 'Medium',
       project_id: req.projectId,
     };
+    if (req.figmaLinks && req.figmaLinks.length > 0) body.figma_links = req.figmaLinks;
     const row = await request<unknown>('POST', '/requirements', body);
     return parseSingle(RequirementRowSchema, RequirementSchema, row, '/requirements');
   },
@@ -588,5 +590,98 @@ export const api = {
   async deactivateAnswer(id: string): Promise<Answer> {
     const raw = await request<unknown>('PATCH', `/answers/${id}/deactivate`);
     return parseSingle(AnswerRowSchema, AnswerSchema, raw, `/answers/${id}/deactivate`);
+  },
+
+  // --- Document Uploads ---
+
+  async uploadDocument(projectId: string, file: File): Promise<{ uploadId: string; status: string }> {
+    const headers = await getAuthHeaders();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE}/documents/upload/${projectId}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(
+        (body as { error?: string }).error || `Upload failed: ${res.status}`,
+        res.status,
+        `/documents/upload/${projectId}`,
+      );
+    }
+
+    return res.json();
+  },
+
+  async getDocumentStatus(uploadId: string): Promise<{
+    id: string;
+    project_id: string;
+    filename: string;
+    status: string;
+    error_message: string | null;
+    extracted_count: number | null;
+    created_at: string;
+  }> {
+    return request('GET', '/documents/status/' + uploadId);
+  },
+
+  async getDocumentPreviewUrl(uploadId: string): Promise<{ url: string }> {
+    return request('GET', '/documents/preview-url/' + uploadId);
+  },
+
+  async getDocumentResults(uploadId: string): Promise<{
+    filename: string;
+    requirements: Array<{
+      title: string;
+      description: string;
+      clarity: string;
+      risk: string;
+    }>;
+  }> {
+    return request('GET', '/documents/results/' + uploadId);
+  },
+
+  async confirmDocumentRequirements(
+    uploadId: string,
+    requirements: Array<{
+      title: string;
+      description: string;
+      clarity: string;
+      risk: string;
+      owner?: string;
+    }>,
+  ): Promise<{ created: number; ids: string[] }> {
+    return request('POST', `/documents/confirm/${uploadId}`, { requirements });
+  },
+
+  // --- Figma ---
+
+  async getFigmaAuthUrl(): Promise<{ url: string }> {
+    return request<{ url: string }>('GET', '/figma/auth');
+  },
+
+  async getFigmaStatus(signal?: AbortSignal): Promise<{ connected: boolean; username?: string; email?: string }> {
+    return request('GET', '/figma/status', undefined, signal);
+  },
+
+  async disconnectFigma(): Promise<void> {
+    await request<unknown>('DELETE', '/figma/connect');
+  },
+
+  async resolveFigmaDesigns(figmaUrls: string[]): Promise<{
+    designs: Array<{
+      url: string;
+      fileKey: string;
+      nodeId: string | null;
+      nodeName: string;
+      thumbnailUrl: string | null;
+      structuralSummary: string;
+    }>;
+  }> {
+    return request('POST', '/figma/resolve', { figma_urls: figmaUrls });
   },
 };

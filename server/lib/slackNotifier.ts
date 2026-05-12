@@ -6,6 +6,7 @@ export type SlackEventType =
   | 'question_posed'
   | 'question_answered'
   | 'requirement_created'
+  | 'requirements_extracted'
   | 'summary_generated'
   | 'sent_to_linear'
   | 'sent_to_cursor';
@@ -23,6 +24,7 @@ const EVENT_LABELS: Record<SlackEventType, string> = {
   question_posed: 'New Question',
   question_answered: 'Question Answered',
   requirement_created: 'New Requirement',
+  requirements_extracted: 'Requirements Extracted from Document',
   summary_generated: 'Summary Generated',
   sent_to_linear: 'Sent to Linear',
   sent_to_cursor: 'Sent to Cursor',

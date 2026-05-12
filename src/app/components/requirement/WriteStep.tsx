@@ -1,39 +1,43 @@
 import React from 'react';
-import { File, LoaderPinwheel } from 'lucide-react';
+import { LoaderPinwheel } from 'lucide-react';
 import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextArea } from '../ui/TextArea';
-import { ActionRow } from '../ui/ActionRow';
+import { FigmaLinksField } from './FigmaLinksField';
 
 interface Props {
   text: string;
   validationError: string | null;
+  figmaLinks: string[];
   onTextChange: (value: string) => void;
+  onFigmaLinksChange: (links: string[]) => void;
   onNext: () => void;
   onClose: () => void;
-  onNavigate: (step: string) => void;
 }
 
-export function WriteStep({ text, validationError, onTextChange, onNext, onClose, onNavigate }: Props) {
+export function WriteStep({ text, validationError, figmaLinks, onTextChange, onFigmaLinksChange, onNext, onClose }: Props) {
   return (
     <div className="flex flex-col gap-6">
-      <FormField label="Free Text" error={validationError}>
-        <TextArea
-          value={text}
-          onChange={onTextChange}
-          placeholder="Describe what needs to be built in plain text..."
-          hasError={!!validationError}
-          autoFocus
-        />
-      </FormField>
-
-      <FormField label="External Sources">
-        <div className="flex flex-col gap-2">
-          <ActionRow icon={<File size={ICON_SIZE.md} />} label="Process from documents" onClick={() => onNavigate('FILE_UPLOAD')} />
-          <ActionRow icon={<img src="/gmail.svg" alt="" className="w-4 h-4" />} label="Process from Gmail" onClick={() => onNavigate('EMAIL_IMPORT')} />
-          <ActionRow icon={<img src="/slack.svg" alt="" className="w-4 h-4" />} label="Process from Slack" onClick={() => onNavigate('SLACK_IMPORT')} />
+      <div className="flex gap-10">
+        <div className="flex-1 min-w-0">
+          <FormField label="Free Text" error={validationError}>
+            <TextArea
+              value={text}
+              onChange={onTextChange}
+              placeholder="Write your requirement in plain text and have Arvid enhance it automatically based on your prior requirements, codebase, and database"
+              hasError={!!validationError}
+              autoFocus
+            />
+          </FormField>
         </div>
-      </FormField>
+
+        <div className="flex-1 min-w-0">
+          <FigmaLinksField
+            links={figmaLinks}
+            onChange={onFigmaLinksChange}
+          />
+        </div>
+      </div>
 
       <div className="flex justify-end gap-3 pt-6">
         <button onClick={onClose} className="btn-ghost">

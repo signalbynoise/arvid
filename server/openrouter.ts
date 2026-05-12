@@ -217,11 +217,31 @@ function buildUserPrompt(input: SummaryGenerationInput): string {
   return prompt;
 }
 
+export interface FigmaDesignContext {
+  nodeName: string;
+  structuralSummary: string;
+}
+
+export function buildFigmaDesignContextBlock(designs: FigmaDesignContext[]): string {
+  const parts: string[] = ['## Figma Design Context'];
+
+  for (let i = 0; i < designs.length; i++) {
+    const d = designs[i];
+    parts.push(`\nDesign ${i + 1}: "${d.nodeName}"`);
+    if (d.structuralSummary) {
+      parts.push(d.structuralSummary);
+    }
+  }
+
+  return parts.join('\n') + '\n\n';
+}
+
 export interface EnhanceContext {
   projectName?: string;
   existingRequirements?: string[];
   repoContext?: RepoAnalysis;
   dbContext?: DbAnalysis;
+  figmaDesigns?: FigmaDesignContext[];
 }
 
 export interface EnhanceResult {
@@ -256,6 +276,9 @@ export async function enhanceRequirement(rawText: string, context?: EnhanceConte
   if (context?.dbContext) {
     contextBlock += `\n\n${buildDbContextBlock(context.dbContext)}Use the database schema context to ground the requirement in the actual data model, table structures, and relationships of the project.`;
   }
+  if (context?.figmaDesigns && context.figmaDesigns.length > 0) {
+    contextBlock += `\n\n${buildFigmaDesignContextBlock(context.figmaDesigns)}Use the Figma design context to understand the intended UI layout, components, and visual structure. Reference specific design elements when writing acceptance criteria. Do not ask questions about UI elements that are already specified in the design.`;
+  }
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -281,6 +304,7 @@ Rules for the description:
 - Be specific about what is expected: inputs, outputs, constraints, acceptance criteria.
 - Include edge cases and error handling considerations if they can be reasonably inferred.
 - Use terminology and framing consistent with the project context and existing requirements.
+- If Figma design context is provided, use it to understand the visual structure, component hierarchy, and layout. Reference specific design elements when writing acceptance criteria.
 - Do NOT duplicate or restate any existing requirement — the new requirement must add distinct value.
 
 Your output MUST be valid JSON with exactly these keys:
@@ -456,6 +480,137 @@ Respond with valid JSON in this exact format:
   console.info(
     '[INFO] [openrouter:analyzeSlackMessages] Analysis complete',
     JSON.stringify({ requirementCount: analyzed.length }),
+  );
+
+  return analyzed;
+}
+
+export interface AnalyzedDocumentRequirement {
+  title: string;
+  description: string;
+  clarity: 'High' | 'Medium' | 'Low';
+  risk: 'Low' | 'Medium' | 'High';
+}
+
+export async function analyzeDocument(
+  documentText: string,
+  filename: string,
+  existingRequirements: string[] = [],
+): Promise<AnalyzedDocumentRequirement[]> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  console.info(
+    `[INFO] [openrouter:analyzeDocument] Calling ${OPENROUTER_MODEL}`,
+    JSON.stringify({ filename, textLength: documentText.length, existingCount: existingRequirements.length }),
+  );
+
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://arvid.work',
+      'X-Title': 'Arvid',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are Arvid, an AI specification writer. You analyze documents (requirements docs, PRDs, specs, meeting notes, etc.) and extract actionable software requirements.
+
+Your task:
+1. Read the document and identify distinct requirements, feature requests, constraints, or technical decisions.
+2. For each one, produce a structured requirement with a title, professional description, and quality metadata.
+3. Assess each requirement's clarity (High/Medium/Low) and risk level (Low/Medium/High).
+
+Rules:
+- Only extract genuine requirements — ignore boilerplate, table of contents, headers, or filler text.
+- If multiple paragraphs discuss the same requirement, merge them into one.
+- Write descriptions in third person, present tense ("The system shall...").
+- Be specific about what is expected: inputs, outputs, constraints.
+- If no actionable requirements exist in the document, return an empty array.
+- Return between 0 and 10 requirements maximum.
+- Do NOT suggest requirements that overlap with or duplicate any existing requirements listed below.
+- Clarity: High = unambiguous, Medium = mostly clear but some interpretation needed, Low = vague or underspecified.
+- Risk: Low = straightforward, Medium = some technical/business uncertainty, High = significant unknowns or dependencies.
+
+Respond with valid JSON in this exact format:
+{
+  "requirements": [
+    {
+      "title": "Short descriptive title (3-8 words)",
+      "description": "Professional requirement description...",
+      "clarity": "Medium",
+      "risk": "Low"
+    }
+  ]
+}`,
+        },
+        {
+          role: 'user',
+          content: existingRequirements.length > 0
+            ? `Existing requirements in this project (do NOT duplicate these):\n${existingRequirements.map(t => `- ${t}`).join('\n')}\n\nExtract NEW requirements from this document (${filename}):\n\n${documentText}`
+            : `Extract requirements from this document (${filename}):\n\n${documentText}`,
+        },
+      ],
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      '[ERROR] [openrouter:analyzeDocument] API call failed',
+      JSON.stringify({ status: response.status, body: errorBody }),
+    );
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    console.error('[ERROR] [openrouter:analyzeDocument] No content in response');
+    return [];
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error('[ERROR] [openrouter:analyzeDocument] Failed to parse JSON');
+    return [];
+  }
+
+  const result = parsed as { requirements?: unknown[] };
+  if (!Array.isArray(result.requirements)) {
+    return [];
+  }
+
+  const VALID_CLARITY = ['High', 'Medium', 'Low'] as const;
+  const VALID_RISK = ['Low', 'Medium', 'High'] as const;
+
+  const analyzed: AnalyzedDocumentRequirement[] = result.requirements
+    .filter((r): r is Record<string, unknown> => typeof r === 'object' && r !== null)
+    .map(r => ({
+      title: typeof r.title === 'string' ? r.title : 'Untitled',
+      description: typeof r.description === 'string' ? r.description : '',
+      clarity: VALID_CLARITY.includes(r.clarity as typeof VALID_CLARITY[number])
+        ? (r.clarity as typeof VALID_CLARITY[number])
+        : 'Low',
+      risk: VALID_RISK.includes(r.risk as typeof VALID_RISK[number])
+        ? (r.risk as typeof VALID_RISK[number])
+        : 'Medium',
+    }))
+    .filter(r => r.description.length > 0);
+
+  console.info(
+    '[INFO] [openrouter:analyzeDocument] Analysis complete',
+    JSON.stringify({ filename, requirementCount: analyzed.length }),
   );
 
   return analyzed;

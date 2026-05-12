@@ -35,7 +35,12 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (isOpen) setTimeout(() => textareaRef.current?.focus(), 50);
+    if (isOpen) {
+      setText('');
+      setValidationError(null);
+      reset();
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    }
   }, [isOpen]);
 
   const handleSubmit = useCallback(() => {

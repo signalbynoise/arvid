@@ -3,9 +3,12 @@ import { createUserClient, supabase } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
 import { enhanceRequirement, classifyImplementation } from '../openrouter';
+import type { FigmaDesignContext } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import type { RepoAnalysis } from '../../shared/schemas/repoContext';
 import type { DbAnalysis } from '../../shared/schemas/dbContext';
+import { parseFigmaUrl } from '../../shared/figmaUrl';
+import { getFileNodes, getImages, extractDesignSummary } from '../lib/figmaClient';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
@@ -67,14 +70,21 @@ requirementsRouter.get('/:id', async (req, res) => {
 requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const projectId = req.body.project_id;
+  const figmaLinks: string[] | undefined = req.body.figma_links;
   const shortId = await generateShortId(db, 'requirements', 'R');
+
+  const { figma_links: _stripFigma, ...insertBody } = req.body;
   const { data, error } = await db
     .from('requirements')
-    .insert({ ...req.body, short_id: shortId, created_at: req.body.created_at || new Date().toISOString(), created_by: req.user!.id })
+    .insert({ ...insertBody, short_id: shortId, created_at: req.body.created_at || new Date().toISOString(), created_by: req.user!.id })
     .select()
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  if (Array.isArray(figmaLinks) && figmaLinks.length > 0) {
+    persistFigmaLinks(data.id, figmaLinks, req.user!.id, req.accessToken!);
+  }
 
   if (data.project_id) {
     sendSlackNotification({
@@ -89,6 +99,92 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
 
   res.status(201).json(data);
 });
+
+function persistFigmaLinks(requirementId: string, figmaLinks: string[], userId: string, accessToken: string): void {
+  (async () => {
+    const db = createUserClient(accessToken);
+
+    for (const url of figmaLinks) {
+      const parsed = parseFigmaUrl(url);
+      if (!parsed) continue;
+
+      const { error: insertError } = await db
+        .from('requirement_figma_links')
+        .insert({
+          requirement_id: requirementId,
+          figma_url: url,
+          file_key: parsed.fileKey,
+          node_id: parsed.nodeId,
+        });
+
+      if (insertError) {
+        console.error(
+          '[ERROR] [requirements:persistFigmaLinks] Insert failed',
+          JSON.stringify({ requirementId, url, error: insertError.message }),
+        );
+        continue;
+      }
+    }
+
+    try {
+      const { data: connection } = await supabase
+        .from('figma_connections')
+        .select('access_token')
+        .eq('user_id', userId)
+        .single();
+
+      if (!connection) return;
+
+      const grouped = new Map<string, Array<{ url: string; nodeId: string | null }>>();
+      for (const url of figmaLinks) {
+        const parsed = parseFigmaUrl(url);
+        if (!parsed) continue;
+        const group = grouped.get(parsed.fileKey) || [];
+        group.push({ url, nodeId: parsed.nodeId });
+        grouped.set(parsed.fileKey, group);
+      }
+
+      for (const [fileKey, entries] of grouped) {
+        const nodeIds = entries.map(e => e.nodeId).filter((id): id is string => id !== null);
+        if (nodeIds.length === 0) continue;
+
+        const [nodesRes, imagesRes] = await Promise.all([
+          getFileNodes(connection.access_token, fileKey, nodeIds),
+          getImages(connection.access_token, fileKey, nodeIds),
+        ]);
+
+        for (const entry of entries) {
+          const nodeData = entry.nodeId ? nodesRes.nodes[entry.nodeId] : null;
+          const thumbnailUrl = entry.nodeId ? imagesRes.images[entry.nodeId] ?? null : null;
+
+          if (nodeData?.document || thumbnailUrl) {
+            await db
+              .from('requirement_figma_links')
+              .update({
+                node_name: nodeData?.document?.name ?? null,
+                thumbnail_url: thumbnailUrl,
+                structural_summary: nodeData?.document ? extractDesignSummary(nodeData.document) : null,
+                fetched_at: new Date().toISOString(),
+              })
+              .eq('requirement_id', requirementId)
+              .eq('figma_url', entry.url);
+          }
+        }
+      }
+
+      console.info(
+        '[INFO] [requirements:persistFigmaLinks] Figma links cached',
+        JSON.stringify({ requirementId, linkCount: figmaLinks.length }),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error(
+        '[ERROR] [requirements:persistFigmaLinks] Cache enrichment failed',
+        JSON.stringify({ requirementId, error: message }),
+      );
+    }
+  })();
+}
 
 requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
@@ -105,14 +201,14 @@ requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), asyn
 
 requirementsRouter.post('/enhance', async (req, res) => {
   const db = createUserClient(req.accessToken!);
-  const { text, project_id } = req.body;
+  const { text, project_id, figma_links } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 3) {
     return res.status(400).json({ error: 'text is required and must be at least 3 characters' });
   }
 
   try {
-    let context: { projectName?: string; existingRequirements?: string[]; repoContext?: RepoAnalysis; dbContext?: DbAnalysis } | undefined;
+    let context: { projectName?: string; existingRequirements?: string[]; repoContext?: RepoAnalysis; dbContext?: DbAnalysis; figmaDesigns?: FigmaDesignContext[] } | undefined;
 
     if (project_id) {
       const { data: project } = await db
@@ -154,6 +250,17 @@ requirementsRouter.post('/enhance', async (req, res) => {
       );
     }
 
+    if (Array.isArray(figma_links) && figma_links.length > 0) {
+      const figmaDesigns = await resolveFigmaDesignsForAI(req.user!.id, figma_links);
+      if (figmaDesigns.length > 0) {
+        context = { ...context, figmaDesigns };
+        console.info(
+          '[INFO] [requirements:enhance] Figma designs loaded',
+          JSON.stringify({ designCount: figmaDesigns.length }),
+        );
+      }
+    }
+
     const result = await enhanceRequirement(text.trim(), context);
     res.json({ title: result.title, description: result.description });
   } catch (err) {
@@ -162,6 +269,54 @@ requirementsRouter.post('/enhance', async (req, res) => {
     res.status(500).json({ error: `Enhancement failed: ${message}` });
   }
 });
+
+async function resolveFigmaDesignsForAI(userId: string, figmaLinks: string[]): Promise<FigmaDesignContext[]> {
+  const { data: connection } = await supabase
+    .from('figma_connections')
+    .select('access_token')
+    .eq('user_id', userId)
+    .single();
+
+  if (!connection) return [];
+
+  const designs: FigmaDesignContext[] = [];
+
+  const grouped = new Map<string, Array<{ nodeId: string | null }>>();
+  for (const url of figmaLinks) {
+    const parsed = parseFigmaUrl(url);
+    if (!parsed) continue;
+    const group = grouped.get(parsed.fileKey) || [];
+    group.push({ nodeId: parsed.nodeId });
+    grouped.set(parsed.fileKey, group);
+  }
+
+  for (const [fileKey, entries] of grouped) {
+    const nodeIds = entries.map(e => e.nodeId).filter((id): id is string => id !== null);
+    if (nodeIds.length === 0) continue;
+
+    try {
+      const nodesRes = await getFileNodes(connection.access_token, fileKey, nodeIds);
+
+      for (const entry of entries) {
+        const nodeData = entry.nodeId ? nodesRes.nodes[entry.nodeId] : null;
+        if (!nodeData?.document) continue;
+
+        designs.push({
+          nodeName: nodeData.document.name,
+          structuralSummary: extractDesignSummary(nodeData.document),
+        });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(
+        '[WARN] [requirements:resolveFigmaDesignsForAI] Failed to fetch Figma data',
+        JSON.stringify({ fileKey, error: message }),
+      );
+    }
+  }
+
+  return designs;
+}
 
 requirementsRouter.post('/:id/check-implementation', async (req, res) => {
   const db = createUserClient(req.accessToken!);

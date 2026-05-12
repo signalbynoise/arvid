@@ -9,8 +9,9 @@ import { SlackSlice, createSlackSlice } from './slices/slack';
 import { UISlice, createUISlice } from './slices/ui';
 import { WorkspacesSlice, createWorkspacesSlice } from './slices/workspaces';
 import { SupabaseConnectSlice, createSupabaseConnectSlice } from './slices/supabaseConnect';
+import { FigmaSlice, createFigmaSlice } from './slices/figma';
 
-export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice;
+export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice & FigmaSlice;
 
 export const useStore = create<AppState>()((...args) => ({
   ...createEntitiesSlice(...args),
@@ -23,6 +24,7 @@ export const useStore = create<AppState>()((...args) => ({
   ...createUISlice(...args),
   ...createWorkspacesSlice(...args),
   ...createSupabaseConnectSlice(...args),
+  ...createFigmaSlice(...args),
 }));
 
 export type { UISlice, ModalIntent, PendingModal } from './slices/ui';
@@ -32,6 +34,7 @@ export type { GitHubConnectionState, GitHubRepo, RepoFetchStatus } from './slice
 export type { LinearConnectionState, LinearTeam, LinearProject, LinearLinkStatus, SendToLinearStatus } from './slices/linear';
 export type { SlackConnectionState, SlackChannel, ExtractionStatus } from './slices/slack';
 export type { SupabaseConnectionState, SupabaseProject, DbFetchStatus } from './slices/supabaseConnect';
+export type { FigmaConnectionState, ResolvedFigmaDesign } from './slices/figma';
 export type { WorkspacesSlice, WorkspacesDataState, WorkspacesDataStatus, BootStatus } from './slices/workspaces';
 export {
   selectRequirements,
@@ -60,5 +63,6 @@ export {
   selectGitHubConnection,
   selectLinearConnection,
   selectSupabaseConnection,
+  selectFigmaConnection,
   selectHintRequirementCards,
 } from './selectors';

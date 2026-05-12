@@ -29,23 +29,35 @@ describe('NewRequirementModal', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders the modal when open', () => {
+  it('renders the modal when open with choose step', () => {
     render(<NewRequirementModal {...defaultProps} />);
     expect(screen.getByText('New Requirement')).toBeInTheDocument();
   });
 
-  it('shows the write step by default with textarea', () => {
+  it('shows method choice buttons on the default step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    expect(screen.getByPlaceholderText('Describe what needs to be built in plain text...')).toBeInTheDocument();
+    expect(screen.getByText('Write with Arvid')).toBeInTheDocument();
+    expect(screen.getByText('Process requirements from uploaded files')).toBeInTheDocument();
+    expect(screen.getByText('Process requirements from Slack channels')).toBeInTheDocument();
+    expect(screen.getByText('Process requirements from emails')).toBeInTheDocument();
   });
 
-  it('shows Check with Arvid button on write step', () => {
+  it('navigates to write step when Write with Arvid is clicked', () => {
     render(<NewRequirementModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Write with Arvid'));
+    expect(screen.getByPlaceholderText(/Write your requirement/)).toBeInTheDocument();
     expect(screen.getByText('Check with Arvid')).toBeInTheDocument();
   });
 
-  it('Check with Arvid button is disabled without text', () => {
+  it('shows Figma link input on write step', () => {
     render(<NewRequirementModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Write with Arvid'));
+    expect(screen.getByPlaceholderText('Paste the Figma link here')).toBeInTheDocument();
+  });
+
+  it('Check with Arvid button is disabled without text on write step', () => {
+    render(<NewRequirementModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Write with Arvid'));
     const btn = screen.getByText('Check with Arvid').closest('button');
     expect(btn).toBeDisabled();
   });
@@ -59,46 +71,41 @@ describe('NewRequirementModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows external source import options', () => {
-    render(<NewRequirementModal {...defaultProps} />);
-    expect(screen.getByText('Process from documents')).toBeInTheDocument();
-    expect(screen.getByText('Process from Gmail')).toBeInTheDocument();
-    expect(screen.getByText('Process from Slack')).toBeInTheDocument();
-  });
-
   it('navigates to file upload step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Process from documents'));
+    fireEvent.click(screen.getByText('Process requirements from uploaded files'));
     expect(screen.getByText('Import from Files')).toBeInTheDocument();
     expect(screen.getByText(/drag files here/i)).toBeInTheDocument();
   });
 
   it('navigates to email import step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Process from Gmail'));
+    fireEvent.click(screen.getByText('Process requirements from emails'));
     expect(screen.getByText('Import from Email')).toBeInTheDocument();
     expect(screen.getByText('Connect Gmail')).toBeInTheDocument();
   });
 
   it('navigates to slack import step', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Process from Slack'));
+    fireEvent.click(screen.getByText('Process requirements from Slack channels'));
     expect(screen.getByText('Import from Slack')).toBeInTheDocument();
     expect(screen.getByText('Connect Slack')).toBeInTheDocument();
   });
 
-  it('back button returns to write step from file upload', () => {
+  it('back button returns to choose step from file upload', () => {
     render(<NewRequirementModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Process from documents'));
+    fireEvent.click(screen.getByText('Process requirements from uploaded files'));
     expect(screen.getByText('Import from Files')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Back'));
     expect(screen.getByText('New Requirement')).toBeInTheDocument();
+    expect(screen.getByText('Write with Arvid')).toBeInTheDocument();
   });
 
-  it('Cancel button calls onClose', () => {
+  it('Cancel button on write step calls onClose', () => {
     const onClose = vi.fn();
     render(<NewRequirementModal {...defaultProps} onClose={onClose} />);
+    fireEvent.click(screen.getByText('Write with Arvid'));
     fireEvent.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalled();
   });

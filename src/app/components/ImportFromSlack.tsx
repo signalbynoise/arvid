@@ -218,7 +218,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
   // --- BROWSE & FILTER ---
   if (step === 'browse') {
     return (
-      <div className="flex flex-col min-h-[500px]">
+      <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 pt-4 pb-3 border-b border-border-subtle shrink-0">
           <div className="relative">
             <Search size={ICON_SIZE.sm} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary" />
@@ -302,7 +302,7 @@ export function ImportFromSlack({ onBack, onImport, onImportMultiple, onWideChan
   // --- SUGGEST (split-pane) ---
   if (step === 'suggest') {
     return (
-      <div className="flex flex-col min-h-[500px]">
+      <div className="flex flex-col flex-1 min-h-0">
         <div className="flex flex-1 min-h-0">
           {/* Left: Selected Messages */}
           <div className="w-1/2 border-r border-border-subtle overflow-y-auto p-4">
