@@ -21,6 +21,7 @@ import {
   CardAssigneeRowSchema,
   CardAssigneeSchema,
 } from '../../shared/schemas';
+import type { ImplAnalysis } from '../../shared/schemas';
 import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
@@ -356,8 +357,8 @@ export const api = {
     await request<void>('DELETE', `/requirements/${id}`);
   },
 
-  async checkImplementation(requirementId: string): Promise<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string }> {
-    return request<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string }>('POST', `/requirements/${requirementId}/check-implementation`);
+  async checkImplementation(requirementId: string): Promise<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string; impl_analysis?: ImplAnalysis | null }> {
+    return request<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string; impl_analysis?: ImplAnalysis | null }>('POST', `/requirements/${requirementId}/check-implementation`);
   },
 
   async createQuestion(q: { text: string; requirementId: string; importance: string; category: string }): Promise<Question> {
