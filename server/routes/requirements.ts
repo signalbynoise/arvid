@@ -482,17 +482,34 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
 
       const repoAnalysis = analyzeRepo(fileTree, existingKeyFiles, recentCommits);
 
-      await supabase
+      const upsertHierarchy = fileTree
+        .filter(f => f.path.includes('workspace') || f.path.includes('team'))
+        .map(f => f.path);
+      console.debug(
+        '[DEBUG] [requirements:checkImplementation] About to upsert file_tree',
+        JSON.stringify({
+          projectId: requirement.project_id,
+          totalEntries: fileTree.length,
+          hierarchyFiles: upsertHierarchy,
+        }),
+      );
+
+      const { error: upsertErr } = await supabase
         .from('repo_contexts')
         .upsert({
           id: contextId,
           project_id: requirement.project_id,
+          user_id: req.user!.id,
           file_tree: fileTree,
           recent_commits: recentCommits,
           analysis: repoAnalysis,
           status: 'ready',
           fetched_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'project_id' });
+
+      if (upsertErr) {
+        console.error('[ERROR] [requirements:checkImplementation] Upsert failed', JSON.stringify({ error: upsertErr }));
+      }
 
       console.info('[INFO] [requirements:checkImplementation] Repo context refreshed', JSON.stringify({ projectId: requirement.project_id, files: fileTree.length, commits: recentCommits.length }));
     } catch (refreshErr) {
@@ -505,6 +522,19 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
     .select('*')
     .eq('project_id', requirement.project_id)
     .single();
+
+  const dbFileTree = repoCtx?.file_tree || [];
+  const dbHierarchy = dbFileTree
+    .filter((f: FileTreeEntry) => f.path.includes('workspace') || f.path.includes('team'))
+    .map((f: FileTreeEntry) => f.path);
+  console.debug(
+    '[DEBUG] [requirements:checkImplementation] DB file_tree read',
+    JSON.stringify({
+      requirementId,
+      totalEntries: dbFileTree.length,
+      hierarchyFiles: dbHierarchy,
+    }),
+  );
 
   if (!repoCtx || repoCtx.status !== 'ready') {
     const now = new Date().toISOString();
