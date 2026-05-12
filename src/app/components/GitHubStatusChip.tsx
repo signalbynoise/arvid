@@ -42,6 +42,8 @@ function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt
   }
   if (HAS_RESULT.has(implStatus)) {
     parts.push('Click for details');
+  } else if (implStatus === 'Not Checked' || implStatus === 'Unknown' || implStatus === 'No Repo') {
+    parts.push('Click to check');
   }
   return parts.join(' · ');
 }
@@ -49,7 +51,7 @@ function buildTooltip(implStatus: string, implConfidence?: number, implCheckedAt
 export function GitHubStatusChip({ implStatus, implConfidence, implCheckedAt, disabled, onRetry, onViewDetails }: GitHubStatusChipProps) {
   const accent = disabled ? 'default' : (STATUS_ACCENT[implStatus] ?? 'default');
   const label = STATUS_LABEL[implStatus] ?? implStatus;
-  const isRetryable = implStatus === 'Not Checked' || implStatus === 'Unknown';
+  const isRetryable = implStatus === 'Not Checked' || implStatus === 'Unknown' || implStatus === 'No Repo';
   const isChecking = implStatus === 'Checking';
   const hasResult = HAS_RESULT.has(implStatus);
   const isChecked = implStatus !== 'Not Checked' && !isChecking;
