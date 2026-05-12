@@ -1,5 +1,7 @@
 import React from 'react';
 import { BaseModal } from './BaseModal';
+import { AnimateIcon } from '@/components/animate-ui/icons/icon';
+import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
 import { ACCORDANCE_WEIGHTS } from '../../../shared/schemas';
 import type { Requirement } from '../types';
 import type { ImplAnalysis } from '../../../shared/schemas';
@@ -60,10 +62,9 @@ export function ImplDetailsModal({ isOpen, onClose, requirement, isChecking, onR
             disabled={isChecking}
             onClick={() => onRecheck(requirement.id)}
           >
-            <svg className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 1v4.5h4.5" />
-              <path d="M2.3 10a6 6 0 1 0 .8-4.5L1 7.5" />
-            </svg>
+            <AnimateIcon animate={isChecking || false}>
+              <LoaderPinwheel size={14} />
+            </AnimateIcon>
             {isChecking ? 'Analyzing...' : 'Re-analyze'}
           </button>
         )}

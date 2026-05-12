@@ -483,6 +483,20 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
     unverifiedRisks: summaryRow.unverified_risks,
   } : undefined;
 
+  console.debug(
+    '[DEBUG] [requirements:checkImplementation] Summary context',
+    JSON.stringify({
+      requirementId,
+      hasSummary: !!summary,
+      summaryFields: summary ? {
+        hasObjective: !!summary.coreObjective,
+        hasArchitecture: !!summary.architecture,
+        hasConstraints: !!summary.constraints,
+        hasRisks: !!summary.unverifiedRisks,
+      } : null,
+    }),
+  );
+
   try {
     const result = await classifyImplementation({
       requirementTitle: requirement.title,
@@ -496,6 +510,17 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
       },
       summary,
     });
+
+    console.debug(
+      '[DEBUG] [requirements:checkImplementation] LLM accordance fields',
+      JSON.stringify({
+        requirementId,
+        objective_met: result.objective_met,
+        architecture_met: result.architecture_met,
+        constraints_met: result.constraints_met,
+        risks_addressed: result.risks_addressed,
+      }),
+    );
 
     const implAnalysis = computeAccordanceScore(result);
     const now = new Date().toISOString();
@@ -512,7 +537,18 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
 
     console.info(
       '[INFO] [requirements:checkImplementation] Check complete',
-      JSON.stringify({ requirementId, status: result.status, confidence: result.confidence, accordanceScore: implAnalysis?.accordance_score }),
+      JSON.stringify({
+        requirementId,
+        status: result.status,
+        confidence: result.confidence,
+        accordanceScore: implAnalysis?.accordance_score ?? null,
+        accordanceDetail: implAnalysis ? {
+          objective: implAnalysis.objective_met,
+          architecture: implAnalysis.architecture_met,
+          constraints: implAnalysis.constraints_met,
+          risks: implAnalysis.risks_addressed,
+        } : 'no summary available',
+      }),
     );
 
     res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now, impl_evidence: result.evidence, impl_analysis: implAnalysis });
