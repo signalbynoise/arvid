@@ -8,16 +8,20 @@ import { NavDropdown } from './NavDropdown';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
-const NAV_LINKS = [
-  { label: 'Product', href: '#product' },
+const PRODUCT_ITEMS = [
   { label: 'Features', href: '#features' },
+  { label: 'Integrations', href: '#integrations' },
+];
+
+const PLAIN_LINKS = [
+  { label: 'Enterprise', href: '#enterprise' },
   { label: 'Pricing', href: '#pricing' },
 ];
 
 const RESOURCES_ITEMS = [
   { label: 'Articles', href: '/articles' },
-  { label: 'Features', href: '#features' },
-  { label: 'Docs', href: '#docs' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Docs', href: '/docs' },
 ];
 
 export function TopNav() {
@@ -34,7 +38,8 @@ export function TopNav() {
         </AnimateIcon>
 
         <nav className="hidden md:flex items-center gap-6">
-          {NAV_LINKS.map(({ label, href }) => (
+          <NavDropdown trigger="Product" items={PRODUCT_ITEMS} />
+          {PLAIN_LINKS.map(({ label, href }) => (
             <a
               key={label}
               href={href}
@@ -65,7 +70,18 @@ export function TopNav() {
 
       {mobileOpen && (
         <div className="col-span-full md:hidden mt-6 flex flex-col gap-4 border-t border-border-subtle pt-4">
-          {NAV_LINKS.map(({ label, href }) => (
+          <span className="text-caption-sm text-text-tertiary">Product</span>
+          {PRODUCT_ITEMS.map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              onClick={() => setMobileOpen(false)}
+              className="text-sm-md text-text-secondary transition-colors hover:text-text-primary pl-2"
+            >
+              {label}
+            </a>
+          ))}
+          {PLAIN_LINKS.map(({ label, href }) => (
             <a
               key={label}
               href={href}
@@ -75,12 +91,13 @@ export function TopNav() {
               {label}
             </a>
           ))}
+          <span className="text-caption-sm text-text-tertiary">Resources</span>
           {RESOURCES_ITEMS.map(({ label, href }) => (
             <a
-              key={href}
+              key={label}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className="text-sm-md text-text-secondary transition-colors hover:text-text-primary"
+              className="text-sm-md text-text-secondary transition-colors hover:text-text-primary pl-2"
             >
               {label}
             </a>

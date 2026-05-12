@@ -4,6 +4,8 @@ import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextArea } from '../ui/TextArea';
 import { FigmaLinksField } from './FigmaLinksField';
+import { FigmaConnectPrompt } from './FigmaConnectPrompt';
+import { useStore } from '../../store';
 
 interface Props {
   text: string;
@@ -16,6 +18,9 @@ interface Props {
 }
 
 export function WriteStep({ text, validationError, figmaLinks, onTextChange, onFigmaLinksChange, onNext, onClose }: Props) {
+  const figmaConnection = useStore(s => s.figmaConnection);
+  const isConnected = figmaConnection.status === 'connected';
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-10">
@@ -32,10 +37,14 @@ export function WriteStep({ text, validationError, figmaLinks, onTextChange, onF
         </div>
 
         <div className="flex-1 min-w-0">
-          <FigmaLinksField
-            links={figmaLinks}
-            onChange={onFigmaLinksChange}
-          />
+          {isConnected ? (
+            <FigmaLinksField
+              links={figmaLinks}
+              onChange={onFigmaLinksChange}
+            />
+          ) : (
+            <FigmaConnectPrompt />
+          )}
         </div>
       </div>
 

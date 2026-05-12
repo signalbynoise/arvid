@@ -14,7 +14,7 @@
 
 - **Marketing Site** — React, Vite, Tailwind CSS (separate build, no auth)
 - **Dashboard App** — React 18, TypeScript, Tailwind CSS, Zustand, Vite, Supabase Auth
-- **BFF** — Express 5, validates with Zod, per-request Supabase clients with user JWT for RLS
+- **BFF** — Express 5, validates with Zod, three Supabase client tiers (see below)
 - **Database** — Supabase (Postgres with RLS, user-scoped via `projects.user_id`)
 
 The dashboard app calls Supabase Auth directly for sign-in/sign-up/OAuth. All data flows through `/api/*` with a Bearer JWT.
@@ -80,6 +80,40 @@ Full address of a requirement: `W01/T01/P01/R03`
 - **BFF auth middleware** (`server/middleware/requireAuth.ts`) — verifies JWT, attaches `req.user` and `req.accessToken`
 - **Per-request Supabase client** (`server/supabase.ts:createUserClient`) — scoped to user's JWT for RLS enforcement
 
+### Supabase Client Tiers (server/supabase.ts)
+
+The BFF exposes three Supabase clients, each for a specific trust level:
+
+| Client | Key | RLS | Use Case |
+|--------|-----|-----|----------|
+| `supabase` | Anon key | Enforced | General reads where RLS should apply (rarely used directly in routes) |
+| `supabaseAdmin` | Service-role key | Bypassed | Server-side writes on behalf of users — integration connections, background jobs, webhook handlers, document processing |
+| `createUserClient(jwt)` | Anon key + user Bearer | Enforced as user | Per-request client scoped to the calling user's JWT — all dashboard CRUD routes |
+
+**Rule:** Integration OAuth callbacks and background operations (webhooks, async enrichment) must use `supabaseAdmin` because there is no user JWT in those contexts. Dashboard CRUD routes use `createUserClient` so RLS enforces workspace isolation.
+
+## Integrations
+
+All third-party integrations follow the same OAuth pattern:
+
+1. User clicks the toggle in the settings menu (`UserMenu.tsx`)
+2. Frontend calls `GET /api/<provider>/auth` → server generates an OAuth URL with a random state token
+3. Browser redirects to the provider's consent screen
+4. Provider redirects back to `GET /api/<provider>/callback` (mounted before `requireAuth` middleware)
+5. Server exchanges the code for tokens, fetches user info, upserts a connection row via `supabaseAdmin`
+6. Server redirects back to `APP_ORIGIN` with a success/error query param
+7. Frontend reloads status via `GET /api/<provider>/status`
+
+| Integration | Connection Table | OAuth Scopes | What It Enables |
+|-------------|-----------------|--------------|-----------------|
+| GitHub | `github_connections` | `repo`, `read:user` | Repository linking, code context |
+| Linear | `linear_connections` | `read`, `write` | Project sync, issue tracking |
+| Slack | `slack_connections` | `channels:read`, `chat:write` | Channel alerts, message extraction |
+| Supabase | `supabase_connections` | `all` | Database schema context |
+| Figma | `figma_connections` | `current_user:read`, `file_content:read`, `file_metadata:read` | Design links, structural summaries, thumbnails |
+
+Each integration has a Zustand store slice (`store/slices/<provider>.ts`) that exposes `load<Provider>Status`, `disconnect<Provider>`, and connection state. All slices are loaded on app boot in `UserMenu.tsx`.
+
 ## State Management
 
 Zustand store with slices:
@@ -89,6 +123,11 @@ Zustand store with slices:
 - **Selection** (`store/slices/selection.ts`) — selected requirement, question, project
 - **Projects** (`store/slices/projects.ts`) — project CRUD backed by API, workspace-scoped loading
 - **Summaries** (`store/slices/summaries.ts`) — AI-generated summary cache, generation triggers
+- **GitHub** (`store/slices/github.ts`) — GitHub connection state, repo fetching
+- **Linear** (`store/slices/linear.ts`) — Linear connection state, project sync
+- **Slack** (`store/slices/slack.ts`) — Slack connection state, channel loading
+- **Supabase Connect** (`store/slices/supabaseConnect.ts`) — Supabase connection state
+- **Figma** (`store/slices/figma.ts`) — Figma connection state, design resolution
 
 Data loading uses an explicit state machine (`idle → loading → ready | error`). Derived data is computed via `useMemo`, never stored separately.
 
@@ -203,6 +242,22 @@ Nine core tables with RLS enabled.
 
 RLS policies enforce workspace-based isolation: `workspaces`, `teams`, and `projects` check membership via `workspace_memberships`. Child tables (requirements, questions, answers, summaries) still join back to `projects` to verify ownership. Soft-delete is enforced via `is_deleted` + `deleted_at` on workspaces, teams, and projects.
 
+### Integration tables (user-scoped via auth.uid)
+
+- **github_connections** — user_id (unique FK), access_token, github_username, github_user_id, connected_at
+- **linear_connections** — user_id (unique FK), access_token, linear_user_id, linear_username, connected_at
+- **slack_connections** — user_id (unique FK), access_token, team_id, team_name, connected_at
+- **supabase_connections** — user_id (unique FK), access_token, refresh_token, org_id, org_name, connected_at
+- **figma_connections** — user_id (unique FK), access_token, refresh_token, token_expires_at, figma_user_id, figma_username, figma_email, scopes, connected_at, updated_at
+
+RLS: each connection table has a policy `user_id = auth.uid()`. Server routes use `supabaseAdmin` to bypass RLS since OAuth callbacks and status checks run without a user JWT.
+
+### Figma design link tables
+
+- **requirement_figma_links** — id, requirement_id (FK), figma_url, file_key, node_id, node_name, thumbnail_url, structural_summary (jsonb), fetched_at, created_at
+
+RLS: joins back to `requirements` → `projects` to verify workspace membership, same pattern as questions/answers.
+
 ### CMS table (marketing site content)
 
 - **articles** — id, title, slug (unique), type (article/feature/docs), status (draft/published), content (jsonb blocks), excerpt, mini_demo_id, author, cover_image_url, published_at, created_at, updated_at, created_by (FK auth.users)
@@ -215,7 +270,10 @@ RLS: anon can SELECT where `status = 'published'`. Authenticated users have full
 |----------|-------|----------|
 | `SUPABASE_URL` | Server | Yes |
 | `SUPABASE_KEY` | Server | Yes |
+| `SUPABASE_SERVICE_KEY` | Server | Yes (supabaseAdmin — integrations, background jobs) |
 | `OPENROUTER_API_KEY` | Server | Yes (for AI summaries) |
+| `FIGMA_CLIENT_ID` | Server | Yes (Figma OAuth) |
+| `FIGMA_CLIENT_SECRET` | Server | Yes (Figma OAuth) |
 | `PORT` | Server | No (default 3001) |
 | `SITE_ORIGIN` | Server | Yes (CORS) |
 | `APP_ORIGIN` | Server | Yes (CORS) |
@@ -241,10 +299,13 @@ server/
   middleware/
     requireAuth.ts    JWT verification middleware
     validateBody.ts   Zod body validation
+  lib/
+    figmaClient.ts    Figma REST API wrapper (getMe, getFileNodes, getImages, extractDesignSummary)
   routes/             CRUD route handlers (per-request Supabase clients)
     workspaces.ts     Workspace CRUD + default team/membership creation
     teams.ts          Team CRUD
     memberships.ts    Workspace membership CRUD
+    figma.ts          Figma OAuth + connection CRUD + design resolution
     articles.ts       Public article read endpoints (no auth)
     cmsArticles.ts    Protected CMS admin endpoints (auth required)
 src/app/

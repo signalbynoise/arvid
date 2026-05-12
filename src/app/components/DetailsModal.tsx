@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Requirement, Question, Answer } from '../types';
-import { Calendar, User, Users, Briefcase, Plus, Pencil, Info } from 'lucide-react';
+import { Calendar, User, Users, Briefcase, Plus, Pencil, Info, Image } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectMembers, selectCardAssignees } from '../store';
 import { BaseModal } from './BaseModal';
@@ -8,14 +8,17 @@ import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { TextArea } from './ui/TextArea';
 import { SubmitButton } from './ui/SubmitButton';
+import { DesignFilesTab } from './requirement/DesignFilesTab';
 
-type DetailsTab = 'general' | 'users' | 'details';
+type DetailsTab = 'general' | 'design' | 'users' | 'details';
 
-const TAB_CONFIG: { id: DetailsTab; label: string; icon: React.ReactNode }[] = [
+const BASE_TABS: { id: DetailsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <Pencil size={ICON_SIZE.sm} /> },
   { id: 'users', label: 'Users', icon: <Users size={ICON_SIZE.sm} /> },
   { id: 'details', label: 'Details', icon: <Info size={ICON_SIZE.sm} /> },
 ];
+
+const DESIGN_TAB = { id: 'design' as DetailsTab, label: 'Design Files', icon: <Image size={ICON_SIZE.sm} /> };
 
 interface Props {
   isOpen: boolean;
@@ -89,6 +92,10 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
   const originalTitle = isReq ? req.title : isQuestion ? q.text : ans.text;
   const originalDescription = isReq ? (req.description || '') : isQuestion ? (q.description || '') : '';
   const hasChanges = title.trim() !== originalTitle || description.trim() !== originalDescription;
+
+  const visibleTabs = isReq
+    ? [BASE_TABS[0], DESIGN_TAB, ...BASE_TABS.slice(1)]
+    : BASE_TABS;
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -409,7 +416,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
     <BaseModal isOpen={isOpen} onClose={handleClose} title={modalTitle} size="xl">
       <div className="flex min-h-[400px]">
         <nav className="w-[160px] border-r border-border-subtle p-2 shrink-0">
-          {TAB_CONFIG.map(tab => (
+          {visibleTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -427,6 +434,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
 
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'general' && renderGeneralTab()}
+          {activeTab === 'design' && isReq && <DesignFilesTab requirementId={req.id} />}
           {activeTab === 'users' && renderUsersTab()}
           {activeTab === 'details' && renderDetailsTab()}
         </div>

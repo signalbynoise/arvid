@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUserClient, supabase } from '../supabase';
+import { createUserClient, supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
 import { enhanceRequirement, classifyImplementation } from '../openrouter';
@@ -100,6 +100,71 @@ requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (r
   res.status(201).json(data);
 });
 
+function enrichFigmaLinks(requirementId: string, figmaLinks: string[], userId: string): void {
+  (async () => {
+    try {
+      const { data: connection } = await supabaseAdmin
+        .from('figma_connections')
+        .select('access_token')
+        .eq('user_id', userId)
+        .single();
+
+      if (!connection) {
+        console.warn('[WARN] [requirements:enrichFigmaLinks] No Figma connection found', JSON.stringify({ userId }));
+        return;
+      }
+
+      const grouped = new Map<string, Array<{ url: string; nodeId: string | null }>>();
+      for (const url of figmaLinks) {
+        const parsed = parseFigmaUrl(url);
+        if (!parsed) continue;
+        const group = grouped.get(parsed.fileKey) || [];
+        group.push({ url, nodeId: parsed.nodeId });
+        grouped.set(parsed.fileKey, group);
+      }
+
+      for (const [fileKey, entries] of grouped) {
+        const nodeIds = entries.map(e => e.nodeId).filter((id): id is string => id !== null);
+        if (nodeIds.length === 0) continue;
+
+        const [nodesRes, imagesRes] = await Promise.all([
+          getFileNodes(connection.access_token, fileKey, nodeIds),
+          getImages(connection.access_token, fileKey, nodeIds),
+        ]);
+
+        for (const entry of entries) {
+          const nodeData = entry.nodeId ? nodesRes.nodes[entry.nodeId] : null;
+          const thumbnailUrl = entry.nodeId ? imagesRes.images[entry.nodeId] ?? null : null;
+
+          if (nodeData?.document || thumbnailUrl) {
+            await supabaseAdmin
+              .from('requirement_figma_links')
+              .update({
+                node_name: nodeData?.document?.name ?? null,
+                thumbnail_url: thumbnailUrl,
+                structural_summary: nodeData?.document ? extractDesignSummary(nodeData.document) : null,
+                fetched_at: new Date().toISOString(),
+              })
+              .eq('requirement_id', requirementId)
+              .eq('figma_url', entry.url);
+          }
+        }
+      }
+
+      console.info(
+        '[INFO] [requirements:enrichFigmaLinks] Figma links enriched',
+        JSON.stringify({ requirementId, linkCount: figmaLinks.length }),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error(
+        '[ERROR] [requirements:enrichFigmaLinks] Enrichment failed',
+        JSON.stringify({ requirementId, error: message }),
+      );
+    }
+  })();
+}
+
 function persistFigmaLinks(requirementId: string, figmaLinks: string[], userId: string, accessToken: string): void {
   (async () => {
     const db = createUserClient(accessToken);
@@ -126,63 +191,7 @@ function persistFigmaLinks(requirementId: string, figmaLinks: string[], userId: 
       }
     }
 
-    try {
-      const { data: connection } = await supabase
-        .from('figma_connections')
-        .select('access_token')
-        .eq('user_id', userId)
-        .single();
-
-      if (!connection) return;
-
-      const grouped = new Map<string, Array<{ url: string; nodeId: string | null }>>();
-      for (const url of figmaLinks) {
-        const parsed = parseFigmaUrl(url);
-        if (!parsed) continue;
-        const group = grouped.get(parsed.fileKey) || [];
-        group.push({ url, nodeId: parsed.nodeId });
-        grouped.set(parsed.fileKey, group);
-      }
-
-      for (const [fileKey, entries] of grouped) {
-        const nodeIds = entries.map(e => e.nodeId).filter((id): id is string => id !== null);
-        if (nodeIds.length === 0) continue;
-
-        const [nodesRes, imagesRes] = await Promise.all([
-          getFileNodes(connection.access_token, fileKey, nodeIds),
-          getImages(connection.access_token, fileKey, nodeIds),
-        ]);
-
-        for (const entry of entries) {
-          const nodeData = entry.nodeId ? nodesRes.nodes[entry.nodeId] : null;
-          const thumbnailUrl = entry.nodeId ? imagesRes.images[entry.nodeId] ?? null : null;
-
-          if (nodeData?.document || thumbnailUrl) {
-            await db
-              .from('requirement_figma_links')
-              .update({
-                node_name: nodeData?.document?.name ?? null,
-                thumbnail_url: thumbnailUrl,
-                structural_summary: nodeData?.document ? extractDesignSummary(nodeData.document) : null,
-                fetched_at: new Date().toISOString(),
-              })
-              .eq('requirement_id', requirementId)
-              .eq('figma_url', entry.url);
-          }
-        }
-      }
-
-      console.info(
-        '[INFO] [requirements:persistFigmaLinks] Figma links cached',
-        JSON.stringify({ requirementId, linkCount: figmaLinks.length }),
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error(
-        '[ERROR] [requirements:persistFigmaLinks] Cache enrichment failed',
-        JSON.stringify({ requirementId, error: message }),
-      );
-    }
+    enrichFigmaLinks(requirementId, figmaLinks, userId);
   })();
 }
 
@@ -197,6 +206,63 @@ requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), asyn
 
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
+});
+
+// --- Figma design links for a requirement ---
+
+requirementsRouter.get('/:id/figma-links', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { data, error } = await db
+    .from('requirement_figma_links')
+    .select('*')
+    .eq('requirement_id', req.params.id)
+    .order('created_at', { ascending: true });
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data ?? []);
+});
+
+requirementsRouter.post('/:id/figma-links', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { figma_url } = req.body as { figma_url?: string };
+
+  if (!figma_url || typeof figma_url !== 'string') {
+    return res.status(400).json({ error: 'figma_url is required' });
+  }
+
+  const parsed = parseFigmaUrl(figma_url);
+  if (!parsed) {
+    return res.status(400).json({ error: 'Invalid Figma URL' });
+  }
+
+  const { data, error } = await db
+    .from('requirement_figma_links')
+    .insert({
+      requirement_id: req.params.id,
+      figma_url,
+      file_key: parsed.fileKey,
+      node_id: parsed.nodeId,
+    })
+    .select()
+    .single();
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  enrichFigmaLinks(req.params.id, [figma_url], req.user!.id);
+
+  res.status(201).json(data);
+});
+
+requirementsRouter.delete('/:id/figma-links/:linkId', async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { error } = await db
+    .from('requirement_figma_links')
+    .delete()
+    .eq('id', req.params.linkId)
+    .eq('requirement_id', req.params.id);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ deleted: true });
 });
 
 requirementsRouter.post('/enhance', async (req, res) => {

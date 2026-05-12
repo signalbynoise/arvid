@@ -26,6 +26,30 @@ import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
 
+interface FigmaDesignLinkRow {
+  id: string;
+  requirement_id: string;
+  figma_url: string;
+  file_key: string;
+  node_id: string | null;
+  node_name: string | null;
+  thumbnail_url: string | null;
+  fetched_at: string | null;
+  created_at: string;
+}
+
+export interface FigmaDesignLink {
+  id: string;
+  requirementId: string;
+  figmaUrl: string;
+  fileKey: string;
+  nodeId: string | null;
+  nodeName: string | null;
+  thumbnailUrl: string | null;
+  fetchedAt: string | null;
+  createdAt: string;
+}
+
 const log = logger.create('api');
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -683,5 +707,30 @@ export const api = {
     }>;
   }> {
     return request('POST', '/figma/resolve', { figma_urls: figmaUrls });
+  },
+
+  // --- Requirement Figma Links ---
+
+  async getRequirementFigmaLinks(requirementId: string): Promise<FigmaDesignLink[]> {
+    const rows = await request<FigmaDesignLinkRow[]>('GET', `/requirements/${requirementId}/figma-links`);
+    return rows.map(row => ({
+      id: row.id,
+      requirementId: row.requirement_id,
+      figmaUrl: row.figma_url,
+      fileKey: row.file_key,
+      nodeId: row.node_id,
+      nodeName: row.node_name,
+      thumbnailUrl: row.thumbnail_url,
+      fetchedAt: row.fetched_at,
+      createdAt: row.created_at,
+    }));
+  },
+
+  async addRequirementFigmaLink(requirementId: string, figmaUrl: string): Promise<FigmaDesignLinkRow> {
+    return request('POST', `/requirements/${requirementId}/figma-links`, { figma_url: figmaUrl });
+  },
+
+  async removeRequirementFigmaLink(requirementId: string, linkId: string): Promise<void> {
+    await request<unknown>('DELETE', `/requirements/${requirementId}/figma-links/${linkId}`);
   },
 };

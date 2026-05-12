@@ -48,7 +48,7 @@ async function figmaFetch<T>(token: string, path: string): Promise<T> {
   );
 
   const res = await fetch(`${FIGMA_API_BASE}${path}`, {
-    headers: { 'X-Figma-Token': token },
+    headers: { 'Authorization': `Bearer ${token}` },
   });
 
   if (!res.ok) {

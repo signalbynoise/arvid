@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { supabase } from '../supabase';
+import { supabaseAdmin } from '../supabase';
 import { getMe, getFileNodes, getImages, extractDesignSummary } from '../lib/figmaClient';
 import { parseFigmaUrl } from '../../shared/figmaUrl';
 import type { FigmaDesignData } from '../lib/figmaClient';
@@ -100,7 +100,7 @@ figmaCallbackRouter.get('/', async (req, res) => {
 
     const figmaUser = await getMe(tokenData.access_token);
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await supabaseAdmin
       .from('figma_connections')
       .upsert(
         {
@@ -146,7 +146,7 @@ figmaCallbackRouter.get('/', async (req, res) => {
 // --- Connection status ---
 
 figmaRouter.get('/status', async (req, res) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('figma_connections')
     .select('figma_username, figma_email, connected_at')
     .eq('user_id', req.user!.id)
@@ -166,7 +166,7 @@ figmaRouter.get('/status', async (req, res) => {
 figmaRouter.delete('/connect', async (req, res) => {
   const userId = req.user!.id;
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('figma_connections')
     .delete()
     .eq('user_id', userId);
@@ -197,7 +197,7 @@ figmaRouter.post('/resolve', async (req, res) => {
 
   const userId = req.user!.id;
 
-  const { data: connection, error: connError } = await supabase
+  const { data: connection, error: connError } = await supabaseAdmin
     .from('figma_connections')
     .select('access_token')
     .eq('user_id', userId)

@@ -29,13 +29,17 @@ export function UserMenu() {
   const supabaseConnection = useStore(s => s.supabaseConnection);
   const loadSupabaseConnectStatus = useStore(s => s.loadSupabaseConnectStatus);
   const disconnectSupabase = useStore(s => s.disconnectSupabase);
+  const figmaConnection = useStore(s => s.figmaConnection);
+  const loadFigmaStatus = useStore(s => s.loadFigmaStatus);
+  const disconnectFigma = useStore(s => s.disconnectFigma);
 
   useEffect(() => {
     loadGitHubStatus();
     loadLinearStatus();
     loadSlackStatus();
     loadSupabaseConnectStatus();
-  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus]);
+    loadFigmaStatus();
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus, loadFigmaStatus]);
 
   const fullName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -100,6 +104,16 @@ export function UserMenu() {
     }
   };
 
+  const handleConnectFigma = async () => {
+    log.info('connect', 'Initiating Figma OAuth');
+    try {
+      const { url } = await api.getFigmaAuthUrl();
+      window.location.href = url;
+    } catch (err) {
+      log.error('connect', 'Failed to get Figma auth URL', { error: err instanceof Error ? err.message : 'Unknown' });
+    }
+  };
+
   const toggleIndicator = (connected: boolean) =>
     connected
       ? <ToggleRight size={ICON_SIZE.md} className="text-status-success" />
@@ -148,6 +162,12 @@ export function UserMenu() {
             label="Supabase"
             right={toggleIndicator(supabaseConnection.status === 'connected')}
             onClick={supabaseConnection.status === 'connected' ? disconnectSupabase : handleConnectSupabase}
+          />
+          <DropdownItem
+            icon={<img src="/figma.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Figma"
+            right={toggleIndicator(figmaConnection.status === 'connected')}
+            onClick={figmaConnection.status === 'connected' ? disconnectFigma : handleConnectFigma}
           />
         </DropdownSection>
 
