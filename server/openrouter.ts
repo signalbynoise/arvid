@@ -1409,10 +1409,7 @@ export async function classifyImplementation(input: ImplementationCheckInput): P
     .map(f => f.path);
   if (filePaths.length > 0) {
     userPrompt += `\n## Repository File Tree (${filePaths.length} files)\n`;
-    userPrompt += filePaths.slice(0, 200).join('\n') + '\n';
-    if (filePaths.length > 200) {
-      userPrompt += `... and ${filePaths.length - 200} more files\n`;
-    }
+    userPrompt += filePaths.join('\n') + '\n';
   }
 
   const keyFileEntries = Object.entries(input.repoContext.keyFiles);
