@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Requirement, Question, Answer, CardAssignee, EntityType, SimilarRequirement } from '../../types';
 import { api, ApiError } from '../../api';
 import { deriveQuestionStatus } from '../../domain/questions';
+import { scoreToClarityLabel, scoreToRiskLabel } from '../../../../shared/schemas/riskClarity';
 import { logger } from '../../logger';
 
 const log = logger.create('store:entities');
@@ -201,12 +202,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       figmaLinks: figmaLinks && figmaLinks.length > 0 ? figmaLinks : undefined,
     };
 
-    if (pendingScores) {
+    if (pendingScores?.clarityScore != null && pendingScores?.riskScore != null) {
       newReq.clarityScore = pendingScores.clarityScore;
       newReq.riskScore = pendingScores.riskScore;
       newReq.clarityReasoning = pendingScores.clarityReasoning;
       newReq.riskReasoning = pendingScores.riskReasoning;
       newReq.scoresComputedAt = new Date().toISOString();
+      newReq.clarity = scoreToClarityLabel(pendingScores.clarityScore);
+      newReq.risk = scoreToRiskLabel(pendingScores.riskScore);
     }
 
     try {
