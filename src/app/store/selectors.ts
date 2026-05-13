@@ -50,3 +50,8 @@ export const selectCurrentPlan = (state: AppState) => resolvePlan(state.subscrip
 export const selectPlanLimits = (state: AppState) => state.planLimits;
 export const selectPlanUsage = (state: AppState) => state.planUsage;
 export const selectSubscriptionLoading = (state: AppState) => state.subscriptionLoading;
+
+export const selectSearchResults = (state: AppState) => state.searchResults;
+export const selectSearchStatus = (state: AppState) => state.searchStatus;
+export const selectSearchHasMore = (state: AppState) => state.searchHasMore;
+export const selectSearchQuery = (state: AppState) => state.searchQuery;

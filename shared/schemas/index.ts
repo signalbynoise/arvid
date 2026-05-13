@@ -316,3 +316,15 @@ export type {
   SimilarRequirementRow,
   SimilarRequirement,
 } from './similarity';
+
+export {
+  SearchEntityTypeEnum,
+  SearchResultRowSchema,
+  SearchResultSchema,
+} from './search';
+
+export type {
+  SearchEntityType,
+  SearchResultRow,
+  SearchResult,
+} from './search';

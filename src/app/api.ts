@@ -29,9 +29,11 @@ import {
   SimilarRequirementSchema,
   SimilarRequirementsResponseSchema,
   ProjectSimilaritiesResponseSchema,
+  SearchResultRowSchema,
+  SearchResultSchema,
 } from '../../shared/schemas';
 import type { ImplAnalysis, PlanLimitsResponse, Invoice } from '../../shared/schemas';
-import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee, UserSubscription, SimilarRequirement } from './types';
+import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee, UserSubscription, SimilarRequirement, SearchResult } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
@@ -794,5 +796,13 @@ export const api = {
       result[reqId] = rows.map(row => SimilarRequirementSchema.parse(row));
     }
     return result;
+  },
+
+  // --- Search ---
+
+  async search(query: string, offset = 0, limit = 50, signal?: AbortSignal): Promise<SearchResult[]> {
+    const params = new URLSearchParams({ q: query, offset: String(offset), limit: String(limit) });
+    const rows = await request<unknown[]>('GET', `/search?${params}`, undefined, signal);
+    return parseArray(SearchResultRowSchema, SearchResultSchema, rows, '/search');
   },
 };

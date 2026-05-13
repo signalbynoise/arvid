@@ -133,6 +133,12 @@ export default function App() {
   const [linkSlackOpen, setLinkSlackOpen] = useState(false);
   const [linkDatabaseOpen, setLinkDatabaseOpen] = useState(false);
   const [addUserTarget, setAddUserTarget] = useState<{ entityType: EntityType; entityId: string } | null>(null);
+  const [pendingDetailsView, setPendingDetailsView] = useState<{
+    type: 'requirement' | 'question' | 'answer';
+    entityId: string;
+    requirementId?: string;
+    questionId?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -158,11 +164,52 @@ export default function App() {
       case 'linkLinearProject': setLinkLinearOpen(true); break;
       case 'linkSlackChannel': setLinkSlackOpen(true); break;
       case 'linkDatabase': setLinkDatabaseOpen(true); break;
+      case 'viewDetails': {
+        const detail = pendingModal.data as {
+          type: 'requirement' | 'question' | 'answer';
+          entityId: string;
+          projectId?: string;
+          requirementId?: string;
+          questionId?: string;
+        } | undefined;
+        if (detail) {
+          if (detail.projectId && detail.projectId !== selectedProjectId) {
+            const { setSelectedProjectId } = useStore.getState();
+            setSelectedProjectId(detail.projectId);
+          }
+          if (detail.requirementId) {
+            const { selectRequirement } = useStore.getState();
+            const currentReqId = useStore.getState().selectedReqId;
+            if (currentReqId !== detail.requirementId) {
+              selectRequirement(detail.requirementId);
+            }
+          }
+          if (detail.questionId) {
+            const { selectQuestion } = useStore.getState();
+            selectQuestion(detail.questionId);
+          }
+          setPendingDetailsView({
+            type: detail.type,
+            entityId: detail.entityId,
+            requirementId: detail.requirementId,
+            questionId: detail.questionId,
+          });
+        }
+        break;
+      }
       default: return;
     }
     clearPendingModal();
-  }, [pendingModal, clearPendingModal]);
+  }, [pendingModal, clearPendingModal, selectedProjectId]);
 
+
+  useEffect(() => {
+    if (!pendingDetailsView || dataState.status !== 'ready') return;
+
+    const { type, entityId } = pendingDetailsView;
+    setPendingDetailsView(null);
+    openDetails(type, entityId);
+  }, [pendingDetailsView, dataState.status]);
 
   const openDetails = (type: 'requirement' | 'question' | 'answer', id: string) => {
     setDetailsModalType(type);

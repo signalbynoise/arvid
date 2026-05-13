@@ -22,7 +22,8 @@ export type ModalIntent =
   | 'linkRepository'
   | 'linkLinearProject'
   | 'linkSlackChannel'
-  | 'linkDatabase';
+  | 'linkDatabase'
+  | 'viewDetails';
 
 export interface PendingModal {
   type: ModalIntent;

@@ -24,4 +24,6 @@ export type {
   SubscriptionPlan,
   UserSubscription,
   SimilarRequirement,
+  SearchResult,
+  SearchEntityType,
 } from '../../shared/schemas';
