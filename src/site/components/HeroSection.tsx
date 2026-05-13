@@ -2,11 +2,14 @@ import React from 'react';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
 import { ChevronDown } from '@/components/animate-ui/icons/chevron-down';
+import { MorphingText } from '@/components/animate-ui/primitives/texts/morphing';
 import Grainient from '@/components/Grainient';
 import { AppDemo } from './app-demo';
 import { PageGrid } from './PageGrid';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
+
+const ROTATING_WORDS = ['#issues', '#agents', '#projects', '#tasks', '#features'];
 
 export function HeroSection() {
   return (
@@ -14,7 +17,13 @@ export function HeroSection() {
       <h1 className="col-span-full text-h2 text-text-primary">
         Arvid builds the missing knowledge graph,
         <br />
-        for your issues and agents.
+        for your{' '}
+        <MorphingText
+          className="font-[var(--fw-semibold)]"
+          text={ROTATING_WORDS}
+          loop
+          holdDelay={2500}
+        />
       </h1>
 
       <div className="col-span-full flex items-center gap-4">

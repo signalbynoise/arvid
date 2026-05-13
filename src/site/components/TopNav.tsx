@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
@@ -24,11 +24,25 @@ const RESOURCES_ITEMS = [
   { label: 'Docs', href: '/docs' },
 ];
 
+function useScrolled(threshold = 1) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > threshold);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [threshold]);
+
+  return scrolled;
+}
+
 export function TopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const scrolled = useScrolled();
 
   return (
-    <PageGrid as="header" className="sticky top-0 z-50 w-full bg-surface-base/80 pt-6 pb-4 backdrop-blur-md">
+    <PageGrid as="header" className={`sticky top-0 z-50 w-full pt-6 pb-4 transition-[background-color,backdrop-filter] duration-300 ${scrolled ? 'bg-surface-base/80 backdrop-blur-md' : ''}`}>
       <div className="col-span-full flex items-center justify-between">
         <AnimateIcon animateOnHover asChild>
           <a href="/" className="flex items-center gap-2 shrink-0 text-text-primary">
