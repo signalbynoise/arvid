@@ -19,6 +19,7 @@ export const QuestionRowSchema = z.object({
   description: z.string().nullable().optional(),
   created_by: z.string().uuid().nullable().optional(),
   is_deactivated: z.boolean().optional(),
+  updated_at: z.string().nullable().optional(),
 });
 
 export const QuestionSchema = QuestionRowSchema.transform(row => ({
@@ -39,6 +40,7 @@ export const QuestionSchema = QuestionRowSchema.transform(row => ({
   description: row.description ?? undefined,
   createdBy: row.created_by ?? undefined,
   isDeactivated: row.is_deactivated ?? false,
+  updatedAt: row.updated_at ?? undefined,
 }));
 
 export const CreateQuestionBodySchema = z.object({

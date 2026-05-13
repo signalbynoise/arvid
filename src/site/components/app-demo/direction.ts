@@ -56,8 +56,8 @@ const contentPool: ContentPool = {
   },
   answers: {
     _default: [
-      { id: 'a1', shortId: 'A01', author: 'David M.', date: 'Today', text: 'Token bucket with configurable burst. Start at 100 req/min for free tier, 1000 for paid.', isCurrent: true },
-      { id: 'a2', shortId: 'A02', author: 'Sarah K.', date: 'Today', text: 'Yes, tier-based. Free, Pro, and Enterprise each get separate limits defined in the plan config.', isCurrent: true },
+      { id: 'a1', shortId: 'A01', author: 'David M.', createdAt: 'Today', text: 'Token bucket with configurable burst. Start at 100 req/min for free tier, 1000 for paid.', isCurrent: true },
+      { id: 'a2', shortId: 'A02', author: 'Sarah K.', createdAt: 'Today', text: 'Yes, tier-based. Free, Pro, and Enterprise each get separate limits defined in the plan config.', isCurrent: true },
     ],
   },
   slackSuggestions: [

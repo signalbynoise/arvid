@@ -7,7 +7,7 @@ describe('AnswerRowSchema', () => {
     question_id: 'q1',
     text: 'The deployment target is AWS EKS.',
     author: 'Jane',
-    date: '2026-02-15',
+    created_at: '2026-02-15T00:00:00.000Z',
     is_current: true,
   };
 
@@ -41,7 +41,7 @@ describe('AnswerSchema (transform)', () => {
     question_id: 'q1',
     text: 'Answer text',
     author: 'Bob',
-    date: '2026-01-20',
+    created_at: '2026-01-20T00:00:00.000Z',
     is_current: false,
   };
 
@@ -57,31 +57,31 @@ describe('AnswerSchema (transform)', () => {
     expect(result.id).toBe('a1');
     expect(result.text).toBe('Answer text');
     expect(result.author).toBe('Bob');
-    expect(result.date).toBe('2026-01-20');
+    expect(result.createdAt).toBe('2026-01-20T00:00:00.000Z');
   });
 });
 
 describe('CreateAnswerBodySchema', () => {
   it('accepts valid creation body', () => {
-    const body = { question_id: 'q1', text: 'My answer', author: 'Eve', date: '2026-03-01' };
+    const body = { question_id: 'q1', text: 'My answer', author: 'Eve', created_at: '2026-03-01T00:00:00.000Z' };
     const result = CreateAnswerBodySchema.safeParse(body);
     expect(result.success).toBe(true);
   });
 
   it('defaults is_current to false', () => {
-    const body = { question_id: 'q1', text: 'Answer', author: 'Eve', date: '2026-03-01' };
+    const body = { question_id: 'q1', text: 'Answer', author: 'Eve', created_at: '2026-03-01T00:00:00.000Z' };
     const result = CreateAnswerBodySchema.parse(body);
     expect(result.is_current).toBe(false);
   });
 
   it('rejects empty text', () => {
-    const body = { question_id: 'q1', text: '', author: 'Eve', date: '2026-03-01' };
+    const body = { question_id: 'q1', text: '', author: 'Eve', created_at: '2026-03-01T00:00:00.000Z' };
     const result = CreateAnswerBodySchema.safeParse(body);
     expect(result.success).toBe(false);
   });
 
   it('rejects empty author', () => {
-    const body = { question_id: 'q1', text: 'Answer', author: '', date: '2026-03-01' };
+    const body = { question_id: 'q1', text: 'Answer', author: '', created_at: '2026-03-01T00:00:00.000Z' };
     const result = CreateAnswerBodySchema.safeParse(body);
     expect(result.success).toBe(false);
   });
@@ -120,7 +120,7 @@ describe('AnswerSchema suggested answer fields', () => {
     question_id: 'q1',
     text: 'Best practice suggests using OAuth2.',
     author: 'Arvid',
-    date: '2026-05-04',
+    created_at: '2026-05-04T00:00:00.000Z',
     is_current: false,
   };
 
@@ -147,7 +147,7 @@ describe('AnswerSchema suggested answer fields', () => {
       question_id: 'q1',
       text: 'AI answer',
       author: 'Arvid',
-      date: '2026-05-04',
+      created_at: '2026-05-04T00:00:00.000Z',
       is_suggested: true,
       is_hidden: false,
     };

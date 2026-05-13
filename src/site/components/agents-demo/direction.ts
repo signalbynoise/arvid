@@ -25,8 +25,8 @@ const contentPool: ContentPool = {
   },
   answers: {
     _default: [
-      { id: 'aga1', shortId: 'A01', author: 'David M.', date: 'Today', text: 'JWT with short-lived access tokens and rotating refresh tokens stored in httpOnly cookies.', isCurrent: true },
-      { id: 'aga2', shortId: 'A02', author: 'David M.', date: 'Today', text: 'WebSockets for real-time, with SSE fallback for environments that block WS.', isCurrent: true },
+      { id: 'aga1', shortId: 'A01', author: 'David M.', createdAt: 'Today', text: 'JWT with short-lived access tokens and rotating refresh tokens stored in httpOnly cookies.', isCurrent: true },
+      { id: 'aga2', shortId: 'A02', author: 'David M.', createdAt: 'Today', text: 'WebSockets for real-time, with SSE fallback for environments that block WS.', isCurrent: true },
     ],
   },
 };

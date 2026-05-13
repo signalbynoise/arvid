@@ -13,7 +13,7 @@ vi.mock('./api', () => ({
       { id: 'q1', requirementId: 'r1', text: 'How?', status: 'Unanswered', importance: 'Critical', type: 'Manual', category: 'Scope' },
     ]),
     getAnswers: vi.fn().mockResolvedValue([
-      { id: 'a1', questionId: 'q1', text: 'Because.', author: 'Bob', date: '2026-01-01', isCurrent: true },
+      { id: 'a1', questionId: 'q1', text: 'Because.', author: 'Bob', createdAt: '2026-01-01', isCurrent: true },
     ]),
     getProjects: vi.fn().mockResolvedValue([
       { id: 'p1', name: 'Platform Migration', parentId: undefined },

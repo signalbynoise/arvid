@@ -8,7 +8,7 @@ const suggestedAnswer: Answer = {
   questionId: 'q1',
   text: 'Best practice suggests using OAuth2 with PKCE for SPAs.',
   author: 'Arvid',
-  date: '2026-05-04',
+  createdAt: '2026-05-04T00:00:00.000Z',
   isCurrent: false,
   isSuggested: true,
   isHidden: false,
@@ -52,6 +52,6 @@ describe('SuggestedAnswerCard', () => {
 
   it('renders the date', () => {
     render(<SuggestedAnswerCard answer={suggestedAnswer} onUse={vi.fn()} onHide={vi.fn()} />);
-    expect(screen.getByText('2026-05-04')).toBeInTheDocument();
+    expect(screen.getByText('2026-05-04T00:00:00.000Z')).toBeInTheDocument();
   });
 });

@@ -32,9 +32,9 @@ const contentPool: ContentPool = {
   },
   answers: {
     _default: [
-      { id: 'cona1', shortId: 'A01', author: 'Sarah K.', date: 'Today', text: 'Gate production access behind onboarding checklist completion and manager approval.', isCurrent: true },
-      { id: 'cona2', shortId: 'A02', author: 'Sarah K.', date: 'Today', text: 'Include sentiment tags plus verbatim feedback excerpts in each digest.', isCurrent: true },
-      { id: 'cona3', shortId: 'A03', author: 'Sarah K.', date: 'Today', text: 'Use a shared invoice template service so billing exports stay consistent across teams.', isCurrent: true },
+      { id: 'cona1', shortId: 'A01', author: 'Sarah K.', createdAt: 'Today', text: 'Gate production access behind onboarding checklist completion and manager approval.', isCurrent: true },
+      { id: 'cona2', shortId: 'A02', author: 'Sarah K.', createdAt: 'Today', text: 'Include sentiment tags plus verbatim feedback excerpts in each digest.', isCurrent: true },
+      { id: 'cona3', shortId: 'A03', author: 'Sarah K.', createdAt: 'Today', text: 'Use a shared invoice template service so billing exports stay consistent across teams.', isCurrent: true },
     ],
   },
   slackSuggestions: [

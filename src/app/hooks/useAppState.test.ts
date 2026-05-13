@@ -13,8 +13,8 @@ vi.mock('../api', () => ({
       { id: 'q2', requirementId: 'r1', text: 'Q2?', status: 'Answered', importance: 'Important', type: 'Manual', category: 'Data' },
     ]),
     getAnswers: vi.fn().mockResolvedValue([
-      { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', date: '2026-01-01', isCurrent: true },
-      { id: 'a2', questionId: 'q1', text: 'Alt answer', author: 'Eve', date: '2026-01-02', isCurrent: false },
+      { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', createdAt: '2026-01-01', isCurrent: true },
+      { id: 'a2', questionId: 'q1', text: 'Alt answer', author: 'Eve', createdAt: '2026-01-02', isCurrent: false },
     ]),
     getProjects: vi.fn().mockResolvedValue([
       { id: 'p1', name: 'Test Project', parentId: undefined },
@@ -141,7 +141,7 @@ describe('Zustand store (replaces useAppState)', () => {
   it('optimistically toggles answer current status', async () => {
     useStore.setState({
       answers: [
-        { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', date: '2026-01-01', isCurrent: true },
+        { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', createdAt: '2026-01-01', isCurrent: true },
       ],
       questions: [
         { id: 'q1', requirementId: 'r1', text: 'Q?', status: 'Answered', importance: 'Critical', type: 'Manual', category: 'Scope' },
@@ -162,7 +162,7 @@ describe('Zustand store (replaces useAppState)', () => {
 
     useStore.setState({
       answers: [
-        { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', date: '2026-01-01', isCurrent: true },
+        { id: 'a1', questionId: 'q1', text: 'Answer', author: 'Bob', createdAt: '2026-01-01', isCurrent: true },
       ],
       questions: [
         { id: 'q1', requirementId: 'r1', text: 'Q?', status: 'Answered', importance: 'Critical', type: 'Manual', category: 'Scope' },

@@ -14,8 +14,8 @@ vi.mock('../api', () => ({
 }));
 
 const answers: Answer[] = [
-  { id: 'a1', shortId: 'A01', questionId: 'q1', text: 'This is the first answer.', author: 'Alice', date: '2026-01-15', isCurrent: true },
-  { id: 'a2', shortId: 'A02', questionId: 'q1', text: 'This is an alternative answer.', author: 'Bob', date: '2026-01-10', isCurrent: false },
+  { id: 'a1', shortId: 'A01', questionId: 'q1', text: 'This is the first answer.', author: 'Alice', createdAt: '2026-01-15', isCurrent: true },
+  { id: 'a2', shortId: 'A02', questionId: 'q1', text: 'This is an alternative answer.', author: 'Bob', createdAt: '2026-01-10', isCurrent: false },
 ];
 
 const suggestedAnswer: Answer = {
@@ -23,7 +23,7 @@ const suggestedAnswer: Answer = {
   questionId: 'q1',
   text: 'AI suggests using OAuth2 with PKCE.',
   author: 'Arvid',
-  date: '2026-05-04',
+  createdAt: '2026-05-04',
   isCurrent: false,
   isSuggested: true,
   isHidden: false,
@@ -34,7 +34,7 @@ const hiddenSuggestedAnswer: Answer = {
   questionId: 'q1',
   text: 'This was hidden.',
   author: 'Arvid',
-  date: '2026-05-04',
+  createdAt: '2026-05-04',
   isCurrent: false,
   isSuggested: true,
   isHidden: true,
@@ -97,8 +97,8 @@ describe('AnswerColumn', () => {
 
   it('shows dates on answer cards', () => {
     render(<AnswerColumn />);
-    expect(screen.getByText('2026-01-15')).toBeInTheDocument();
-    expect(screen.getByText('2026-01-10')).toBeInTheDocument();
+    expect(screen.getByText(/Jan 15/)).toBeInTheDocument();
+    expect(screen.getByText(/Jan 10/)).toBeInTheDocument();
   });
 
   it('renders answer text content', () => {

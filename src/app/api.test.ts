@@ -93,7 +93,7 @@ describe('api', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => [
-          { id: 'a1', question_id: 'q1', text: 'Because...', author: 'Alice', date: '2026-01-01', is_current: true },
+          { id: 'a1', question_id: 'q1', text: 'Because...', author: 'Alice', created_at: '2026-01-01', is_current: true },
         ],
       });
 
@@ -106,10 +106,13 @@ describe('api', () => {
         questionId: 'q1',
         text: 'Because...',
         author: 'Alice',
-        date: '2026-01-01',
+        createdAt: '2026-01-01',
         isCurrent: true,
         isSuggested: undefined,
         isHidden: undefined,
+        createdBy: undefined,
+        isDeactivated: false,
+        updatedAt: undefined,
       });
     });
 
@@ -192,7 +195,7 @@ describe('api', () => {
     it('sends a PATCH with is_current field', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ id: 'a1', question_id: 'q1', text: 'Yes', author: 'Alice', date: '2026-01-01', is_current: true }),
+        json: async () => ({ id: 'a1', question_id: 'q1', text: 'Yes', author: 'Alice', created_at: '2026-01-01', is_current: true }),
       });
 
       const result = await api.updateAnswer('a1', { isCurrent: true });

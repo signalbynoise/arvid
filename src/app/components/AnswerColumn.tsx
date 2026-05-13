@@ -75,9 +75,9 @@ export function AnswerColumn({ onOpenDetails, onEdit, onAddUser, onDeactivate }:
   const processedAnswers = useMemo(() => {
     let sorted = [...answers];
     if (sortBy === 'date_desc') {
-      sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else if (sortBy === 'date_asc') {
-      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     } else if (sortBy === 'status_active') {
       sorted.sort((a, b) => (b.isCurrent ? 1 : 0) - (a.isCurrent ? 1 : 0));
     }

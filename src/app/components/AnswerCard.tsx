@@ -64,7 +64,7 @@ export function AnswerCard({
       </Chip>
 
       <Card.Footer
-        meta={`${ans.author} - ${formatCardDate(ans.date)}`}
+        meta={`${ans.author} - ${formatCardDate(ans.createdAt)}`}
         authorName={authorName}
         assigneeCount={assignees.length}
         indicators={<div className="w-2 h-2 rounded-full bg-indicator-high" />}

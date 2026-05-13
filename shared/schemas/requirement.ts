@@ -32,6 +32,7 @@ export const RequirementRowSchema = z.object({
   clarity_reasoning: z.string().nullable().optional(),
   risk_reasoning: z.string().nullable().optional(),
   scores_computed_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -65,6 +66,7 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   clarityReasoning: row.clarity_reasoning ?? undefined,
   riskReasoning: row.risk_reasoning ?? undefined,
   scoresComputedAt: row.scores_computed_at ?? undefined,
+  updatedAt: row.updated_at ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({

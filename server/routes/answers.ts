@@ -14,7 +14,7 @@ answersRouter.get('/', async (req, res) => {
   let query = db
     .from('answers')
     .select('*')
-    .order('date', { ascending: true });
+    .order('created_at', { ascending: true });
 
   if (req.query.question_id) {
     query = query.eq('question_id', req.query.question_id as string);
@@ -151,7 +151,7 @@ answersRouter.post('/suggest/:questionId', async (req, res) => {
         short_id: shortId,
         text: result.answer_text,
         author: 'Arvid',
-        date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         is_current: false,
         is_suggested: true,
         is_hidden: false,

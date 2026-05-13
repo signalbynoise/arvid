@@ -31,7 +31,7 @@ export function AnswerCard({ answer, visible }: AnswerCardProps) {
         </MiniStatusLabel>
       </MiniStatusChip>
 
-      <MiniCardMeta text={`${answer.author} - ${answer.date}`}>
+      <MiniCardMeta text={`${answer.author} - ${answer.createdAt}`}>
         <MiniIndicatorDot color="bg-indicator-high" />
       </MiniCardMeta>
     </MiniCard>

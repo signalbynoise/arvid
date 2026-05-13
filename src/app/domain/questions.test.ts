@@ -7,7 +7,7 @@ const makeAnswer = (overrides: Partial<Answer> = {}): Answer => ({
   questionId: 'q1',
   text: 'Some answer',
   author: 'Test User',
-  date: '2026-01-01',
+  createdAt: '2026-01-01',
   isCurrent: false,
   ...overrides,
 });

@@ -28,7 +28,7 @@ export interface Answer {
   id: string;
   shortId: string;
   author: string;
-  date: string;
+  createdAt: string;
   text: string;
   isCurrent: boolean;
 }

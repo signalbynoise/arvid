@@ -79,7 +79,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
   const authorName = isReq ? req.owner : isQuestion ? q.author : ans.author;
   const authorTeam = isReq ? req.ownerTeam : isQuestion ? q.authorTeam : undefined;
   const authorRole = isReq ? req.ownerRole : isQuestion ? q.authorRole : undefined;
-  const createdAt = isReq ? req.createdAt : isQuestion ? q.createdAt : ans.date;
+  const createdAt = isReq ? req.createdAt : isQuestion ? q.createdAt : ans.createdAt;
 
   const assigneeKey = `${type}:${data.id}`;
   const assignees = allAssignees[assigneeKey] || [];

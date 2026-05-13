@@ -426,7 +426,7 @@ export const api = {
       question_id: a.questionId,
       text: a.text,
       author: a.author,
-      date: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       is_current: false,
     };
     const row = await request<unknown>('POST', '/answers', body);
