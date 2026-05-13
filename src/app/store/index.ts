@@ -65,6 +65,8 @@ export {
   selectInvitations,
   selectCardAssignees,
   selectSimilarities,
+  selectScoringRequirements,
+  selectPendingScores,
   selectGitHubConnection,
   selectLinearConnection,
   selectSupabaseConnection,

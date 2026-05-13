@@ -330,11 +330,11 @@ export const api = {
     return parseArray(AnswerRowSchema, AnswerSchema, rows, `/answers${params}`);
   },
 
-  async enhanceRequirement(text: string, projectId?: string | null, figmaLinks?: string[]): Promise<{ title: string; description: string }> {
+  async enhanceRequirement(text: string, projectId?: string | null, figmaLinks?: string[]): Promise<{ title: string; description: string; clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string }> {
     const body: Record<string, unknown> = { text };
     if (projectId) body.project_id = projectId;
     if (figmaLinks && figmaLinks.length > 0) body.figma_links = figmaLinks;
-    return request<{ title: string; description: string }>('POST', '/requirements/enhance', body);
+    return request<{ title: string; description: string; clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string }>('POST', '/requirements/enhance', body);
   },
 
   async createRequirement(req: Partial<Requirement> & { projectId?: string; figmaLinks?: string[] }): Promise<Requirement> {
@@ -353,6 +353,13 @@ export const api = {
       project_id: req.projectId,
     };
     if (req.figmaLinks && req.figmaLinks.length > 0) body.figma_links = req.figmaLinks;
+    if (req.clarityScore != null) {
+      body.clarity_score = req.clarityScore;
+      body.risk_score = req.riskScore;
+      body.clarity_reasoning = req.clarityReasoning;
+      body.risk_reasoning = req.riskReasoning;
+      body.scores_computed_at = req.scoresComputedAt;
+    }
     const row = await request<unknown>('POST', '/requirements', body);
     return parseSingle(RequirementRowSchema, RequirementSchema, row, '/requirements');
   },

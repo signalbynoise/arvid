@@ -6,6 +6,7 @@ import { TextInput } from '../ui/TextInput';
 import { TextArea } from '../ui/TextArea';
 import { SubmitButton } from '../ui/SubmitButton';
 import { FigmaDesignGrid } from './FigmaDesignGrid';
+import { ScoreBadge } from '../ScoreBadge';
 
 interface FigmaDesign {
   url: string;
@@ -13,18 +14,26 @@ interface FigmaDesign {
   nodeName?: string;
 }
 
+interface ScoreAnalysis {
+  clarityScore?: number;
+  riskScore?: number;
+  clarityReasoning?: string;
+  riskReasoning?: string;
+}
+
 interface Props {
   isEnhancing: boolean;
   title: string;
   description: string;
   figmaDesigns: FigmaDesign[];
+  scores?: ScoreAnalysis | null;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onBack: () => void;
   onCreate: () => void;
 }
 
-export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
+export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, scores, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -74,6 +83,32 @@ export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, onT
           </div>
         )}
       </div>
+
+      {scores?.clarityScore != null && scores?.riskScore != null && (
+        <div className="rounded-card bg-surface-frost-02 border border-border-default p-4 space-y-3">
+          <span className="text-[11px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
+            Analysis
+          </span>
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <ScoreBadge label="Clarity" score={scores.clarityScore} />
+              </div>
+              {scores.clarityReasoning && (
+                <p className="text-caption-lg text-text-tertiary">{scores.clarityReasoning}</p>
+              )}
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <ScoreBadge label="Risk" score={scores.riskScore} invert />
+              </div>
+              {scores.riskReasoning && (
+                <p className="text-caption-lg text-text-tertiary">{scores.riskReasoning}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-between items-center pt-6">
         <button onClick={onBack} className="btn-ghost flex items-center gap-1.5 -ml-2">

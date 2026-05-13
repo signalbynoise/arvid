@@ -21,6 +21,10 @@ export interface RequirementFullContext {
     clarity: string;
     risk: string;
     project_id?: string;
+    clarity_score?: number;
+    risk_score?: number;
+    clarity_reasoning?: string;
+    risk_reasoning?: string;
   };
   projectName?: string;
   siblingRequirements: string[];
@@ -226,6 +230,10 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
       clarity: requirement.clarity,
       risk: requirement.risk,
       project_id: requirement.project_id ?? undefined,
+      clarity_score: requirement.clarity_score ?? undefined,
+      risk_score: requirement.risk_score ?? undefined,
+      clarity_reasoning: requirement.clarity_reasoning ?? undefined,
+      risk_reasoning: requirement.risk_reasoning ?? undefined,
     },
     projectName,
     siblingRequirements,

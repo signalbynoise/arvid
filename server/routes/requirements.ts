@@ -2,8 +2,9 @@ import { Router } from 'express';
 import { createUserClient, supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateRequirementBodySchema, UpdateRequirementBodySchema } from '../../shared/schemas';
-import { enhanceRequirement, classifyImplementation } from '../openrouter';
+import { enhanceRequirement, classifyImplementation, analyzeRiskClarity } from '../openrouter';
 import type { FigmaDesignContext } from '../openrouter';
+import { scoreToClarityLabel, scoreToRiskLabel } from '../../shared/schemas/riskClarity';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../../shared/schemas/repoContext';
 import type { DbAnalysis } from '../../shared/schemas/dbContext';
@@ -17,6 +18,45 @@ import { checkRequirementLimit } from '../middleware/checkPlanLimits';
 import { getSimilarForRequirement } from '../similarity';
 
 export const requirementsRouter = Router();
+
+function scoreRequirementBackground(requirementId: string, title: string, description?: string): void {
+  (async () => {
+    try {
+      const scores = await analyzeRiskClarity({ title, description });
+      const { error } = await supabaseAdmin
+        .from('requirements')
+        .update({
+          clarity_score: scores.clarity_score,
+          risk_score: scores.risk_score,
+          clarity: scoreToClarityLabel(scores.clarity_score),
+          risk: scoreToRiskLabel(scores.risk_score),
+          clarity_reasoning: scores.clarity_reasoning,
+          risk_reasoning: scores.risk_reasoning,
+          scores_computed_at: new Date().toISOString(),
+        })
+        .eq('id', requirementId);
+
+      if (error) {
+        console.error(
+          '[ERROR] [requirements:scoreBackground] DB update failed',
+          JSON.stringify({ requirementId, error: error.message }),
+        );
+        return;
+      }
+
+      console.info(
+        '[INFO] [requirements:scoreBackground] Scores persisted',
+        JSON.stringify({ requirementId, clarity: scores.clarity_score, risk: scores.risk_score }),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(
+        '[WARN] [requirements:scoreBackground] Scoring failed, keeping defaults',
+        JSON.stringify({ requirementId, error: message }),
+      );
+    }
+  })();
+}
 
 requirementsRouter.get('/', async (req, res) => {
   const db = createUserClient(req.accessToken!);
@@ -131,6 +171,10 @@ requirementsRouter.post('/', checkRequirementLimit, validateBody(CreateRequireme
     });
   }
 
+  if (!data.clarity_score) {
+    scoreRequirementBackground(data.id, data.title, data.description ?? undefined);
+  }
+
   res.status(201).json(data);
 });
 
@@ -239,6 +283,12 @@ requirementsRouter.patch('/:id', validateBody(UpdateRequirementBodySchema), asyn
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  const textChanged = req.body.title !== undefined || req.body.description !== undefined;
+  if (textChanged) {
+    scoreRequirementBackground(data.id, data.title, data.description ?? undefined);
+  }
+
   res.json(data);
 });
 
@@ -362,7 +412,22 @@ requirementsRouter.post('/enhance', async (req, res) => {
     }
 
     const result = await enhanceRequirement(text.trim(), context);
-    res.json({ title: result.title, description: result.description });
+
+    let scores: { clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string } = {};
+    try {
+      const analysis = await analyzeRiskClarity({ title: result.title, description: result.description });
+      scores = {
+        clarityScore: analysis.clarity_score,
+        riskScore: analysis.risk_score,
+        clarityReasoning: analysis.clarity_reasoning,
+        riskReasoning: analysis.risk_reasoning,
+      };
+    } catch (scoreErr) {
+      const scoreMsg = scoreErr instanceof Error ? scoreErr.message : 'Unknown error';
+      console.warn('[WARN] [requirements:enhance] Scoring failed, returning without scores', JSON.stringify({ error: scoreMsg }));
+    }
+
+    res.json({ title: result.title, description: result.description, ...scores });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[ERROR] [requirements:enhance] Enhancement failed', JSON.stringify({ error: message }));

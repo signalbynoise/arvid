@@ -297,6 +297,15 @@ export type {
 } from './subscription';
 
 export {
+  RiskClarityResponseSchema,
+  scoreToClarityLabel,
+  scoreToRiskLabel,
+  clampScore,
+} from './riskClarity';
+
+export type { RiskClarityResponse, ScoreLabel } from './riskClarity';
+
+export {
   SimilarRequirementSchema,
   SimilarRequirementRowSchema,
   SimilarRequirementsResponseSchema,

@@ -27,6 +27,11 @@ export const RequirementRowSchema = z.object({
   impl_analysis: z.unknown().nullable().optional(),
   created_by: z.string().uuid().nullable().optional(),
   is_deactivated: z.boolean().optional(),
+  clarity_score: z.number().int().min(1).max(10).nullable().optional(),
+  risk_score: z.number().int().min(1).max(10).nullable().optional(),
+  clarity_reasoning: z.string().nullable().optional(),
+  risk_reasoning: z.string().nullable().optional(),
+  scores_computed_at: z.string().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -55,6 +60,11 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   implAnalysis: (row.impl_analysis as import('./implCheck').ImplAnalysis | null) ?? undefined,
   createdBy: row.created_by ?? undefined,
   isDeactivated: row.is_deactivated ?? false,
+  clarityScore: row.clarity_score ?? undefined,
+  riskScore: row.risk_score ?? undefined,
+  clarityReasoning: row.clarity_reasoning ?? undefined,
+  riskReasoning: row.risk_reasoning ?? undefined,
+  scoresComputedAt: row.scores_computed_at ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({
@@ -72,6 +82,11 @@ export const CreateRequirementBodySchema = z.object({
   project_id: z.string().nullable().optional(),
   created_by: z.string().uuid().nullable().optional(),
   is_deactivated: z.boolean().optional(),
+  clarity_score: z.number().int().min(1).max(10).nullable().optional(),
+  risk_score: z.number().int().min(1).max(10).nullable().optional(),
+  clarity_reasoning: z.string().nullable().optional(),
+  risk_reasoning: z.string().nullable().optional(),
+  scores_computed_at: z.string().nullable().optional(),
 });
 
 export const UpdateRequirementBodySchema = CreateRequirementBodySchema.partial().omit({ id: true });

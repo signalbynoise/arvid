@@ -43,6 +43,8 @@ export const selectSupabaseConnection = (state: AppState) => state.supabaseConne
 export const selectFigmaConnection = (state: AppState) => state.figmaConnection;
 
 export const selectSimilarities = (state: AppState) => state.similarities;
+export const selectScoringRequirements = (state: AppState) => state.scoringRequirements;
+export const selectPendingScores = (state: AppState) => state.pendingScores;
 export const selectSubscription = (state: AppState) => state.subscription;
 export const selectCurrentPlan = (state: AppState) => resolvePlan(state.subscription);
 export const selectPlanLimits = (state: AppState) => state.planLimits;

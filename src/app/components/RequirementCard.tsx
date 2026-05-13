@@ -4,6 +4,7 @@ import { CompletenessChip } from './CompletenessChip';
 import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
 import { CardItemMenu } from './CardItemMenu';
+import { ScoreBadge } from './ScoreBadge';
 import { formatCardDate } from '../lib/formatDate';
 import { scrollToRequirement } from '../domain/scrollToRequirement';
 import { useStore, selectMembers, selectCardAssignees, selectSimilarities } from '../store';
@@ -112,20 +113,27 @@ export function RequirementCard({
         authorName={authorName}
         assigneeCount={assignees.length}
         indicators={
-          <>
-            <div
-              className={`w-2 h-2 rounded-full ${
-                req.clarity === 'High' ? 'bg-indicator-high' : req.clarity === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
-              }`}
-              title={`Clarity: ${req.clarity}`}
-            />
-            <div
-              className={`w-2 h-2 rounded-full ${
-                req.risk === 'Low' ? 'bg-indicator-high' : req.risk === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
-              }`}
-              title={`Risk: ${req.risk}`}
-            />
-          </>
+          req.clarityScore != null && req.riskScore != null ? (
+            <>
+              <ScoreBadge label="C" score={req.clarityScore} separator="" title={`Clarity: ${req.clarityScore}/10 — ${req.clarity}`} />
+              <ScoreBadge label="R" score={req.riskScore} separator="" invert title={`Risk: ${req.riskScore}/10 — ${req.risk}`} />
+            </>
+          ) : (
+            <>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  req.clarity === 'High' ? 'bg-indicator-high' : req.clarity === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
+                }`}
+                title={`Clarity: ${req.clarity}`}
+              />
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  req.risk === 'Low' ? 'bg-indicator-high' : req.risk === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
+                }`}
+                title={`Risk: ${req.risk}`}
+              />
+            </>
+          )
         }
       />
     </Card>

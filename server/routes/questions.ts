@@ -144,6 +144,10 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       repoKeyFiles: context.repoKeyFiles,
       repoRecentCommits: context.repoRecentCommits,
       dbContext: context.dbContext,
+      clarityScore: context.requirement.clarity_score,
+      riskScore: context.requirement.risk_score,
+      clarityReasoning: context.requirement.clarity_reasoning,
+      riskReasoning: context.requirement.risk_reasoning,
     });
 
     const existingTexts = new Set(

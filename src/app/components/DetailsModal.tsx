@@ -367,11 +367,15 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-card bg-surface-frost-02 border border-border-default">
               <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Clarity</span>
-              <span className="block text-[13px] text-text-primary mt-1">{req.clarity}</span>
+              <span className="block text-[13px] text-text-primary mt-1">
+                {req.clarityScore != null ? `${req.clarityScore}/10 (${req.clarity})` : req.clarity}
+              </span>
             </div>
             <div className="p-3 rounded-card bg-surface-frost-02 border border-border-default">
               <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Risk</span>
-              <span className="block text-[13px] text-text-primary mt-1">{req.risk}</span>
+              <span className="block text-[13px] text-text-primary mt-1">
+                {req.riskScore != null ? `${req.riskScore}/10 (${req.risk})` : req.risk}
+              </span>
             </div>
             <div className="p-3 rounded-card bg-surface-frost-02 border border-border-default">
               <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Source</span>
@@ -382,6 +386,27 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
               <span className="block text-[13px] text-text-primary mt-1">{req.completeness}%</span>
             </div>
           </div>
+
+          {(req.clarityReasoning || req.riskReasoning) && (
+            <div className="space-y-2 pt-2">
+              {req.clarityReasoning && (
+                <div>
+                  <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Clarity Analysis</span>
+                  <p className="text-caption-lg text-text-tertiary mt-0.5">{req.clarityReasoning}</p>
+                </div>
+              )}
+              {req.riskReasoning && (
+                <div>
+                  <span className="block text-[11px] text-text-quaternary uppercase tracking-wider">Risk Analysis</span>
+                  <p className="text-caption-lg text-text-tertiary mt-0.5">{req.riskReasoning}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {req.clarityScore == null && (
+            <p className="text-caption-lg text-text-quaternary italic">Risk and clarity scores not yet computed</p>
+          )}
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { GenerateSummaryResponseSchema, GenerateSummaryResponse, ImplementationCheckResponseSchema } from '../shared/schemas';
-import type { ImplementationCheckResponse } from '../shared/schemas';
+import { GenerateSummaryResponseSchema, GenerateSummaryResponse, ImplementationCheckResponseSchema, RiskClarityResponseSchema, clampScore } from '../shared/schemas';
+import type { ImplementationCheckResponse, RiskClarityResponse } from '../shared/schemas';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
 import type { DbAnalysis, DbTable, DbRelationship, DbFunction, EdgeFunction } from '../shared/schemas/dbContext';
 
@@ -354,6 +354,150 @@ Respond ONLY with the JSON object, no markdown fences, no explanation.`,
 
   console.info('[INFO] [openrouter:enhanceRequirement] Enhancement complete', JSON.stringify({ title, descriptionLength: description.length }));
   return { title, description };
+}
+
+// --- Risk & Clarity Analysis ---
+
+export interface RiskClarityInput {
+  title: string;
+  description?: string;
+}
+
+const MIN_TEXT_LENGTH_FOR_SCORING = 10;
+
+export async function analyzeRiskClarity(input: RiskClarityInput): Promise<RiskClarityResponse> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  const combinedText = input.description
+    ? `${input.title}\n${input.description}`
+    : input.title;
+
+  if (combinedText.trim().length < MIN_TEXT_LENGTH_FOR_SCORING) {
+    throw new Error('Requirement text too short for meaningful scoring');
+  }
+
+  console.info(
+    `[INFO] [openrouter:analyzeRiskClarity] Calling ${OPENROUTER_MODEL}`,
+    JSON.stringify({ title: input.title, textLength: combinedText.length }),
+  );
+
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://arvid.work',
+      'X-Title': 'Arvid',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are Arvid, an AI specification analyst. Analyze the following software requirement text and produce two scores on a 1-10 scale.
+
+## Clarity Score (1-10)
+How clear, unambiguous, and well-specified is this requirement?
+
+Scoring factors:
+- **Language precision**: Are terms specific and unambiguous, or vague and open to interpretation?
+- **Acceptance criteria**: Are expected inputs, outputs, and behaviors explicitly stated?
+- **Completeness**: Are constraints, edge cases, and error handling addressed?
+- **Terminology**: Are domain terms used consistently and precisely?
+
+Guidelines:
+- 1-3 (Low): Vague, ambiguous, missing key details. An engineer would need to make many assumptions.
+- 4-6 (Medium): Mostly clear but some aspects need clarification. Reasonable defaults can be assumed.
+- 7-10 (High): Precise, specific, and comprehensive. An engineer can confidently begin implementation.
+
+## Risk Score (1-10)
+How much implementation risk does this requirement carry?
+
+Scoring factors:
+- **Security/compliance**: Does it involve authentication, authorization, PII, payments, or regulatory concerns?
+- **Integration complexity**: How many external systems, APIs, or services are involved?
+- **Data sensitivity**: Does it handle sensitive, financial, or health data?
+- **Performance/scalability**: Are there throughput, latency, or scaling concerns?
+- **Deployment risk**: Does it require database migrations, infrastructure changes, or breaking changes?
+- **Technical unknowns**: Are there unproven technologies, novel algorithms, or architectural uncertainties?
+
+Guidelines:
+- 1-3 (Low): Straightforward implementation with minimal dependencies and no sensitive data.
+- 4-6 (Medium): Some technical complexity or dependencies, but manageable with standard practices.
+- 7-10 (High): Significant unknowns, security concerns, complex integrations, or high-stakes data.
+
+## Rules
+- Analyze ONLY the provided requirement text. Do not assume external context.
+- Be calibrated: most well-written requirements should score 5-7 on clarity and 3-6 on risk. Reserve extreme scores for genuinely extreme cases.
+- Provide a concise 1-2 sentence reasoning for each score explaining the key factors.
+
+Your output MUST be valid JSON with exactly these keys:
+- "clarity_score": integer 1-10
+- "risk_score": integer 1-10
+- "clarity_reasoning": string (1-2 sentences)
+- "risk_reasoning": string (1-2 sentences)
+
+Respond ONLY with the JSON object, no markdown fences, no explanation.`,
+        },
+        {
+          role: 'user',
+          content: `Analyze this requirement:\n\nTitle: ${input.title}${input.description ? `\n\nDescription: ${input.description}` : ''}`,
+        },
+      ],
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      '[ERROR] [openrouter:analyzeRiskClarity] API call failed',
+      JSON.stringify({ status: response.status, body: errorBody }),
+    );
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    console.error('[ERROR] [openrouter:analyzeRiskClarity] No content in response', JSON.stringify(data));
+    throw new Error('OpenRouter returned empty content');
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error('[ERROR] [openrouter:analyzeRiskClarity] Failed to parse JSON', JSON.stringify({ content }));
+    throw new Error('OpenRouter returned invalid JSON');
+  }
+
+  const result = RiskClarityResponseSchema.safeParse(parsed);
+  if (!result.success) {
+    console.error(
+      '[ERROR] [openrouter:analyzeRiskClarity] Response validation failed',
+      JSON.stringify({ issues: result.error.issues }),
+    );
+    throw new Error('OpenRouter response did not match expected schema');
+  }
+
+  const clamped: RiskClarityResponse = {
+    clarity_score: clampScore(result.data.clarity_score),
+    risk_score: clampScore(result.data.risk_score),
+    clarity_reasoning: result.data.clarity_reasoning,
+    risk_reasoning: result.data.risk_reasoning,
+  };
+
+  console.info(
+    '[INFO] [openrouter:analyzeRiskClarity] Scoring complete',
+    JSON.stringify({ clarity: clamped.clarity_score, risk: clamped.risk_score }),
+  );
+
+  return clamped;
 }
 
 export interface SlackMessageInput {
@@ -857,6 +1001,10 @@ export interface SuggestQuestionsInput {
   repoKeyFiles?: Record<string, string>;
   repoRecentCommits?: CommitEntry[];
   dbContext?: DbAnalysis;
+  clarityScore?: number;
+  riskScore?: number;
+  clarityReasoning?: string;
+  riskReasoning?: string;
 }
 
 export interface SuggestedQuestion {
@@ -972,6 +1120,17 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
     dbContextBlock = buildDbContextBlock(input.dbContext);
   }
 
+  let scoreBlock = '';
+  if (input.clarityScore != null && input.riskScore != null) {
+    const clarityLabel = input.clarityScore <= 3 ? 'Low' : input.clarityScore >= 7 ? 'High' : 'Medium';
+    const riskLabel = input.riskScore <= 3 ? 'Low' : input.riskScore >= 7 ? 'High' : 'Medium';
+    scoreBlock += `\n\n## Requirement Scores`;
+    scoreBlock += `\n- Clarity: ${input.clarityScore}/10 (${clarityLabel})`;
+    if (input.clarityReasoning) scoreBlock += ` — ${input.clarityReasoning}`;
+    scoreBlock += `\n- Risk: ${input.riskScore}/10 (${riskLabel})`;
+    if (input.riskReasoning) scoreBlock += ` — ${input.riskReasoning}`;
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -1035,12 +1194,20 @@ You will receive a full history of your prior suggestions and their outcomes:
 
 You MUST NOT repeat, rephrase, or closely paraphrase ANY prior suggestion, regardless of its disposition. Every new suggestion must cover a genuinely different topic or angle not already addressed by prior suggestions or existing questions.
 
+## Score-Aware Prioritization
+If the user message includes clarity and risk scores, adapt your questions:
+- If risk is high (>=7): Prioritize questions about security, compliance, integration risks, data sensitivity, and failure modes.
+- If clarity is low (<=3): Ask broader scoping and definition questions to establish fundamentals before diving into specifics.
+- If both scores are moderate (4-6): Balance questions across all dimensions.
+- If clarity is high (>=7) and risk is low (<=3): Coverage is likely already good — return fewer or no questions.
+
 ## Process
 1. Review what's already been asked, answered, AND previously suggested (including rejected suggestions).
 2. If codebase context is provided, review what's already implemented — do NOT ask about things the code already answers.
-3. Identify only the MOST IMPORTANT remaining gaps — things that would block or derail work.
-4. Skip dimensions that are already well-covered OR where the answer is obvious from context or code.
-5. If coverage is good enough to start work, return an EMPTY questions array.
+3. If risk/clarity scores are provided, use them to focus your questions on the areas that matter most.
+4. Identify only the MOST IMPORTANT remaining gaps — things that would block or derail work.
+5. Skip dimensions that are already well-covered OR where the answer is obvious from context or code.
+6. If coverage is good enough to start work, return an EMPTY questions array.
 
 ## Output Format
 Your output MUST be valid JSON with these keys:
@@ -1057,7 +1224,7 @@ Respond ONLY with the JSON object, no markdown fences.`,
 
 Title: ${input.requirementTitle}
 ${input.requirementDescription ? `Description: ${input.requirementDescription}` : ''}
-${contextBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}`,
+${contextBlock}${scoreBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}`,
         },
       ],
       temperature: 0.4,

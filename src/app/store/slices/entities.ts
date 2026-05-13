@@ -29,13 +29,15 @@ export interface EntitiesSlice {
   suggestingAnswerForQuestions: Set<string>;
   skippedAnswerSuggestions: Set<string>;
   checkingImplementation: Set<string>;
+  scoringRequirements: Set<string>;
+  pendingScores: { clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string } | null;
 
   loadEntities: (projectId?: string) => Promise<void>;
   loadSimilarities: (projectId: string) => Promise<void>;
   refreshRequirements: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
 
-  enhanceRequirement: (text: string, projectId?: string | null, figmaLinks?: string[]) => Promise<{ title: string; description: string }>;
+  enhanceRequirement: (text: string, projectId?: string | null, figmaLinks?: string[]) => Promise<{ title: string; description: string; clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string }>;
   createRequirement: (text: string, owner: string, title?: string, figmaLinks?: string[]) => Promise<void>;
   updateRequirement: (id: string, updates: { title?: string; description?: string; owner?: string }) => Promise<void>;
   deleteRequirement: (id: string) => Promise<void>;
@@ -72,6 +74,8 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   suggestingAnswerForQuestions: new Set(),
   skippedAnswerSuggestions: new Set(),
   checkingImplementation: new Set(),
+  scoringRequirements: new Set(),
+  pendingScores: null,
 
   loadEntities: async (projectId?: string) => {
     const current = get();
@@ -153,7 +157,21 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     log.info('enhanceRequirement', 'Enhancing requirement via AI', { textLength: text.length, figmaLinkCount: figmaLinks?.length });
     try {
       const result = await api.enhanceRequirement(text, projectId, figmaLinks);
-      log.info('enhanceRequirement', 'Enhancement complete', { title: result.title });
+      log.info('enhanceRequirement', 'Enhancement complete', { title: result.title, clarityScore: result.clarityScore, riskScore: result.riskScore });
+
+      if (result.clarityScore != null && result.riskScore != null) {
+        set({
+          pendingScores: {
+            clarityScore: result.clarityScore,
+            riskScore: result.riskScore,
+            clarityReasoning: result.clarityReasoning,
+            riskReasoning: result.riskReasoning,
+          },
+        });
+      } else {
+        set({ pendingScores: null });
+      }
+
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -167,6 +185,8 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     log.info('createRequirement', 'Creating requirement', { title, figmaLinkCount: figmaLinks?.length });
 
     const selectedProjectId = (get() as unknown as { selectedProjectId: string | null }).selectedProjectId;
+    const { pendingScores } = get();
+
     const newReq: Partial<Requirement> & { projectId?: string; figmaLinks?: string[] } = {
       id: `r${Date.now()}`,
       title,
@@ -181,9 +201,17 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       figmaLinks: figmaLinks && figmaLinks.length > 0 ? figmaLinks : undefined,
     };
 
+    if (pendingScores) {
+      newReq.clarityScore = pendingScores.clarityScore;
+      newReq.riskScore = pendingScores.riskScore;
+      newReq.clarityReasoning = pendingScores.clarityReasoning;
+      newReq.riskReasoning = pendingScores.riskReasoning;
+      newReq.scoresComputedAt = new Date().toISOString();
+    }
+
     try {
       const created = await api.createRequirement(newReq);
-      set(state => ({ requirements: [created, ...state.requirements] }));
+      set(state => ({ requirements: [created, ...state.requirements], pendingScores: null }));
       log.info('createRequirement', 'Requirement created', { id: created.id });
 
       get().suggestQuestions(created.id);

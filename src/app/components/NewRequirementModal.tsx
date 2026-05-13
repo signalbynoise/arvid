@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useStore, selectSelectedProjectId } from '../store';
+import { useStore, selectSelectedProjectId, selectPendingScores } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
 import { isValidFigmaUrl } from '../../../shared/figmaUrl';
@@ -35,6 +35,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const createRequirement = useStore(s => s.createRequirement);
   const enhanceRequirement = useStore(s => s.enhanceRequirement);
   const selectedProjectId = useStore(selectSelectedProjectId);
+  const pendingScores = useStore(selectPendingScores);
   const { user } = useAuth();
 
   const ownerName = user?.user_metadata?.full_name
@@ -170,6 +171,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
             title={title}
             description={description}
             figmaDesigns={figmaDesigns}
+            scores={pendingScores}
             onTitleChange={setTitle}
             onDescriptionChange={setDescription}
             onBack={() => setStep('WRITE')}
