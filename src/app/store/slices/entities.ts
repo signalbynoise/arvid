@@ -640,9 +640,15 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
     }
 
     log.info('checkImplementation', 'Starting implementation check', { requirementId });
+    const previousImplStatus = get().requirements.find(r => r.id === requirementId)?.implStatus;
     const nextSet = new Set(checkingImplementation);
     nextSet.add(requirementId);
-    set({ checkingImplementation: nextSet });
+    set(state => ({
+      checkingImplementation: nextSet,
+      requirements: state.requirements.map(r =>
+        r.id === requirementId ? { ...r, implStatus: 'Checking' as const } : r,
+      ),
+    }));
 
     try {
       const result = await api.checkImplementation(requirementId);
@@ -673,7 +679,12 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       set(state => {
         const updatedSet = new Set(state.checkingImplementation);
         updatedSet.delete(requirementId);
-        return { checkingImplementation: updatedSet };
+        return {
+          checkingImplementation: updatedSet,
+          requirements: state.requirements.map(r =>
+            r.id === requirementId ? { ...r, implStatus: previousImplStatus } : r,
+          ),
+        };
       });
       log.error('checkImplementation', 'Implementation check failed', { requirementId, error: message });
     }

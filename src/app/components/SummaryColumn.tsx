@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { FileText, LoaderPinwheel, MoreHorizontal, BarChart3 } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
@@ -50,11 +50,17 @@ export function SummaryColumn() {
     [allAnswers, questions],
   );
 
+  const [figmaUrls, setFigmaUrls] = useState<string[]>([]);
+
   useEffect(() => {
     if (selectedReqId) {
       loadSummary(selectedReqId);
+      api.getRequirementFigmaLinks(selectedReqId)
+        .then(links => setFigmaUrls(links.map(l => l.figmaUrl)))
+        .catch(() => setFigmaUrls([]));
     } else {
       clearSummary();
+      setFigmaUrls([]);
     }
   }, [selectedReqId, loadSummary, clearSummary]);
 
@@ -204,7 +210,7 @@ export function SummaryColumn() {
               disabled={!canSend || !summary}
               onClick={() => {
                 if (!summary) return;
-                openInCursor(buildCursorPrompt(summary, requirement.title));
+                openInCursor(buildCursorPrompt(summary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined));
                 api.notifyCursorSent(requirement.id);
               }}
             >

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createUserClient } from '../supabase';
 import { generateSummary, SummaryGenerationInput } from '../openrouter';
-import { fetchRequirementContext } from '../context';
+import { fetchRequirementContext, toFigmaDesignContexts } from '../context';
 import { sendSlackNotification } from '../lib/slackNotifier';
 import { generateShortId } from '../lib/shortId';
 
@@ -68,6 +68,7 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
     })),
     repoContext: context.repoContext,
     dbContext: context.dbContext,
+    figmaDesigns: toFigmaDesignContexts(context.figmaLinks),
   };
 
   try {

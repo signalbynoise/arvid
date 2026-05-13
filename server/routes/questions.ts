@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { createUserClient } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateQuestionBodySchema, UpdateQuestionBodySchema } from '../../shared/schemas';
-import { suggestQuestions, classifyQuestion } from '../openrouter';
-import { fetchRequirementContext } from '../context';
+import { suggestQuestions, classifyQuestion, computeQuestionDepth } from '../openrouter';
+import { fetchRequirementContext, toFigmaDesignContexts } from '../context';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 
@@ -98,6 +98,7 @@ questionsRouter.post('/classify', async (req, res) => {
     })),
     repoContext: fullContext.repoContext,
     dbContext: fullContext.dbContext,
+    figmaDesigns: toFigmaDesignContexts(fullContext.figmaLinks),
   } : null;
 
   try {
@@ -126,28 +127,41 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
   }
 
   try {
+    const existingQuestionsForDepth = context.questions.map(q => ({
+      text: q.text,
+      status: q.status,
+      importance: q.importance,
+      category: q.category,
+      answers: q.answers.map(a => ({ text: a.text, author: a.author })),
+    }));
+
+    const depthTier = computeQuestionDepth(existingQuestionsForDepth, context.suggestionHistory);
+
+    console.info(
+      '[INFO] [questions:suggest] Computed question depth',
+      JSON.stringify({ requirementId, tier: depthTier.tier, label: depthTier.label, reasoning: depthTier.reasoning }),
+    );
+
+    const figmaDesigns = toFigmaDesignContexts(context.figmaLinks);
+
     const suggestions = await suggestQuestions({
       requirementTitle: context.requirement.title,
       requirementDescription: context.requirement.description,
       projectName: context.projectName,
       existingRequirements: context.siblingRequirements,
-      existingQuestions: context.questions.map(q => ({
-        text: q.text,
-        status: q.status,
-        importance: q.importance,
-        category: q.category,
-        answers: q.answers.map(a => ({ text: a.text, author: a.author })),
-      })),
+      existingQuestions: existingQuestionsForDepth,
       suggestionHistory: context.suggestionHistory,
       repoContext: context.repoContext,
       repoFileTree: context.repoFileTree,
       repoKeyFiles: context.repoKeyFiles,
       repoRecentCommits: context.repoRecentCommits,
       dbContext: context.dbContext,
+      figmaDesigns,
       clarityScore: context.requirement.clarity_score,
       riskScore: context.requirement.risk_score,
       clarityReasoning: context.requirement.clarity_reasoning,
       riskReasoning: context.requirement.risk_reasoning,
+      depthTier,
     });
 
     const existingTexts = new Set(

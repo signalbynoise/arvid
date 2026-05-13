@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { supabase, supabaseAdmin } from '../supabase';
+import { supabaseAdmin } from '../supabase';
 import { classifyImplementation } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import { GitHubClient } from '../lib/githubClient';
@@ -73,18 +73,23 @@ webhooksRouter.post('/linear', async (req: Request, res: Response) => {
   }
 
   if (stateType === 'completed') {
-    supabase
+    const { error: checkingErr } = await supabaseAdmin
       .from('requirements')
       .update({ impl_status: 'Checking', impl_checked_at: new Date().toISOString() })
-      .eq('linear_issue_id', linearIssueId)
-      .then(() => {
-        checkImplementationAsync(linearIssueId).catch(err => {
-          console.error(
-            '[ERROR] [webhooks:implCheck] Async implementation check failed',
-            JSON.stringify({ linearIssueId, error: err instanceof Error ? err.message : 'Unknown error' }),
-          );
-        });
-      });
+      .eq('linear_issue_id', linearIssueId);
+
+    if (checkingErr) {
+      console.error('[ERROR] [webhooks:linear] Failed to set Checking status', JSON.stringify({ linearIssueId, error: checkingErr.message }));
+    } else {
+      console.info('[INFO] [webhooks:linear] Set impl_status to Checking', JSON.stringify({ linearIssueId }));
+    }
+
+    checkImplementationAsync(linearIssueId).catch(err => {
+      console.error(
+        '[ERROR] [webhooks:implCheck] Async implementation check failed',
+        JSON.stringify({ linearIssueId, error: err instanceof Error ? err.message : 'Unknown error' }),
+      );
+    });
   }
 
   res.sendStatus(200);

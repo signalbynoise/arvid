@@ -5,8 +5,9 @@ const DEEPLINK_BASE = 'cursor://anysphere.cursor-deeplink/prompt';
 export function buildCursorPrompt(
   summary: Summary,
   requirementTitle: string,
+  figmaUrls?: string[],
 ): string {
-  return [
+  const parts = [
     'Use plan mode.',
     '',
     `# ${requirementTitle}`,
@@ -25,9 +26,18 @@ export function buildCursorPrompt(
     '',
     '## Risks',
     summary.unverifiedRisks,
-    '',
-    'Based on this Arvid specification, create an implementation plan.',
-  ].join('\n');
+  ];
+
+  if (figmaUrls && figmaUrls.length > 0) {
+    parts.push('', '## Design Files');
+    for (const url of figmaUrls) {
+      parts.push(`- ${url}`);
+    }
+  }
+
+  parts.push('', 'Based on this Arvid specification, create an implementation plan.');
+
+  return parts.join('\n');
 }
 
 export function openInCursor(prompt: string): void {

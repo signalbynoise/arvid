@@ -87,6 +87,7 @@ export const CreateRequirementBodySchema = z.object({
   clarity_reasoning: z.string().nullable().optional(),
   risk_reasoning: z.string().nullable().optional(),
   scores_computed_at: z.string().nullable().optional(),
+  figma_links: z.array(z.string().url()).optional(),
 });
 
 export const UpdateRequirementBodySchema = CreateRequirementBodySchema.partial().omit({ id: true });

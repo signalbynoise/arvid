@@ -1,6 +1,25 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas/repoContext';
 import type { DbAnalysis, DbTable, DbRelationship, DbFunction, EdgeFunction } from '../shared/schemas/dbContext';
+import type { FigmaDesignContext } from './openrouter';
+
+export interface FigmaLinkContext {
+  figmaUrl: string;
+  nodeName?: string;
+  structuralSummary?: unknown;
+}
+
+export function toFigmaDesignContexts(links?: FigmaLinkContext[]): FigmaDesignContext[] | undefined {
+  if (!links || links.length === 0) return undefined;
+  return links
+    .filter(l => l.nodeName && l.structuralSummary)
+    .map(l => ({
+      nodeName: l.nodeName!,
+      structuralSummary: typeof l.structuralSummary === 'string'
+        ? l.structuralSummary
+        : JSON.stringify(l.structuralSummary),
+    }));
+}
 
 export type SuggestionDisposition = 'pending' | 'accepted' | 'rejected';
 
@@ -47,6 +66,7 @@ export interface RequirementFullContext {
   dbRelationships?: DbRelationship[];
   dbFunctions?: DbFunction[];
   dbEdgeFunctions?: EdgeFunction[];
+  figmaLinks?: FigmaLinkContext[];
 }
 
 export async function fetchRequirementContext(db: SupabaseClient, requirementId: string): Promise<RequirementFullContext | null> {
@@ -170,6 +190,27 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     }
   }
 
+  const { data: figmaRows } = await db
+    .from('requirement_figma_links')
+    .select('figma_url, node_name, structural_summary')
+    .eq('requirement_id', requirementId)
+    .order('created_at', { ascending: true });
+
+  const figmaLinks: FigmaLinkContext[] = (figmaRows || []).map(
+    (row: { figma_url: string; node_name: string | null; structural_summary: unknown }) => ({
+      figmaUrl: row.figma_url,
+      nodeName: row.node_name ?? undefined,
+      structuralSummary: row.structural_summary ?? undefined,
+    }),
+  );
+
+  if (figmaLinks.length > 0) {
+    console.info(
+      '[INFO] [context:figmaLinks] Figma links loaded',
+      JSON.stringify({ requirementId, count: figmaLinks.length }),
+    );
+  }
+
   const { data: dbQuestions } = await db
     .from('questions')
     .select('*')
@@ -248,5 +289,6 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     dbRelationships,
     dbFunctions,
     dbEdgeFunctions,
+    figmaLinks: figmaLinks.length > 0 ? figmaLinks : undefined,
   };
 }

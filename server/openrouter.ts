@@ -42,6 +42,7 @@ export interface SummaryGenerationInput {
   questions: QuestionContext[];
   repoContext?: RepoAnalysis;
   dbContext?: DbAnalysis;
+  figmaDesigns?: FigmaDesignContext[];
 }
 
 function buildCodebaseContextBlock(repoContext: RepoAnalysis): string {
@@ -174,13 +175,13 @@ Scoring guidelines:
 - An empty requirement with zero questions should score 10-20 (it exists, but hasn't been validated at all).
 - Be encouraging. If someone has answered the key questions, reward them with 100.
 
-Base your analysis entirely on the provided requirement, questions, and answers. If codebase context is provided, use it to ground your analysis in the project's actual technology stack and architecture — but do not hallucinate details beyond what the context provides. If areas lack answers, flag them as risks.
+Base your analysis entirely on the provided requirement, questions, and answers. If codebase context is provided, use it to ground your analysis in the project's actual technology stack and architecture — but do not hallucinate details beyond what the context provides. If Figma design context is provided, reference the intended UI layout and component structure in your architecture and constraints analysis. If areas lack answers, flag them as risks.
 
 Respond ONLY with the JSON object, no markdown fences, no explanation.`;
 }
 
 function buildUserPrompt(input: SummaryGenerationInput): string {
-  const { requirement, questions, repoContext, dbContext } = input;
+  const { requirement, questions, repoContext, dbContext, figmaDesigns } = input;
 
   let prompt = '';
 
@@ -190,6 +191,10 @@ function buildUserPrompt(input: SummaryGenerationInput): string {
 
   if (dbContext) {
     prompt += buildDbContextBlock(dbContext);
+  }
+
+  if (figmaDesigns && figmaDesigns.length > 0) {
+    prompt += buildFigmaDesignContextBlock(figmaDesigns);
   }
 
   prompt += `## Requirement\nTitle: ${requirement.title}\n`;
@@ -857,6 +862,7 @@ export interface ClassifyQuestionContext {
   }[];
   repoContext?: RepoAnalysis;
   dbContext?: DbAnalysis;
+  figmaDesigns?: FigmaDesignContext[];
 }
 
 export async function classifyQuestion(
@@ -910,6 +916,10 @@ export async function classifyQuestion(
 
   if (context?.dbContext) {
     userMessage += `\n${buildDbContextBlock(context.dbContext)}`;
+  }
+
+  if (context?.figmaDesigns && context.figmaDesigns.length > 0) {
+    userMessage += `\n${buildFigmaDesignContextBlock(context.figmaDesigns)}`;
   }
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -989,6 +999,66 @@ export interface PriorSuggestionContext {
   disposition: 'pending' | 'accepted' | 'rejected';
 }
 
+export type QuestionDepthTier = 1 | 2 | 3;
+
+export interface QuestionDepthResult {
+  tier: QuestionDepthTier;
+  label: 'layman' | 'intermediate' | 'technical';
+  reasoning: string;
+}
+
+export function computeQuestionDepth(
+  existingQuestions: ExistingQuestionContext[] | undefined,
+  suggestionHistory: PriorSuggestionContext[] | undefined,
+): QuestionDepthResult {
+  const questions = existingQuestions ?? [];
+  const history = suggestionHistory ?? [];
+
+  const answeredQuestions = questions.filter(q => q.status === 'Answered' && q.answers.length > 0);
+  const totalAsked = questions.length + history.length;
+  const answeredCount = answeredQuestions.length;
+
+  const coveredCategories = new Set(
+    answeredQuestions.map(q => q.category),
+  );
+
+  const criticalAnswered = answeredQuestions.filter(q => q.importance === 'Critical').length;
+  const importantAnswered = answeredQuestions.filter(q => q.importance === 'Important').length;
+
+  if (answeredCount === 0 && totalAsked <= 2) {
+    return {
+      tier: 1,
+      label: 'layman',
+      reasoning: 'No or few questions answered yet — stakeholder needs simple, non-technical questions first',
+    };
+  }
+
+  const hasBasicCoverage = coveredCategories.size >= 2 && (criticalAnswered >= 1 || answeredCount >= 3);
+  const hasStrongCoverage = coveredCategories.size >= 3 && criticalAnswered >= 2 && importantAnswered >= 2;
+
+  if (hasStrongCoverage) {
+    return {
+      tier: 3,
+      label: 'technical',
+      reasoning: `Strong coverage (${answeredCount} answered, ${coveredCategories.size} categories, ${criticalAnswered} critical) — ready for deep technical questions`,
+    };
+  }
+
+  if (hasBasicCoverage) {
+    return {
+      tier: 2,
+      label: 'intermediate',
+      reasoning: `Basic scope established (${answeredCount} answered, ${coveredCategories.size} categories) — can ask more specific questions`,
+    };
+  }
+
+  return {
+    tier: 1,
+    label: 'layman',
+    reasoning: `Still gathering basics (${answeredCount} answered, ${coveredCategories.size} categories) — keep questions simple`,
+  };
+}
+
 export interface SuggestQuestionsInput {
   requirementTitle: string;
   requirementDescription?: string;
@@ -1001,10 +1071,12 @@ export interface SuggestQuestionsInput {
   repoKeyFiles?: Record<string, string>;
   repoRecentCommits?: CommitEntry[];
   dbContext?: DbAnalysis;
+  figmaDesigns?: FigmaDesignContext[];
   clarityScore?: number;
   riskScore?: number;
   clarityReasoning?: string;
   riskReasoning?: string;
+  depthTier?: QuestionDepthResult;
 }
 
 export interface SuggestedQuestion {
@@ -1024,6 +1096,81 @@ const SuggestQuestionsResponseSchema = z.object({
   questions: z.array(SuggestedQuestionSchema),
 });
 
+function buildDepthGuidance(depth?: QuestionDepthResult): string {
+  if (!depth) return '';
+
+  switch (depth.tier) {
+    case 1:
+      return `
+## Question Depth: LAYMAN (Tier 1)
+This requirement is in its early stages. The person who wrote it is likely a non-technical stakeholder, product owner, or business user. Your questions MUST be:
+
+- Written in everyday language a non-developer would use. No technical terms whatsoever.
+- Focused on WHAT and WHY, never HOW (implementation is not their concern yet).
+- About business goals, user expectations, success criteria, and priorities.
+- Short — one simple sentence per question. Conversational, like asking a colleague.
+- Answerable without any technical knowledge.
+
+FORBIDDEN at this tier:
+- Technical terminology (API, database, schema, endpoint, auth, middleware, etc.)
+- Architecture or design questions
+- Performance, scalability, or infrastructure questions
+- Questions about data formats, protocols, or integrations specifics
+- Questions that require engineering knowledge to understand
+
+Good Tier 1 examples:
+- "Who will be using this feature?"
+- "What should happen when something goes wrong?"
+- "Is this more urgent than the other items on the list?"
+- "Should everyone see this, or only certain people?"
+- "What's the most important thing this needs to do?"
+
+`;
+    case 2:
+      return `
+## Question Depth: INTERMEDIATE (Tier 2)
+The basic business context has been established through earlier questions. You can now ask more specific, moderately technical questions — but still keep them accessible to a product-savvy person who isn't an engineer.
+
+- You may reference specific behaviors, data flows, and system boundaries.
+- You may ask about integrations, permissions, and data at a conceptual level.
+- Keep language clear — explain any technical concept inline if you use one.
+- Focus on bridging business intent to implementation constraints.
+
+FORBIDDEN at this tier:
+- Deep implementation details (specific algorithms, data structures, query patterns)
+- Infrastructure questions (hosting, scaling, caching strategies)
+- Code-level architecture decisions
+
+Good Tier 2 examples:
+- "Should this data stay private to the team, or could other teams need access later?"
+- "When a user gets notified, should that be email, in-app, or both?"
+- "If two people edit this at the same time, who wins?"
+- "Does this need to work offline, or is internet always available?"
+- "Should we keep a history of changes, or just the latest version?"
+
+`;
+    case 3:
+      return `
+## Question Depth: TECHNICAL (Tier 3)
+The requirement has strong business coverage from earlier questions. You may now ask advanced technical questions that help engineers make implementation decisions — but only if genuine gaps remain.
+
+- You may use technical terminology freely.
+- Focus on architecture decisions, edge cases, performance constraints, security boundaries, and integration specifics.
+- These questions are for the engineering team or a technical product owner.
+- Only ask if the codebase context doesn't already answer the question.
+
+Good Tier 3 examples:
+- "Should this endpoint support pagination, or will the dataset always be small enough to return in full?"
+- "Do we need optimistic locking for concurrent edits, or is last-write-wins acceptable?"
+- "Should failed webhook deliveries retry with exponential backoff, or alert and stop?"
+- "Is eventual consistency acceptable here, or do reads need to reflect writes immediately?"
+
+`;
+    default:
+      return '';
+  }
+}
+
 export async function suggestQuestions(input: SuggestQuestionsInput): Promise<SuggestedQuestion[]> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured');
@@ -1036,6 +1183,8 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
       project: input.projectName,
       existingQuestionCount: input.existingQuestions?.length ?? 0,
       priorSuggestionCount: input.suggestionHistory?.length ?? 0,
+      depthTier: input.depthTier?.tier ?? null,
+      depthLabel: input.depthTier?.label ?? null,
     }),
   );
 
@@ -1120,6 +1269,12 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
     dbContextBlock = buildDbContextBlock(input.dbContext);
   }
 
+  let figmaContextBlock = '';
+  if (input.figmaDesigns && input.figmaDesigns.length > 0) {
+    figmaContextBlock = buildFigmaDesignContextBlock(input.figmaDesigns)
+      + 'Figma design files are attached to this requirement. Do NOT ask questions about UI elements, layout, or visual structure that are already specified in the design. Focus questions on behavior, data, and business logic not covered by the designs.\n';
+  }
+
   let scoreBlock = '';
   if (input.clarityScore != null && input.riskScore != null) {
     const clarityLabel = input.clarityScore <= 3 ? 'Low' : input.clarityScore >= 7 ? 'High' : 'Medium';
@@ -1130,6 +1285,8 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
     scoreBlock += `\n- Risk: ${input.riskScore}/10 (${riskLabel})`;
     if (input.riskReasoning) scoreBlock += ` — ${input.riskReasoning}`;
   }
+
+  const depthGuidance = buildDepthGuidance(input.depthTier);
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -1151,7 +1308,7 @@ export async function suggestQuestions(input: SuggestQuestionsInput): Promise<Su
 - Write like a human, not a consultant. Short, plain-language questions a non-technical stakeholder can answer.
 - Avoid jargon, implementation details, and edge-case rabbit holes unless the requirement explicitly involves them.
 - Trust that engineers can make reasonable decisions about minor details — focus on the big unknowns.
-
+${depthGuidance}
 ## Codebase Awareness (CRITICAL)
 If codebase context is provided (file tree, key files, recent commits), you MUST use it to avoid asking questions about things that are already implemented or already decided in the code:
 - Do NOT ask "how should X be done?" if the file tree or key files show X is already built.
@@ -1159,6 +1316,9 @@ If codebase context is provided (file tree, key files, recent commits), you MUST
 - DO ask about gaps between the requirement and what exists — things the requirement calls for that the codebase does NOT yet have.
 - DO ask about business/product decisions that the code cannot answer (priorities, user expectations, rollout plans).
 - If the codebase shows the requirement is largely implemented, focus on what's MISSING or what might need to CHANGE, not on how existing things work.
+
+## Design File Awareness
+If Figma design context is provided, use it to avoid asking questions about UI elements, layout, or visual structure that are already specified in the design. Focus instead on behavior, data flow, and business logic that the designs do not address.
 
 ## Coverage Dimensions (use as a mental checklist, NOT as a quota to fill)
 - **Scope**: What's in, what's out?
@@ -1224,7 +1384,7 @@ Respond ONLY with the JSON object, no markdown fences.`,
 
 Title: ${input.requirementTitle}
 ${input.requirementDescription ? `Description: ${input.requirementDescription}` : ''}
-${contextBlock}${scoreBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}`,
+${contextBlock}${scoreBlock}${qaTreeBlock}${suggestionHistoryBlock}${repoContextBlock ? `\n${repoContextBlock}` : ''}${dbContextBlock ? `\n${dbContextBlock}` : ''}${figmaContextBlock ? `\n${figmaContextBlock}` : ''}`,
         },
       ],
       temperature: 0.4,

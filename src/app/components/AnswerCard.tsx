@@ -37,6 +37,7 @@ export function AnswerCard({
     <Card
       id={`answer-${ans.id}`}
       variant={ans.isCurrent ? 'selected' : 'inactive'}
+      interactive
       connectorLeft
     >
       <Card.Header

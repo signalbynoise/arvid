@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, type Transition } from 'framer-motion';
 
@@ -55,22 +55,73 @@ export function DropdownPanel({
   children,
 }: DropdownPanelProps) {
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-  const transformOrigin = TRANSFORM_ORIGINS[position][align];
+  const [resolvedPosition, setResolvedPosition] = useState(position);
+  const [resolvedAlign, setResolvedAlign] = useState(align);
+  const transformOrigin = TRANSFORM_ORIGINS[resolvedPosition][resolvedAlign];
 
-  useLayoutEffect(() => {
+  const updatePosition = useCallback(() => {
     if (!anchorRef?.current || !isOpen) return;
     const rect = anchorRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const panelWidth = panelRef?.current?.offsetWidth ?? 200;
+    const panelHeight = panelRef?.current?.offsetHeight ?? 200;
+
+    let nextPosition = position;
+    let nextAlign = align;
+    let top: number;
+    let left: number;
+
     if (position === 'right') {
-      setCoords({ top: rect.top, left: rect.right + 4 });
+      const fitsRight = rect.right + 4 + panelWidth <= vw;
+      const fitsLeft = rect.left - 4 - panelWidth >= 0;
+      if (!fitsRight && fitsLeft) {
+        nextPosition = 'right';
+        left = rect.left - 4 - panelWidth;
+      } else {
+        left = rect.right + 4;
+      }
+      top = rect.top;
+      if (top + panelHeight > vh) {
+        top = Math.max(8, vh - panelHeight - 8);
+      }
     } else if (position === 'above') {
-      setCoords({ top: rect.top, left: align === 'end' ? rect.right : rect.left });
+      top = rect.top;
+      left = nextAlign === 'end' ? rect.right : rect.left;
     } else {
-      setCoords({ top: rect.bottom + 4, left: align === 'end' ? rect.right : rect.left });
+      const fitsBelow = rect.bottom + 4 + panelHeight <= vh;
+      const fitsAbove = rect.top - 4 - panelHeight >= 0;
+      if (!fitsBelow && fitsAbove) {
+        nextPosition = 'above';
+        top = rect.top - 4 - panelHeight;
+      } else {
+        top = rect.bottom + 4;
+      }
+      left = nextAlign === 'end' ? rect.right : rect.left;
+      if (left + panelWidth > vw) {
+        nextAlign = 'end';
+        left = rect.right;
+      }
     }
-  }, [anchorRef, position, align, isOpen]);
+
+    setResolvedPosition(nextPosition);
+    setResolvedAlign(nextAlign);
+    setCoords({ top, left });
+  }, [anchorRef, panelRef, position, align, isOpen]);
+
+  useLayoutEffect(() => {
+    updatePosition();
+  }, [updatePosition]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !panelRef?.current) return;
+    const observer = new ResizeObserver(() => updatePosition());
+    observer.observe(panelRef.current);
+    return () => observer.disconnect();
+  }, [isOpen, panelRef, updatePosition]);
 
   if (anchorRef) {
-    const alignTransform = align === 'end' && position !== 'right' ? 'translateX(-100%)' : '';
+    const alignTransform = resolvedAlign === 'end' && resolvedPosition !== 'right' ? 'translateX(-100%)' : '';
 
     const panel = (
       <AnimatePresence>
