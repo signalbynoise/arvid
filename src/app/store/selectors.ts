@@ -1,4 +1,5 @@
 import { AppState } from './index';
+import { resolvePlan } from '../domain/billing';
 
 export const selectRequirements = (state: AppState) => state.requirements;
 export const selectQuestions = (state: AppState) => state.questions;
@@ -40,3 +41,10 @@ export const selectGitHubConnection = (state: AppState) => state.githubConnectio
 export const selectLinearConnection = (state: AppState) => state.linearConnection;
 export const selectSupabaseConnection = (state: AppState) => state.supabaseConnection;
 export const selectFigmaConnection = (state: AppState) => state.figmaConnection;
+
+export const selectSimilarities = (state: AppState) => state.similarities;
+export const selectSubscription = (state: AppState) => state.subscription;
+export const selectCurrentPlan = (state: AppState) => resolvePlan(state.subscription);
+export const selectPlanLimits = (state: AppState) => state.planLimits;
+export const selectPlanUsage = (state: AppState) => state.planUsage;
+export const selectSubscriptionLoading = (state: AppState) => state.subscriptionLoading;

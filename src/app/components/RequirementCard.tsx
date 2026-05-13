@@ -5,7 +5,8 @@ import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
 import { CardItemMenu } from './CardItemMenu';
 import { formatCardDate } from '../lib/formatDate';
-import { useStore, selectMembers, selectCardAssignees } from '../store';
+import { scrollToRequirement } from '../domain/scrollToRequirement';
+import { useStore, selectMembers, selectCardAssignees, selectSimilarities } from '../store';
 import type { Requirement } from '../types';
 
 interface RequirementCardProps {
@@ -39,7 +40,9 @@ export function RequirementCard({
 }: RequirementCardProps) {
   const members = useStore(selectMembers);
   const allAssignees = useStore(selectCardAssignees);
+  const similarities = useStore(selectSimilarities);
   const assignees = allAssignees[`requirement:${req.id}`] || [];
+  const similar = similarities[req.id];
 
   const authorName = req.createdBy
     ? (members.find(m => m.userId === req.createdBy)?.email?.split('@')[0] || req.owner)
@@ -69,6 +72,26 @@ export function RequirementCard({
 
       <Card.Body>
         <h3>{req.title}</h3>
+        {similar && similar.length > 0 && (
+          <p className="text-caption-lg text-text-tertiary">
+            {'Related to '}
+            {similar.map((s, i) => (
+              <React.Fragment key={s.id}>
+                {i > 0 && ', '}
+                <button
+                  type="button"
+                  className="hover:text-text-primary transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    scrollToRequirement(s.id);
+                  }}
+                >
+                  {s.shortId ?? s.id.slice(0, 6)}
+                </button>
+              </React.Fragment>
+            ))}
+          </p>
+        )}
       </Card.Body>
 
       <div className="flex items-center gap-2 flex-wrap">

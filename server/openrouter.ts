@@ -1408,20 +1408,6 @@ export async function classifyImplementation(input: ImplementationCheckInput): P
     .filter(f => f.type === 'blob')
     .map(f => f.path);
 
-  const hierarchyFiles = filePaths.filter(p =>
-    p.includes('workspace') || p.includes('team') || p.includes('membership'),
-  );
-  console.debug(
-    '[DEBUG] [openrouter:classifyImpl] File tree stats',
-    JSON.stringify({
-      totalBlobs: filePaths.length,
-      totalEntries: input.repoContext.fileTree.length,
-      hierarchyFiles,
-      samplePaths: filePaths.slice(0, 10),
-      lastPaths: filePaths.slice(-10),
-    }),
-  );
-
   if (filePaths.length > 0) {
     userPrompt += `\n## Repository File Tree (${filePaths.length} files)\n`;
     userPrompt += filePaths.join('\n') + '\n';

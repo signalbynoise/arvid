@@ -10,8 +10,9 @@ import { UISlice, createUISlice } from './slices/ui';
 import { WorkspacesSlice, createWorkspacesSlice } from './slices/workspaces';
 import { SupabaseConnectSlice, createSupabaseConnectSlice } from './slices/supabaseConnect';
 import { FigmaSlice, createFigmaSlice } from './slices/figma';
+import { BillingSlice, createBillingSlice } from './slices/billing';
 
-export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice & FigmaSlice;
+export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice & FigmaSlice & BillingSlice;
 
 export const useStore = create<AppState>()((...args) => ({
   ...createEntitiesSlice(...args),
@@ -25,6 +26,7 @@ export const useStore = create<AppState>()((...args) => ({
   ...createWorkspacesSlice(...args),
   ...createSupabaseConnectSlice(...args),
   ...createFigmaSlice(...args),
+  ...createBillingSlice(...args),
 }));
 
 export type { UISlice, ModalIntent, PendingModal } from './slices/ui';
@@ -36,6 +38,8 @@ export type { SlackConnectionState, SlackChannel, ExtractionStatus } from './sli
 export type { SupabaseConnectionState, SupabaseProject, DbFetchStatus } from './slices/supabaseConnect';
 export type { FigmaConnectionState, ResolvedFigmaDesign } from './slices/figma';
 export type { WorkspacesSlice, WorkspacesDataState, WorkspacesDataStatus, BootStatus } from './slices/workspaces';
+export type { BillingSlice, PlanLimits, PlanUsage } from './slices/billing';
+export { resolvePlan } from '../domain/billing';
 export {
   selectRequirements,
   selectQuestions,
@@ -60,9 +64,15 @@ export {
   selectMembers,
   selectInvitations,
   selectCardAssignees,
+  selectSimilarities,
   selectGitHubConnection,
   selectLinearConnection,
   selectSupabaseConnection,
   selectFigmaConnection,
   selectHintRequirementCards,
+  selectSubscription,
+  selectCurrentPlan,
+  selectPlanLimits,
+  selectPlanUsage,
+  selectSubscriptionLoading,
 } from './selectors';

@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
-import { Requirement, Question, Answer, CardAssignee, EntityType } from '../../types';
-import { api } from '../../api';
+import { toast } from 'sonner';
+import { Requirement, Question, Answer, CardAssignee, EntityType, SimilarRequirement } from '../../types';
+import { api, ApiError } from '../../api';
 import { deriveQuestionStatus } from '../../domain/questions';
 import { logger } from '../../logger';
 
@@ -20,6 +21,7 @@ export interface EntitiesSlice {
   questions: Question[];
   answers: Answer[];
   cardAssignees: Record<string, CardAssignee[]>;
+  similarities: Record<string, SimilarRequirement[]>;
   dataState: DataState;
   abortController: AbortController | null;
   isSuggestingQuestions: boolean;
@@ -29,6 +31,7 @@ export interface EntitiesSlice {
   checkingImplementation: Set<string>;
 
   loadEntities: (projectId?: string) => Promise<void>;
+  loadSimilarities: (projectId: string) => Promise<void>;
   refreshRequirements: (projectId?: string) => Promise<void>;
   cancelLoad: () => void;
 
@@ -61,6 +64,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   questions: [],
   answers: [],
   cardAssignees: {},
+  similarities: {},
   dataState: { status: 'idle' },
   abortController: null,
   isSuggestingQuestions: false,
@@ -112,6 +116,18 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
         abortController: null,
       });
       log.error('loadEntities', 'Failed to load data', { error: message });
+    }
+  },
+
+  loadSimilarities: async (projectId: string) => {
+    try {
+      log.debug('loadSimilarities', 'Loading project similarities', { projectId });
+      const similarities = await api.getProjectSimilarities(projectId);
+      set({ similarities });
+      log.info('loadSimilarities', 'Similarities loaded', { count: Object.keys(similarities).length });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.warn('loadSimilarities', 'Failed to load similarities', { error: message });
     }
   },
 
@@ -172,6 +188,14 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
 
       get().suggestQuestions(created.id);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        toast.error('Requirement limit reached', {
+          description: 'Upgrade to Arvid Plus for unlimited requirements.',
+          action: { label: 'Upgrade', onClick: () => window.dispatchEvent(new CustomEvent('arvid:open-account-settings')) },
+        });
+        log.info('createRequirement', 'Plan limit reached');
+        return;
+      }
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createRequirement', 'Failed to create requirement', { error: message });
     }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Requirement, Question, Answer } from '../types';
-import { Calendar, User, Users, Briefcase, Plus, Pencil, Info, Image } from 'lucide-react';
+import { Calendar, User, Users, Briefcase, Plus, Pencil, Info, Image, Link2 } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
-import { useStore, selectMembers, selectCardAssignees } from '../store';
+import { scrollToRequirement } from '../domain/scrollToRequirement';
+import { useStore, selectMembers, selectCardAssignees, selectSimilarities } from '../store';
 import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
@@ -36,6 +37,7 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
   const deleteQuestion = useStore(s => s.deleteQuestion);
   const members = useStore(selectMembers);
   const allAssignees = useStore(selectCardAssignees);
+  const similarities = useStore(selectSimilarities);
   const assignUser = useStore(s => s.assignUser);
   const unassignUser = useStore(s => s.unassignUser);
 
@@ -382,6 +384,46 @@ export function DetailsModal({ isOpen, onClose, type, data, onAddUser }: Props) 
           </div>
         </div>
       )}
+
+      {isReq && (() => {
+        const similar = similarities[req.id];
+        if (!similar || similar.length === 0) return null;
+        return (
+          <div className="pt-4 border-t border-border-subtle space-y-4">
+            <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
+              Related Requirements
+            </span>
+            <div className="space-y-1">
+              {similar.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    handleClose();
+                    scrollToRequirement(s.id);
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-card bg-surface-frost-02 border border-border-default hover:border-border-focus transition-all text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-7 w-7 rounded-full bg-surface-frost-08 flex items-center justify-center shrink-0">
+                      <Link2 size={ICON_SIZE.xs} className="text-text-tertiary" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-text-quaternary font-[var(--fw-medium)]">
+                        {s.shortId ?? s.id.slice(0, 6)}
+                      </span>
+                      <p className="text-[13px] text-text-primary truncate">{s.title}</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-[var(--fw-medium)] text-text-tertiary px-2 py-0.5 bg-surface-frost-04 rounded-pill shrink-0">
+                    {Math.round(s.score * 100)}%
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {isQuestion && (
         <div className="pt-4 border-t border-border-subtle space-y-4">

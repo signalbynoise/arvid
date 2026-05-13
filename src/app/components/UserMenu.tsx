@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LogOut, Settings, UserRound, ToggleRight, ToggleLeft } from 'lucide-react';
+import { LogOut, Settings, UserRound, ToggleRight, ToggleLeft, CreditCard } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
 import { DropdownSection } from './ui/DropdownSection';
 import { DropdownItem } from './ui/DropdownItem';
 import { DropdownDivider } from './ui/DropdownDivider';
+import { AccountSettingsModal } from './AccountSettingsModal';
 import { useAuth } from '../auth/AuthProvider';
 import { useStore } from '../store';
 import { api } from '../api';
@@ -16,6 +17,7 @@ const log = logger.create('UserMenu');
 export function UserMenu() {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const githubConnection = useStore(s => s.githubConnection);
   const loadGitHubStatus = useStore(s => s.loadGitHubStatus);
@@ -40,6 +42,12 @@ export function UserMenu() {
     loadSupabaseConnectStatus();
     loadFigmaStatus();
   }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus, loadFigmaStatus]);
+
+  useEffect(() => {
+    const handler = () => setAccountSettingsOpen(true);
+    window.addEventListener('arvid:open-account-settings', handler);
+    return () => window.removeEventListener('arvid:open-account-settings', handler);
+  }, []);
 
   const fullName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -173,6 +181,16 @@ export function UserMenu() {
 
         <DropdownDivider />
 
+        <DropdownSection label="Account">
+          <DropdownItem
+            icon={<CreditCard size={ICON_SIZE.md} />}
+            label="Account settings"
+            onClick={() => { setIsOpen(false); setAccountSettingsOpen(true); }}
+          />
+        </DropdownSection>
+
+        <DropdownDivider />
+
         <DropdownSection label="Avoid">
           <DropdownItem
             icon={<LogOut size={ICON_SIZE.md} />}
@@ -182,6 +200,11 @@ export function UserMenu() {
           />
         </DropdownSection>
       </DropdownPanel>
+
+      <AccountSettingsModal
+        isOpen={accountSettingsOpen}
+        onClose={() => setAccountSettingsOpen(false)}
+      />
     </div>
   );
 }

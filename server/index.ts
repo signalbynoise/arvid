@@ -22,6 +22,8 @@ import { articlesPublicRouter } from './routes/articles';
 import { cmsArticlesRouter } from './routes/cmsArticles';
 import { documentsRouter } from './routes/documents';
 import { figmaRouter, figmaCallbackRouter } from './routes/figma';
+import { billingRouter } from './routes/billing';
+import { stripeWebhooksRouter } from './routes/stripeWebhooks';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +43,7 @@ app.use('/api/webhooks', express.json({
   },
 }));
 app.use('/api/webhooks', webhooksRouter);
+app.use('/api/webhooks', stripeWebhooksRouter);
 
 app.use((req, res, next) => {
   const contentType = req.headers['content-type'] || '';
@@ -83,6 +86,7 @@ app.use('/api/supabase-connect', supabaseConnectRouter);
 app.use('/api/documents', documentsRouter);
 app.use('/api/figma', figmaRouter);
 app.use('/api/cms/articles', cmsArticlesRouter);
+app.use('/api/billing', billingRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR] [express:unhandled]', err.message, err.stack);

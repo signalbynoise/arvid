@@ -17,7 +17,6 @@ interface Props {
   isEnhancing: boolean;
   title: string;
   description: string;
-  hasRepoContext: boolean;
   figmaDesigns: FigmaDesign[];
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
@@ -25,7 +24,7 @@ interface Props {
   onCreate: () => void;
 }
 
-export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, figmaDesigns, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
+export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -64,15 +63,8 @@ export function EnhanceStep({ isEnhancing, title, description, hasRepoContext, f
               value={description}
               onChange={onDescriptionChange}
               textareaRef={descriptionRef}
+              className="min-h-[240px]"
             />
-            {hasRepoContext && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-surface-frost-02 border border-border-default rounded-comfortable mt-2">
-                <img src="/github.svg" alt="" className="w-3.5 h-3.5 shrink-0" />
-                <span className="text-caption text-text-secondary">
-                  Enhanced with codebase context from your linked repository
-                </span>
-              </div>
-            )}
           </FormField>
         </div>
 

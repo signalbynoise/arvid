@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { createUserClient, supabaseAdmin } from '../supabase';
+import { createUserClient, supabase, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateProjectBodySchema, UpdateProjectBodySchema } from '../../shared/schemas';
 import { generateShortId } from '../lib/shortId';
+import { checkProjectLimit } from '../middleware/checkPlanLimits';
+import { getProjectSimilarities } from '../similarity';
 
 export const projectsRouter = Router();
 
@@ -40,7 +42,30 @@ projectsRouter.get('/:id', async (req, res) => {
   res.json(data);
 });
 
-projectsRouter.post('/', validateBody(CreateProjectBodySchema), async (req, res) => {
+projectsRouter.get('/:id/similarities', async (req, res) => {
+  try {
+    const db = createUserClient(req.accessToken!);
+    const { data: project, error } = await db
+      .from('projects')
+      .select('id')
+      .eq('id', req.params.id)
+      .eq('is_deleted', false)
+      .single();
+
+    if (error || !project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const similarities = await getProjectSimilarities(project.id);
+    return res.json({ similarities });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[ERROR] [projects:similarities] ${message}`);
+    return res.status(500).json({ error: 'Failed to compute project similarities' });
+  }
+});
+
+projectsRouter.post('/', checkProjectLimit, validateBody(CreateProjectBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const userId = req.user!.id;
   const shortId = await generateShortId(db, 'projects', 'P');
@@ -91,6 +116,22 @@ projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, 
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  if (req.body.github_repo_full_name) {
+    supabase
+      .from('requirements')
+      .update({ impl_status: 'Not Checked', impl_confidence: null, impl_checked_at: null })
+      .eq('project_id', req.params.id)
+      .eq('impl_status', 'No Repo')
+      .then(({ error: resetErr, count }) => {
+        if (resetErr) {
+          console.error('[ERROR] [projects:patch] Failed to reset No Repo requirements', JSON.stringify({ error: resetErr.message }));
+        } else if (count && count > 0) {
+          console.info('[INFO] [projects:patch] Reset No Repo requirements after repo connected', JSON.stringify({ projectId: req.params.id, count }));
+        }
+      });
+  }
+
   res.json(data);
 });
 

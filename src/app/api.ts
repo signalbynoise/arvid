@@ -20,9 +20,18 @@ import {
   InvitationSchema,
   CardAssigneeRowSchema,
   CardAssigneeSchema,
+  UserSubscriptionRowSchema,
+  UserSubscriptionSchema,
+  PlanLimitsResponseSchema,
+  InvoiceSchema,
+  CheckoutSessionResponseSchema,
+  PortalSessionResponseSchema,
+  SimilarRequirementSchema,
+  SimilarRequirementsResponseSchema,
+  ProjectSimilaritiesResponseSchema,
 } from '../../shared/schemas';
-import type { ImplAnalysis } from '../../shared/schemas';
-import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee } from './types';
+import type { ImplAnalysis, PlanLimitsResponse, Invoice } from '../../shared/schemas';
+import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee, UserSubscription, SimilarRequirement } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
@@ -733,5 +742,50 @@ export const api = {
 
   async removeRequirementFigmaLink(requirementId: string, linkId: string): Promise<void> {
     await request<unknown>('DELETE', `/requirements/${requirementId}/figma-links/${linkId}`);
+  },
+
+  // --- Billing ---
+
+  async getSubscription(signal?: AbortSignal): Promise<UserSubscription> {
+    const raw = await request<unknown>('GET', '/billing/subscription', undefined, signal);
+    return parseSingle(UserSubscriptionRowSchema, UserSubscriptionSchema, raw, '/billing/subscription');
+  },
+
+  async getPlanLimits(signal?: AbortSignal): Promise<PlanLimitsResponse> {
+    const raw = await request<unknown>('GET', '/billing/plan-limits', undefined, signal);
+    return PlanLimitsResponseSchema.parse(raw);
+  },
+
+  async createCheckoutSession(): Promise<{ url: string }> {
+    const raw = await request<unknown>('POST', '/billing/create-checkout-session');
+    return CheckoutSessionResponseSchema.parse(raw);
+  },
+
+  async createPortalSession(): Promise<{ url: string }> {
+    const raw = await request<unknown>('POST', '/billing/create-portal-session');
+    return PortalSessionResponseSchema.parse(raw);
+  },
+
+  async getInvoices(): Promise<Invoice[]> {
+    const raw = await request<unknown[]>('GET', '/billing/invoices');
+    return z.array(InvoiceSchema).parse(raw);
+  },
+
+  // --- Similarity ---
+
+  async getSimilarRequirements(requirementId: string): Promise<SimilarRequirement[]> {
+    const raw = await request<unknown>('GET', `/requirements/${requirementId}/similar`);
+    const parsed = SimilarRequirementsResponseSchema.parse(raw);
+    return parsed.similar.map(row => SimilarRequirementSchema.parse(row));
+  },
+
+  async getProjectSimilarities(projectId: string): Promise<Record<string, SimilarRequirement[]>> {
+    const raw = await request<unknown>('GET', `/projects/${projectId}/similarities`);
+    const parsed = ProjectSimilaritiesResponseSchema.parse(raw);
+    const result: Record<string, SimilarRequirement[]> = {};
+    for (const [reqId, rows] of Object.entries(parsed.similarities)) {
+      result[reqId] = rows.map(row => SimilarRequirementSchema.parse(row));
+    }
+    return result;
   },
 };

@@ -104,7 +104,7 @@ function CardFooter({ meta, authorName, assigneeCount, indicators }: CardFooterP
 
   return (
     <div className="flex items-center justify-between">
-      <p className="text-label text-text-quaternary">{displayMeta}</p>
+      <p className="text-caption-lg text-text-tertiary">{displayMeta}</p>
       {indicators && (
         <div className="flex items-center gap-1.5">
           {indicators}

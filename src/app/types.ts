@@ -21,4 +21,7 @@ export type {
   ProjectMembership,
   EntityType,
   CardAssignee,
+  SubscriptionPlan,
+  UserSubscription,
+  SimilarRequirement,
 } from '../../shared/schemas';

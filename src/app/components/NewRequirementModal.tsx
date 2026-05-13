@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useStore, selectSelectedProjectId, selectProjects } from '../store';
+import { useStore, selectSelectedProjectId } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
 import { isValidFigmaUrl } from '../../../shared/figmaUrl';
@@ -35,13 +35,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const createRequirement = useStore(s => s.createRequirement);
   const enhanceRequirement = useStore(s => s.enhanceRequirement);
   const selectedProjectId = useStore(selectSelectedProjectId);
-  const projects = useStore(selectProjects);
   const { user } = useAuth();
-
-  const hasRepoContext = useMemo(() => {
-    const project = projects.find(p => p.id === selectedProjectId);
-    return !!project?.githubRepo;
-  }, [projects, selectedProjectId]);
 
   const ownerName = user?.user_metadata?.full_name
     || user?.user_metadata?.name
@@ -58,6 +52,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const [figmaLinks, setFigmaLinks] = useState<string[]>([]);
 
   const resolveFigmaDesigns = useStore(s => s.resolveFigmaDesigns);
+  const clearResolvedDesigns = useStore(s => s.clearResolvedDesigns);
   const resolvedDesigns = useStore(s => s.resolvedDesigns);
 
   const validFigmaLinks = useMemo(
@@ -81,6 +76,7 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     setIsEnhancing(false);
     setSlackWideMode(false);
     setFigmaLinks([]);
+    clearResolvedDesigns();
   };
 
   const handleClose = () => { onClose(); reset(); };
@@ -173,7 +169,6 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
             isEnhancing={isEnhancing}
             title={title}
             description={description}
-            hasRepoContext={hasRepoContext}
             figmaDesigns={figmaDesigns}
             onTitleChange={setTitle}
             onDescriptionChange={setDescription}

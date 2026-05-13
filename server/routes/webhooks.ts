@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { supabase } from '../supabase';
+import { supabase, supabaseAdmin } from '../supabase';
 import { classifyImplementation } from '../openrouter';
 import { computeAccordanceScore } from '../../shared/schemas/implCheck';
 import { GitHubClient } from '../lib/githubClient';
@@ -59,7 +59,7 @@ webhooksRouter.post('/linear', async (req: Request, res: Response) => {
     stateType,
   }));
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('requirements')
     .update({
       linear_status: stateName,
@@ -96,7 +96,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
     JSON.stringify({ linearIssueId }),
   );
 
-  const { data: requirement } = await supabase
+  const { data: requirement } = await supabaseAdmin
     .from('requirements')
     .select('*')
     .eq('linear_issue_id', linearIssueId)
@@ -109,14 +109,14 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
   if (!requirement.project_id) {
     console.info('[INFO] [webhooks:implCheck] No project_id on requirement, setting No Repo', JSON.stringify({ requirementId: requirement.id }));
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
       .eq('id', requirement.id);
     return;
   }
 
-  const { data: project, error: projError } = await supabase
+  const { data: project, error: projError } = await supabaseAdmin
     .from('projects')
     .select('github_repo_full_name')
     .eq('id', requirement.project_id)
@@ -128,14 +128,14 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
   if (!project?.github_repo_full_name) {
     console.info('[INFO] [webhooks:implCheck] No GitHub repo linked to project, setting No Repo', JSON.stringify({ requirementId: requirement.id, projectId: requirement.project_id, project }));
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({ impl_status: 'No Repo', impl_confidence: null, impl_checked_at: new Date().toISOString() })
       .eq('id', requirement.id);
     return;
   }
 
-  const { data: projectFull } = await supabase
+  const { data: projectFull } = await supabaseAdmin
     .from('projects')
     .select('github_repo_default_branch, user_id')
     .eq('id', requirement.project_id)
@@ -143,7 +143,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
   const branch = projectFull?.github_repo_default_branch || 'main';
 
-  const { data: ghConnection } = await supabase
+  const { data: ghConnection } = await supabaseAdmin
     .from('github_connections')
     .select('access_token')
     .eq('user_id', projectFull?.user_id ?? '')
@@ -178,7 +178,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
       }));
 
       const contextId = `rc-${requirement.project_id}`;
-      const existingKeyFiles = (await supabase
+      const existingKeyFiles = (await supabaseAdmin
         .from('repo_contexts')
         .select('key_files')
         .eq('project_id', requirement.project_id)
@@ -186,7 +186,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
       const analysis = analyzeRepo(fileTree, existingKeyFiles, recentCommits);
 
-      await supabase
+      await supabaseAdmin
         .from('repo_contexts')
         .update({
           file_tree: fileTree,
@@ -203,7 +203,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
     }
   }
 
-  const { data: repoCtx, error: repoError } = await supabase
+  const { data: repoCtx, error: repoError } = await supabaseAdmin
     .from('repo_contexts')
     .select('*')
     .eq('project_id', requirement.project_id)
@@ -215,14 +215,14 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
   if (!repoCtx || repoCtx.status !== 'ready') {
     console.info('[INFO] [webhooks:implCheck] Repo context not ready, setting Unknown', JSON.stringify({ requirementId: requirement.id, status: repoCtx?.status }));
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({ impl_status: 'Unknown', impl_confidence: 0.1, impl_checked_at: new Date().toISOString() })
       .eq('id', requirement.id);
     return;
   }
 
-  const { data: dbQuestions } = await supabase
+  const { data: dbQuestions } = await supabaseAdmin
     .from('questions')
     .select('*')
     .eq('requirement_id', requirement.id);
@@ -230,7 +230,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
   const questionIds = (dbQuestions || []).map((q: { id: string }) => q.id);
   let dbAnswers: Array<{ question_id: string; text: string; author: string }> = [];
   if (questionIds.length > 0) {
-    const { data: ansData } = await supabase
+    const { data: ansData } = await supabaseAdmin
       .from('answers')
       .select('question_id, text, author')
       .in('question_id', questionIds);
@@ -247,7 +247,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
         .map(a => ({ text: a.text, author: a.author })),
     }));
 
-  const { data: summaryRow } = await supabase
+  const { data: summaryRow } = await supabaseAdmin
     .from('summaries')
     .select('core_objective, architecture, constraints, unverified_risks')
     .eq('requirement_id', requirement.id)
@@ -276,7 +276,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
 
     const implAnalysis = computeAccordanceScore(result);
 
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({
         impl_status: result.status,
@@ -303,7 +303,7 @@ async function checkImplementationAsync(linearIssueId: string): Promise<void> {
       JSON.stringify({ requirementId: requirement.id, error: message }),
     );
 
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({ impl_status: 'Unknown', impl_confidence: 0.0, impl_checked_at: new Date().toISOString() })
       .eq('id', requirement.id);

@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
+import { toast } from 'sonner';
 import { Project } from '../../types';
-import { api } from '../../api';
+import { api, ApiError } from '../../api';
 import { logger } from '../../logger';
 import { SelectionSlice } from './selection';
 
@@ -64,6 +65,14 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
       log.info('createProject', 'Project created', { id: created.id });
       return created;
     } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        toast.error('Project limit reached', {
+          description: 'Upgrade to Arvid Plus for unlimited projects.',
+          action: { label: 'Upgrade', onClick: () => window.dispatchEvent(new CustomEvent('arvid:open-account-settings')) },
+        });
+        log.info('createProject', 'Plan limit reached');
+        return undefined;
+      }
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('createProject', 'Failed to create project', { error: message });
       return undefined;

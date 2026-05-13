@@ -29,6 +29,7 @@ export interface FigmaSlice {
   loadFigmaStatus: () => Promise<void>;
   disconnectFigma: () => Promise<void>;
   resolveFigmaDesigns: (urls: string[]) => Promise<ResolvedFigmaDesign[]>;
+  clearResolvedDesigns: () => void;
 }
 
 export const createFigmaSlice: StateCreator<FigmaSlice, [], [], FigmaSlice> = (set) => ({
@@ -77,6 +78,11 @@ export const createFigmaSlice: StateCreator<FigmaSlice, [], [], FigmaSlice> = (s
     }
   },
 
+  clearResolvedDesigns: () => {
+    set({ resolvedDesigns: [] });
+    log.debug('clearResolvedDesigns', 'Resolved designs cleared');
+  },
+
   resolveFigmaDesigns: async (urls: string[]) => {
     log.info('resolveFigmaDesigns', 'Resolving Figma designs', { urlCount: urls.length });
 
@@ -87,6 +93,7 @@ export const createFigmaSlice: StateCreator<FigmaSlice, [], [], FigmaSlice> = (s
       return result.designs;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
+      set({ resolvedDesigns: [] });
       log.error('resolveFigmaDesigns', 'Failed to resolve designs', { error: message });
       return [];
     }

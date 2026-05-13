@@ -8,6 +8,7 @@ interface TextAreaProps {
   disabled?: boolean;
   autoFocus?: boolean;
   textareaRef?: React.Ref<HTMLTextAreaElement>;
+  className?: string;
 }
 
 const BASE_CLASSES =
@@ -25,6 +26,7 @@ export function TextArea({
   disabled = false,
   autoFocus,
   textareaRef,
+  className = '',
 }: TextAreaProps) {
   return (
     <textarea
@@ -34,7 +36,7 @@ export function TextArea({
       placeholder={placeholder}
       disabled={disabled}
       autoFocus={autoFocus}
-      className={`${BASE_CLASSES} ${hasError ? ERROR_BORDER : DEFAULT_BORDER} ${disabled ? DISABLED_CLASSES : ''}`}
+      className={`${BASE_CLASSES} ${hasError ? ERROR_BORDER : DEFAULT_BORDER} ${disabled ? DISABLED_CLASSES : ''} ${className}`}
     />
   );
 }

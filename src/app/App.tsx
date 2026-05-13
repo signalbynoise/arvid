@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { RequirementColumn } from './components/RequirementColumn';
 import { QuestionColumn } from './components/QuestionColumn';
 import { AnswerColumn } from './components/AnswerColumn';
@@ -50,11 +50,14 @@ export default function App() {
   const requestModal = useStore(s => s.requestModal);
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
   const loadProjects = useStore(s => s.loadProjects);
+  const loadSimilarities = useStore(s => s.loadSimilarities);
   const bootApp = useStore(s => s.bootApp);
+  const loadSubscription = useStore(s => s.loadSubscription);
 
   useEffect(() => {
     bootApp();
-  }, [bootApp]);
+    loadSubscription();
+  }, [bootApp, loadSubscription]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -82,7 +85,14 @@ export default function App() {
         loadSupabaseConnectStatus();
       }
     }
-  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus]);
+    if (params.get('billing') === 'success') {
+      window.history.replaceState({}, '', window.location.pathname);
+      toast.success('Welcome to Arvid Plus!', { description: 'Your subscription is now active.' });
+      loadSubscription();
+    } else if (params.get('billing') === 'canceled') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus, loadSubscription]);
 
   useEffect(() => {
     if (!selectedProjectId || dataState.status !== 'ready') return;
@@ -131,6 +141,12 @@ export default function App() {
     }
     return () => cancelLoad();
   }, [selectedProjectId, loadEntities, fetchCardAssignees, cancelLoad]);
+
+  useEffect(() => {
+    if (selectedProjectId && dataState.status === 'ready') {
+      loadSimilarities(selectedProjectId);
+    }
+  }, [selectedProjectId, dataState.status, loadSimilarities]);
 
   useEffect(() => {
     if (!pendingModal) return;

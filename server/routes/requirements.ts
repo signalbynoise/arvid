@@ -13,6 +13,8 @@ import { GitHubClient } from '../lib/githubClient';
 import { analyzeRepo } from '../analysis/repoAnalyzer';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
+import { checkRequirementLimit } from '../middleware/checkPlanLimits';
+import { getSimilarForRequirement } from '../similarity';
 
 export const requirementsRouter = Router();
 
@@ -69,7 +71,37 @@ requirementsRouter.get('/:id', async (req, res) => {
   res.json(data);
 });
 
-requirementsRouter.post('/', validateBody(CreateRequirementBodySchema), async (req, res) => {
+requirementsRouter.get('/:id/similar', async (req, res) => {
+  try {
+    const db = createUserClient(req.accessToken!);
+    const { data: requirement, error } = await db
+      .from('requirements')
+      .select('id, project_id, is_deactivated')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !requirement) {
+      return res.status(404).json({ error: 'Requirement not found' });
+    }
+
+    if (requirement.is_deactivated) {
+      return res.json({ similar: [] });
+    }
+
+    if (!requirement.project_id) {
+      return res.json({ similar: [] });
+    }
+
+    const similar = await getSimilarForRequirement(requirement.id, requirement.project_id);
+    return res.json({ similar });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[ERROR] [requirements:similar] ${message}`);
+    return res.status(500).json({ error: 'Failed to compute similar requirements' });
+  }
+});
+
+requirementsRouter.post('/', checkRequirementLimit, validateBody(CreateRequirementBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const projectId = req.body.project_id;
   const figmaLinks: string[] | undefined = req.body.figma_links;
@@ -482,18 +514,6 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
 
       const repoAnalysis = analyzeRepo(fileTree, existingKeyFiles, recentCommits);
 
-      const upsertHierarchy = fileTree
-        .filter(f => f.path.includes('workspace') || f.path.includes('team'))
-        .map(f => f.path);
-      console.debug(
-        '[DEBUG] [requirements:checkImplementation] About to upsert file_tree',
-        JSON.stringify({
-          projectId: requirement.project_id,
-          totalEntries: fileTree.length,
-          hierarchyFiles: upsertHierarchy,
-        }),
-      );
-
       const { error: upsertErr } = await supabase
         .from('repo_contexts')
         .upsert({
@@ -522,19 +542,6 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
     .select('*')
     .eq('project_id', requirement.project_id)
     .single();
-
-  const dbFileTree = repoCtx?.file_tree || [];
-  const dbHierarchy = dbFileTree
-    .filter((f: FileTreeEntry) => f.path.includes('workspace') || f.path.includes('team'))
-    .map((f: FileTreeEntry) => f.path);
-  console.debug(
-    '[DEBUG] [requirements:checkImplementation] DB file_tree read',
-    JSON.stringify({
-      requirementId,
-      totalEntries: dbFileTree.length,
-      hierarchyFiles: dbHierarchy,
-    }),
-  );
 
   if (!repoCtx || repoCtx.status !== 'ready') {
     const now = new Date().toISOString();
