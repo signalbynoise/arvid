@@ -5,6 +5,7 @@ import { useStore, selectSelectedReqId } from '../store';
 import { QuestionInputSchema } from '../../../shared/schemas';
 import { useCreateEntity } from '../machines/mutations/useCreateEntity';
 import { BaseModal } from './BaseModal';
+import { ModalFooter } from './ui/ModalFooter';
 import { FormField } from './ui/FormField';
 import { TextArea } from './ui/TextArea';
 import { useQuestionClassification } from '../domain/useQuestionClassification';
@@ -87,31 +88,31 @@ export function NewQuestionModal({ isOpen, onClose }: Props) {
 
   const displayError = validationError || error;
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="New Question" size="md">
-      <div className="flex flex-col gap-6">
-        <FormField label="Question" error={displayError}>
-          <TextArea
-            value={text}
-            onChange={handleTextChange}
-            placeholder="What needs to be clarified about this requirement?"
-            hasError={!!displayError}
-            textareaRef={textareaRef}
-          />
-        </FormField>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={handleClose} className="btn-ghost">Cancel</button>
+      <button
+        onClick={handleSubmit}
+        disabled={!text.trim() || isSubmitting}
+        className="btn-primary flex items-center gap-2"
+      >
+        <LoaderPinwheel size={ICON_SIZE.md} />
+        <span>{isSubmitting ? 'Checking...' : 'Check with Arvid'}</span>
+      </button>
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <button
-            onClick={handleSubmit}
-            disabled={!text.trim() || isSubmitting}
-            className="btn-primary flex items-center gap-2"
-          >
-            <LoaderPinwheel size={ICON_SIZE.md} />
-            <span>{isSubmitting ? 'Checking...' : 'Check with Arvid'}</span>
-          </button>
-        </div>
-      </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={handleClose} title="New Question" size="md" footer={modalFooter}>
+      <FormField label="Question" error={displayError}>
+        <TextArea
+          value={text}
+          onChange={handleTextChange}
+          placeholder="What needs to be clarified about this requirement?"
+          hasError={!!displayError}
+          textareaRef={textareaRef}
+        />
+      </FormField>
     </BaseModal>
   );
 }

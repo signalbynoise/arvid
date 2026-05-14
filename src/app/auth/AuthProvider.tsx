@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null;
   session: Session | null;
   signOut: () => Promise<void>;
+  updateProfile: (data: { fullName?: string }) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -65,9 +66,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (data: { fullName?: string }): Promise<{ error: string | null }> => {
+    log.info('updateProfile', 'Updating user profile', { hasName: !!data.fullName });
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: data.fullName },
+    });
+    if (error) {
+      log.error('updateProfile', 'Profile update failed', { message: error.message });
+      return { error: error.message };
+    }
+    const { data: refreshed } = await supabase.auth.getUser();
+    if (refreshed.user) setUser(refreshed.user);
+    return { error: null };
+  }, []);
+
   const value = useMemo<AuthState>(
-    () => ({ status, user, session, signOut }),
-    [status, user, session, signOut],
+    () => ({ status, user, session, signOut, updateProfile }),
+    [status, user, session, signOut, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

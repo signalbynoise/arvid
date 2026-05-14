@@ -9,7 +9,7 @@ interface SidebarFooterItemProps {
 
 export function SidebarFooterItem({ icon, label, isConnected, children }: SidebarFooterItemProps) {
   return (
-    <div className="px-4 space-y-2">
+    <div className="space-y-2">
       <div className="flex items-center gap-2">
         {icon}
         <span className="text-label text-text-tertiary">

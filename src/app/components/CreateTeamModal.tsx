@@ -4,6 +4,7 @@ import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { SubmitButton } from './ui/SubmitButton';
+import { ModalFooter } from './ui/ModalFooter';
 
 interface Props {
   isOpen: boolean;
@@ -38,29 +39,29 @@ export function CreateTeamModal({ isOpen, onClose, workspaceId, workspaceName }:
     reset();
   };
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Create new team" size="sm">
-      <div className="flex flex-col gap-6">
-        <FormField
-          label="Team Name"
-          error={error}
-          hint={<>Team will be added to workspace <span className="text-text-primary">{workspaceName}</span></>}
-        >
-          <TextInput
-            value={name}
-            onChange={(v) => setName(v)}
-            onKeyDown={handleKeyDown}
-            placeholder="Team name"
-            inputRef={inputRef}
-            hasError={!!error}
-          />
-        </FormField>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={handleClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Create new team" loadingLabel="Creating..." isLoading={isSubmitting} />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Create new team" loadingLabel="Creating..." isLoading={isSubmitting} />
-        </div>
-      </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={handleClose} title="Create new team" size="sm" footer={modalFooter}>
+      <FormField
+        label="Team Name"
+        error={error}
+        hint={<>Team will be added to workspace <span className="text-text-primary">{workspaceName}</span></>}
+      >
+        <TextInput
+          value={name}
+          onChange={(v) => setName(v)}
+          onKeyDown={handleKeyDown}
+          placeholder="Team name"
+          inputRef={inputRef}
+          hasError={!!error}
+        />
+      </FormField>
     </BaseModal>
   );
 }

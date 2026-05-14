@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { FormField } from '../ui/FormField';
+import { TextInput } from '../ui/TextInput';
+import { TextArea } from '../ui/TextArea';
 
 interface ExtractedRequirement {
   title: string;
@@ -15,42 +18,31 @@ interface Props {
   onUpdate: (updates: Partial<ExtractedRequirement>) => void;
 }
 
-const CLARITY_OPTIONS = ['High', 'Medium', 'Low'] as const;
-const RISK_OPTIONS = ['Low', 'Medium', 'High'] as const;
-
 export function ExtractedRequirementCard({ requirement, onToggle, onUpdate }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div
-      className={`rounded-comfortable border transition-all duration-150 ${
+      onClick={onToggle}
+      className={`rounded-comfortable border transition-all duration-150 cursor-pointer ${
         requirement.selected
-          ? 'border-border-hover bg-surface-frost-06'
-          : 'border-border-default bg-surface-frost-02 opacity-60'
+          ? 'border-border-hover bg-surface-panel'
+          : 'border-border-default bg-surface-panel opacity-60'
       }`}
     >
-      {/* Header row */}
-      <div
-        onClick={onToggle}
-        className="flex items-start gap-2 p-3 cursor-pointer"
-      >
-        <div className={`mt-0.5 h-4 w-4 rounded-standard border flex items-center justify-center shrink-0 ${
-          requirement.selected ? 'border-status-success bg-status-success' : 'border-border-default'
-        }`}>
-          {requirement.selected && <Check size={10} className="text-white" />}
-        </div>
+      <div className="flex items-start gap-2 p-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-[var(--fw-medium)] text-text-primary">
+          <p className="text-caption-lg text-text-primary">
             {requirement.title}
           </p>
-          <p className="text-[12px] text-text-tertiary mt-1 line-clamp-2">
+          <p className="text-label text-text-tertiary mt-1 line-clamp-2">
             {requirement.description}
           </p>
           <div className="flex items-center gap-3 mt-2">
-            <span className="text-[10px] text-text-quaternary">
+            <span className="text-label-sm text-text-quaternary">
               Clarity: {requirement.clarity}
             </span>
-            <span className="text-[10px] text-text-quaternary">
+            <span className="text-label-sm text-text-quaternary">
               Risk: {requirement.risk}
             </span>
           </div>
@@ -63,61 +55,20 @@ export function ExtractedRequirementCard({ requirement, onToggle, onUpdate }: Pr
         </button>
       </div>
 
-      {/* Expanded edit area */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-0 border-t border-border-subtle space-y-3" onClick={e => e.stopPropagation()}>
-          <div>
-            <label className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
-              Title
-            </label>
-            <input
-              type="text"
+          <FormField label="Title">
+            <TextInput
               value={requirement.title}
-              onChange={e => onUpdate({ title: e.target.value })}
-              className="w-full mt-1 px-2.5 py-1.5 text-[13px] bg-surface-frost-01 border border-border-default rounded-standard text-text-primary focus:outline-none focus:border-border-hover"
+              onChange={(v) => onUpdate({ title: v })}
             />
-          </div>
-          <div>
-            <label className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
-              Description
-            </label>
-            <textarea
+          </FormField>
+          <FormField label="Description">
+            <TextArea
               value={requirement.description}
-              onChange={e => onUpdate({ description: e.target.value })}
-              rows={3}
-              className="w-full mt-1 px-2.5 py-1.5 text-[13px] bg-surface-frost-01 border border-border-default rounded-standard text-text-primary focus:outline-none focus:border-border-hover resize-y"
+              onChange={(v) => onUpdate({ description: v })}
             />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
-                Clarity
-              </label>
-              <select
-                value={requirement.clarity}
-                onChange={e => onUpdate({ clarity: e.target.value })}
-                className="w-full mt-1 px-2.5 py-1.5 text-[13px] bg-surface-frost-01 border border-border-default rounded-standard text-text-primary focus:outline-none focus:border-border-hover"
-              >
-                {CLARITY_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
-                Risk
-              </label>
-              <select
-                value={requirement.risk}
-                onChange={e => onUpdate({ risk: e.target.value })}
-                className="w-full mt-1 px-2.5 py-1.5 text-[13px] bg-surface-frost-01 border border-border-default rounded-standard text-text-primary focus:outline-none focus:border-border-hover"
-              >
-                {RISK_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          </FormField>
         </div>
       )}
     </div>

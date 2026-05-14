@@ -5,6 +5,7 @@ import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { SubmitButton } from './ui/SubmitButton';
+import { ModalFooter } from './ui/ModalFooter';
 
 interface Props {
   isOpen: boolean;
@@ -59,25 +60,25 @@ export function NewProjectModal({ isOpen, onClose, workspaceId, teamId, teamName
     : <>Project will be added to team <span className="text-text-primary">{teamName}</span></>;
   const submitLabel = isSubProject ? 'Create new sub project' : 'Create new project';
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
-      <div className="flex flex-col gap-6">
-        <FormField label={fieldLabel} error={displayError} hint={hint}>
-          <TextInput
-            value={name}
-            onChange={(v) => { setName(v); setValidationError(null); }}
-            onKeyDown={handleKeyDown}
-            placeholder="Project name"
-            inputRef={inputRef}
-            hasError={!!displayError}
-          />
-        </FormField>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={handleClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label={submitLabel} isLoading={isSubmitting} />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label={submitLabel} isLoading={isSubmitting} />
-        </div>
-      </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={handleClose} title={title} size="sm" footer={modalFooter}>
+      <FormField label={fieldLabel} error={displayError} hint={hint}>
+        <TextInput
+          value={name}
+          onChange={(v) => { setName(v); setValidationError(null); }}
+          onKeyDown={handleKeyDown}
+          placeholder="Project name"
+          inputRef={inputRef}
+          hasError={!!displayError}
+        />
+      </FormField>
     </BaseModal>
   );
 }

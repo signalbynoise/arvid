@@ -620,6 +620,142 @@ Full-width action button with left icon and label. Used for import source button
 
 ---
 
+## Modal
+
+All app modals **must** use `BaseModal` from `src/app/components/BaseModal.tsx` as their shell. `BaseModal` composes three internal primitives (`ModalHeader`, `ModalSidebar`, `ModalFooter`) and owns all visual chrome — overlay, panel, header, body layout, and footer positioning. Consumer modals pass data props and content; they never style the shell.
+
+This section applies to **app modals only**. Marketing site DMC/MDA modals use `MiniDmcModal` (see Mini Demo Apps section).
+
+### Shell (`BaseModal`)
+
+File: `src/app/components/BaseModal.tsx`
+
+| Token | Class | Value | Use |
+|-------|-------|-------|-----|
+| Background | `bg-surface-panel` | `#0f1011` | Panel fill |
+| Border | `border border-border-strong` | `rgba(255,255,255,0.1)` | Panel edge |
+| Radius | `rounded-panel` | 12px | Corner rounding |
+| Shadow | `shadow-modal` | Deep elevation | Drop shadow |
+| Overlay | `bg-overlay-scrim` | `rgba(0,0,0,0.85)` | Backdrop |
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `isOpen` | `boolean` | — | Controls visibility |
+| `onClose` | `() => void` | — | Close handler (also Escape key) |
+| `title` | `string` | — | Header title text |
+| `size` | `ModalSize` | `'lg'` | Size variant (see below) |
+| `sidebar` | `ReactNode` | — | Left sidebar (use `ModalSidebar`) |
+| `aside` | `ReactNode` | — | Right aside panel (content | aside layout) |
+| `footer` | `ReactNode` | — | Footer below body (use `ModalFooter`) |
+| `children` | `ReactNode` | — | Body content |
+
+### Size Variants
+
+| Variant | Width | Height | Use |
+|---------|-------|--------|-----|
+| `sm` | 400px (`max-w-modal-sm`) | auto, max 85vh | Confirmations, deletes, renames, link pickers |
+| `md` | 480px (`max-w-modal-md`) | auto, max 85vh | Single-field forms |
+| `lg` | 520px (`max-w-modal-lg`) | auto, max 85vh | Multi-field forms, multi-step |
+| `wide` | 760px (`max-w-modal-wide`) | auto, max 85vh | Content-rich (aside layout) |
+| `xl` | 70vw | 70vh | Complex tabbed modals with sidebar |
+
+### Body Layout
+
+- **Default** (no sidebar, no aside): children rendered with `p-6` padding (or `px-6 pt-6` when footer is provided)
+- **Sidebar** (`sidebar` prop): sidebar on left with `border-r border-border-strong`, scrollable content on right
+- **Aside** (`aside` prop): content and aside in equal-width columns with `gap-10`
+
+### Header (`ModalHeader`)
+
+File: `src/app/components/ui/ModalHeader.tsx`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `title` | `string` | Title text |
+| `onClose` | `() => void` | Close handler |
+
+Styling: `p-6`, title `text-caption-lg text-text-primary`, close button ghost pattern with `ICON_SIZE.md`.
+
+Rendered internally by `BaseModal` — consumers do not import it directly.
+
+### Sidebar (`ModalSidebar`)
+
+File: `src/app/components/ui/ModalSidebar.tsx`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `items` | `ModalSidebarItem[]` | Array of `{ id, label, icon }` |
+| `activeId` | `string` | Currently selected item ID |
+| `onSelect` | `(id: string) => void` | Selection handler |
+
+Styling: `w-[200px]`, `border-r border-border-strong`, `p-6`, items `text-caption-lg rounded-comfortable`, active `bg-surface-frost-08 text-text-primary`, inactive `text-text-tertiary`.
+
+Used by passing to `BaseModal`'s `sidebar` prop for `xl`-sized tabbed modals (Details, Workspace Settings, Account Settings).
+
+### Footer (`ModalFooter`)
+
+File: `src/app/components/ui/ModalFooter.tsx`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `back` | `ReactNode?` | Optional left-side element (e.g. Back button) |
+| `children` | `ReactNode` | Right-side action buttons |
+
+Styling: `p-6`, `justify-between`. Left side renders `back`, right side renders `children` in a `flex gap-3` wrapper.
+
+```tsx
+// Standard footer: Cancel + Primary
+<ModalFooter>
+  <button onClick={onClose} className="btn-ghost">Cancel</button>
+  <SubmitButton onClick={handleSave} label="Save" isLoading={isSaving} />
+</ModalFooter>
+
+// Footer with Back button
+<ModalFooter back={<button className="btn-ghost" onClick={onBack}>Back</button>}>
+  <button onClick={onClose} className="btn-ghost">Cancel</button>
+  <button className="btn-primary" onClick={onSubmit}>Submit</button>
+</ModalFooter>
+```
+
+### Picker List (`PickerList`, `PickerSection`, `PickerItem`)
+
+File: `src/app/components/ui/PickerList.tsx`
+
+Used for link picker modals (GitHub repos, Linear projects, Slack channels, databases).
+
+- `PickerList`: scrollable container (`max-h-[320px]`, `overflow-y-auto`, `hide-scrollbar`)
+- `PickerSection`: labeled group with `text-label-upper` header
+- `PickerItem`: button row with optional icon, label (`text-caption-lg`), optional right element, hover `bg-surface-frost-04`
+
+### Select (`Select`)
+
+File: `src/app/components/ui/Select.tsx`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `value` | `string` | Current value |
+| `onChange` | `(value: string) => void` | Change handler |
+| `options` | `{ value, label }[]` | Options |
+| `disabled` | `boolean?` | Disabled state |
+
+Styling: same tokens as `TextInput` — `bg-surface-panel border-border-default rounded-comfortable text-caption-lg`.
+
+### Anti-patterns
+
+- **Custom modal containers** — always use `BaseModal`
+- **`border-border-subtle`** on modals — modals use `border-border-strong`
+- **`className` on `BaseModal`** — not accepted; use typed props
+- **Inline sidebar nav** — use `ModalSidebar` via the `sidebar` prop
+- **Footer inside `children`** — use the `footer` prop with `ModalFooter` for proper pinned layout
+- **`style={{ width }}` on progress bars** — use `--progress` CSS variable
+- **Render helpers inside modal components** (`renderTab()`, `renderContent()`) — extract into standalone components in a subdirectory
+- **Raw `<input>` or `<select>`** — use `TextInput`, `TextArea`, `Select`
+- **`text-[Npx]` or `font-[var(--fw-*)]`** in modal content — use typography presets
+
+---
+
 ## Runtime CSS Variables
 
 Two exceptions exist for runtime-computed values (documented per Rule 21):

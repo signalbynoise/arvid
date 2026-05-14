@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LogOut, Settings, UserRound, ToggleRight, ToggleLeft, CreditCard } from 'lucide-react';
+import { LogOut, UserRound, ToggleRight, ToggleLeft, CreditCard } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
@@ -133,7 +133,7 @@ export function UserMenu() {
         onClick={() => setIsOpen(prev => !prev)}
         title={fullName || email}
       >
-        <Settings size={ICON_SIZE.sm} />
+        <UserRound size={ICON_SIZE.sm} />
       </IconButton>
 
       <DropdownPanel isOpen={isOpen} position="below" align="end">

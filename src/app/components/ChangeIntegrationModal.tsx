@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
+import { ModalFooter } from './ui/ModalFooter';
 import { SubmitButton } from './ui/SubmitButton';
 
 interface ChangeIntegrationModalProps {
@@ -38,26 +39,24 @@ export function ChangeIntegrationModal({
     }
   }, [isOpen, handleKeyDown]);
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title={`Change ${integrationName}`} size="sm">
-      <div className="space-y-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle size={ICON_SIZE.lg} className="text-status-warning shrink-0 mt-0.5" />
-          <div className="space-y-2">
-            <p className="text-caption-lg text-text-primary">
-              This project is currently linked to <span className="text-text-primary font-[var(--fw-semibold)]">{currentValue}</span>.
-            </p>
-            <p className="text-caption-lg text-text-tertiary">
-              Changing the {integrationName.toLowerCase()} will affect how Arvid processes context for this project. This cannot be undone automatically.
-            </p>
-          </div>
-        </div>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={onClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleConfirm} label="Confirm" />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={onClose} className="btn-ghost">
-            Cancel
-          </button>
-          <SubmitButton onClick={handleConfirm} label="Confirm" />
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} title={`Change ${integrationName}`} size="sm" footer={modalFooter}>
+      <div className="flex items-start gap-3">
+        <AlertTriangle size={ICON_SIZE.lg} className="text-status-warning shrink-0 mt-0.5" />
+        <div className="space-y-2">
+          <p className="text-caption-lg text-text-primary">
+            This project is currently linked to <span className="text-caption-lg">{currentValue}</span>.
+          </p>
+          <p className="text-caption-lg text-text-tertiary">
+            Changing the {integrationName.toLowerCase()} will affect how Arvid processes context for this project. This cannot be undone automatically.
+          </p>
         </div>
       </div>
     </BaseModal>

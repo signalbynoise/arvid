@@ -120,7 +120,7 @@ export async function getImages(
 }
 
 export function extractDesignSummary(node: FigmaNode, depth = 0): string {
-  const MAX_DEPTH = 3;
+  const MAX_DEPTH = 5;
   const indent = '  '.repeat(depth);
   const parts: string[] = [];
 

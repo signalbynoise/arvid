@@ -1,21 +1,26 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Trash2, Pencil, Users, Layers, Settings as SettingsIcon, Upload, LoaderPinwheel, Loader2, X } from 'lucide-react';
+import { Users, Layers, Settings as SettingsIcon } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectWorkspaces, selectActiveWorkspaceId, selectTeams, selectMembers, selectInvitations } from '../store';
 import { useAuth } from '../auth/AuthProvider';
-import { getRoleLabel, canManageTeams, canManageMembers, canChangeRoles, canDeleteWorkspace } from '../domain/workspaces';
+import { canManageTeams, canManageMembers, canChangeRoles as canChangeRolesFn, canDeleteWorkspace } from '../domain/workspaces';
 import { BaseModal } from './BaseModal';
-import { PendingInvitationList } from './PendingInvitationList';
+import { ModalSidebar } from './ui/ModalSidebar';
+import type { ModalSidebarItem } from './ui/ModalSidebar';
+import { ModalFooter } from './ui/ModalFooter';
+import { SubmitButton } from './ui/SubmitButton';
+import { GeneralTab } from './workspace-settings/GeneralTab';
+import { TeamsTab } from './workspace-settings/TeamsTab';
+import { MembersTab } from './workspace-settings/MembersTab';
 import { supabase } from '../lib/supabase';
 import { logger } from '../logger';
 import type { WorkspaceRole } from '../types';
-import { SubmitButton } from './ui/SubmitButton';
 
 const settingsLog = logger.create('WorkspaceSettings');
 
 type SettingsTab = 'general' | 'teams' | 'members';
 
-const TAB_CONFIG: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
+const TAB_CONFIG: ModalSidebarItem[] = [
   { id: 'general', label: 'General', icon: <SettingsIcon size={ICON_SIZE.sm} /> },
   { id: 'teams', label: 'Teams', icon: <Layers size={ICON_SIZE.sm} /> },
   { id: 'members', label: 'Members', icon: <Users size={ICON_SIZE.sm} /> },
@@ -49,15 +54,11 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
   const leaveWorkspace = useStore(s => s.leaveWorkspace);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
-  const [editingName, setEditingName] = useState(false);
-  const [nameValue, setNameValue] = useState('');
-  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
-  const [teamNameValue, setTeamNameValue] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [confirmLeave, setConfirmLeave] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
-  const [nameError, setNameError] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [nameValue, setNameValue] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const workspace = useMemo(
     () => workspaces.find(w => w.id === activeWorkspaceId),
@@ -90,14 +91,51 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
   }, [isOpen, activeWorkspaceId, loadTeams, loadMembers, loadInvitations]);
 
   useEffect(() => {
-    if (workspace) setNameValue(workspace.name);
-  }, [workspace]);
+    if (workspace) {
+      setNameValue(workspace.name);
+      setNameError(null);
+    }
+  }, [workspace?.name]);
 
   if (!workspace) return null;
 
+  const nameDirty = nameValue !== workspace.name;
+
+  const handleSaveName = async () => {
+    const trimmed = nameValue.trim();
+    if (!trimmed) {
+      setNameValue(workspace.name);
+      setNameError(null);
+      return;
+    }
+    if (trimmed !== workspace.name) {
+      setIsSaving(true);
+      setNameError(null);
+      const error = await updateWorkspace(workspace.id, { name: trimmed });
+      setIsSaving(false);
+      if (error) {
+        setNameError(
+          typeof error === 'string' && error.includes('already exists')
+            ? 'A workspace with this name already exists.'
+            : 'Failed to rename workspace.',
+        );
+      }
+    }
+  };
+
+  const handleCancelName = () => {
+    setNameValue(workspace.name);
+    setNameError(null);
+  };
+
+  const isLastWorkspace = workspaces.length <= 1;
+  const isPersonalWorkspace = workspace.createdBy === user?.id;
+  const computedCanLeave = userRole !== 'owner' && !!currentMember && !isLastWorkspace;
+  const computedCanDelete = canDeleteWorkspace(userRole) && !isLastWorkspace && !isPersonalWorkspace;
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !workspace) return;
+    if (!file) return;
 
     setLogoUploading(true);
     settingsLog.info('handleLogoUpload', 'Uploading workspace logo', { workspaceId: workspace.id, size: file.size });
@@ -128,32 +166,15 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
   };
 
   const handleRemoveLogo = async () => {
-    if (!workspace) return;
     settingsLog.info('handleRemoveLogo', 'Removing workspace logo', { workspaceId: workspace.id });
     await updateWorkspace(workspace.id, { logoUrl: null });
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameValue.trim();
-    if (trimmed && trimmed !== workspace.name) {
-      setNameError(null);
-      const error = await updateWorkspace(workspace.id, { name: trimmed });
-      if (error) {
-        setNameError(error.includes('already exists') ? 'A workspace with this name already exists.' : 'Failed to rename workspace.');
-        return;
-      }
+  const handleLeaveWorkspace = async () => {
+    if (currentMember) {
+      const success = await leaveWorkspace(workspace.id, currentMember.id);
+      if (success) onClose();
     }
-    setEditingName(false);
-    setNameError(null);
-  };
-
-  const handleSaveTeamName = async (teamId: string) => {
-    const trimmed = teamNameValue.trim();
-    if (trimmed) {
-      await updateTeam(teamId, trimmed);
-    }
-    setEditingTeamId(null);
-    setTeamNameValue('');
   };
 
   const handleDeleteWorkspace = async () => {
@@ -161,325 +182,64 @@ export function WorkspaceSettingsModal({ isOpen, onClose, onCreateTeam, onInvite
     onClose();
   };
 
-  const renderGeneralTab = () => (
-    <div className="p-5 space-y-8">
-      <div className="space-y-3">
-        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-          Logo
-        </label>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-card bg-surface-frost-04 border border-border-default flex items-center justify-center overflow-hidden shrink-0">
-            {workspace.logoUrl ? (
-              <img src={workspace.logoUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <LoaderPinwheel size={ICON_SIZE.xl} className="text-text-quaternary" />
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/svg+xml"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
-            {canManageTeams(userRole) && (
-              <button
-                onClick={() => logoInputRef.current?.click()}
-                disabled={logoUploading}
-                className="btn-ghost flex items-center gap-1.5"
-              >
-                {logoUploading ? <Loader2 size={ICON_SIZE.sm} className="animate-spin" /> : <Upload size={ICON_SIZE.sm} />}
-                <span>{logoUploading ? 'Uploading...' : 'Upload'}</span>
-              </button>
-            )}
-            {workspace.logoUrl && canManageTeams(userRole) && (
-              <button
-                onClick={handleRemoveLogo}
-                className="p-1.5 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
-                title="Remove logo"
-              >
-                <X size={ICON_SIZE.sm} />
-              </button>
-            )}
-          </div>
-        </div>
-        <p className="text-[11px] text-text-empty">PNG, JPG, WebP or SVG. Max 2 MB.</p>
-      </div>
-
-      <div className="space-y-3">
-        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-          Workspace Name
-        </label>
-        {editingName ? (
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={nameValue}
-                onChange={(e) => { setNameValue(e.target.value); setNameError(null); }}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setEditingName(false); setNameError(null); } }}
-                autoFocus
-                className={`flex-1 bg-surface-frost-02 border rounded-comfortable px-3 py-2 text-[14px] text-text-primary focus:outline-none transition-all ${nameError ? 'border-status-error' : 'border-border-default focus:border-border-focus'}`}
-              />
-              <SubmitButton onClick={handleSaveName} label="Save" />
-              <button onClick={() => { setEditingName(false); setNameError(null); }} className="btn-ghost">
-                Cancel
-              </button>
-            </div>
-            {nameError && (
-              <p className="text-[12px] text-status-error">{nameError}</p>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-[14px] text-text-primary">{workspace.name}</span>
-            {canManageTeams(userRole) && (
-              <button onClick={() => setEditingName(true)} className="text-text-quaternary hover:text-text-secondary transition-colors">
-                <Pencil size={ICON_SIZE.sm} />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <label className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-          Slug
-        </label>
-        <span className="block text-[14px] text-text-secondary font-mono">{workspace.slug}</span>
-      </div>
-
-      {(() => {
-        const isLastWorkspace = workspaces.length <= 1;
-        const isPersonalWorkspace = workspace.createdBy === user?.id;
-        const canLeave = userRole !== 'owner' && currentMember && !isLastWorkspace;
-        const canDelete = canDeleteWorkspace(userRole) && !isLastWorkspace && !isPersonalWorkspace;
-
-        if (!canLeave && !canDelete) return null;
-
-        return (
-          <div className="pt-4 border-t border-border-subtle space-y-3">
-            <h3 className="text-[13px] font-[var(--fw-medium)] text-status-error">Danger Zone</h3>
-
-            {canLeave && (
-              confirmLeave ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-[13px] text-text-secondary">You will lose access to this workspace and its projects.</span>
-                  <button
-                    onClick={async () => {
-                      const success = await leaveWorkspace(workspace.id, currentMember!.id);
-                      if (success) onClose();
-                    }}
-                    className="btn-primary shrink-0"
-                  >
-                    Confirm
-                  </button>
-                  <button onClick={() => setConfirmLeave(false)} className="btn-ghost shrink-0">
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmLeave(true)} className="btn-primary">
-                  Leave workspace
-                </button>
-              )
-            )}
-
-            {canDelete && (
-              confirmDelete ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-[13px] text-text-secondary">This will archive the workspace and all its teams and projects.</span>
-                  <button onClick={handleDeleteWorkspace} className="btn-primary shrink-0">
-                    Confirm
-                  </button>
-                  <button onClick={() => setConfirmDelete(false)} className="btn-ghost shrink-0">
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)} className="btn-primary">
-                  Delete workspace
-                </button>
-              )
-            )}
-          </div>
-        );
-      })()}
-    </div>
+  const sidebar = (
+    <ModalSidebar
+      items={TAB_CONFIG}
+      activeId={activeTab}
+      onSelect={(id) => setActiveTab(id as SettingsTab)}
+    />
   );
 
-  const renderTeamsTab = () => (
-    <div className="p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-          Teams ({teams.length})
-        </span>
-        {canManageTeams(userRole) && (
-          <button onClick={onCreateTeam} className="flex items-center gap-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors">
-            <Plus size={ICON_SIZE.sm} />
-            <span>Add team</span>
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        {teams.map(team => (
-          <div
-            key={team.id}
-            className="flex items-center justify-between p-3 rounded-card bg-surface-frost-02 border border-border-default"
-          >
-            {editingTeamId === team.id ? (
-              <div className="flex gap-2 flex-1 mr-2">
-                <input
-                  type="text"
-                  value={teamNameValue}
-                  onChange={(e) => setTeamNameValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTeamName(team.id); if (e.key === 'Escape') setEditingTeamId(null); }}
-                  autoFocus
-                  className="flex-1 bg-surface-frost-04 border border-border-default rounded-comfortable px-2 py-1 text-[13px] text-text-primary focus:outline-none focus:border-border-focus transition-all"
-                />
-                <button onClick={() => handleSaveTeamName(team.id)} className="text-[12px] text-text-secondary hover:text-text-primary">Save</button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <span className="text-[13px] font-[var(--fw-medium)] text-text-primary">{team.name}</span>
-                <span className="text-[11px] text-text-quaternary">
-                  {projectCountByTeam.get(team.id) ?? 0} projects
-                </span>
-              </div>
-            )}
-
-            {canManageTeams(userRole) && editingTeamId !== team.id && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => { setEditingTeamId(team.id); setTeamNameValue(team.name); }}
-                  className="p-1 text-text-quaternary hover:text-text-secondary transition-colors rounded-standard"
-                  title="Rename team"
-                >
-                  <Pencil size={ICON_SIZE.xs} />
-                </button>
-                <button
-                  onClick={() => deleteTeam(team.id)}
-                  className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
-                  title="Delete team"
-                >
-                  <Trash2 size={ICON_SIZE.xs} />
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {teams.length === 0 && (
-          <p className="text-[13px] text-text-empty text-center py-6">No teams yet.</p>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderMembersTab = () => (
-    <div className="p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-          Members ({members.length})
-        </span>
-        {canManageMembers(userRole) && (
-          <button onClick={onInviteMember} className="flex items-center gap-1.5 text-[12px] font-[var(--fw-medium)] text-text-tertiary hover:text-text-primary transition-colors">
-            <Plus size={ICON_SIZE.sm} />
-            <span>Invite</span>
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        {members.map(member => (
-          <div
-            key={member.id}
-            className="flex items-center justify-between p-3 rounded-card bg-surface-frost-02 border border-border-default"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-7 w-7 rounded-full bg-surface-frost-08 flex items-center justify-center shrink-0">
-                <span className="text-[11px] font-[var(--fw-medium)] text-text-primary">
-                  {(member.email ?? '?')[0].toUpperCase()}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[13px] text-text-primary truncate">{member.email ?? 'Unknown'}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {canChangeRoles(userRole) && member.userId !== user?.id ? (
-                <select
-                  value={member.role}
-                  onChange={(e) => updateMemberRole(member.id, e.target.value)}
-                  className="bg-surface-frost-04 border border-border-default rounded-comfortable px-2 py-1 text-[12px] text-text-secondary focus:outline-none focus:border-border-focus appearance-none cursor-pointer"
-                >
-                  <option value="owner">Owner</option>
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                  <option value="guest">Guest</option>
-                </select>
-              ) : (
-                <span className="text-[12px] font-[var(--fw-medium)] text-text-tertiary px-2 py-1 bg-surface-frost-04 rounded-pill">
-                  {getRoleLabel(member.role as WorkspaceRole)}
-                </span>
-              )}
-
-              {canManageMembers(userRole) && member.userId !== user?.id && (
-                <button
-                  onClick={() => removeMember(member.id)}
-                  className="p-1 text-text-quaternary hover:text-status-error transition-colors rounded-standard"
-                  title="Remove member"
-                >
-                  <Trash2 size={ICON_SIZE.xs} />
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {members.length === 0 && (
-          <p className="text-[13px] text-text-empty text-center py-6">No members found.</p>
-        )}
-      </div>
-
-      <PendingInvitationList
-        invitations={invitations}
-        teams={teams}
-        canManage={canManageMembers(userRole)}
-        onCancel={cancelInvitation}
-      />
-    </div>
-  );
+  const generalFooter = activeTab === 'general' && nameDirty ? (
+    <ModalFooter>
+      <button onClick={handleCancelName} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSaveName} label="Save" isLoading={isSaving} />
+    </ModalFooter>
+  ) : undefined;
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Workspace Settings" size="xl">
-      <div className="flex min-h-[400px]">
-        <nav className="w-[160px] border-r border-border-subtle p-2 shrink-0">
-          {TAB_CONFIG.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-comfortable text-[13px] font-[var(--fw-medium)] transition-colors text-left ${
-                activeTab === tab.id
-                  ? 'bg-surface-frost-08 text-text-primary'
-                  : 'text-text-tertiary hover:bg-surface-frost-04 hover:text-text-secondary'
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === 'general' && renderGeneralTab()}
-          {activeTab === 'teams' && renderTeamsTab()}
-          {activeTab === 'members' && renderMembersTab()}
-        </div>
-      </div>
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Workspace Settings" size="xl" sidebar={sidebar} footer={generalFooter}>
+      {activeTab === 'general' && (
+        <GeneralTab
+          workspace={workspace}
+          userRole={userRole}
+          nameValue={nameValue}
+          onNameChange={(v) => { setNameValue(v); setNameError(null); }}
+          nameError={nameError}
+          logoInputRef={logoInputRef}
+          logoUploading={logoUploading}
+          onLogoUpload={handleLogoUpload}
+          onRemoveLogo={handleRemoveLogo}
+          canLeave={computedCanLeave}
+          canDelete={computedCanDelete}
+          onLeaveWorkspace={handleLeaveWorkspace}
+          onDeleteWorkspace={handleDeleteWorkspace}
+        />
+      )}
+      {activeTab === 'teams' && (
+        <TeamsTab
+          teams={teams}
+          projectCountByTeam={projectCountByTeam}
+          canManage={canManageTeams(userRole)}
+          onCreateTeam={onCreateTeam}
+          onRenameTeam={updateTeam}
+          onDeleteTeam={deleteTeam}
+        />
+      )}
+      {activeTab === 'members' && (
+        <MembersTab
+          members={members}
+          currentUserId={user?.id}
+          canManageMembers={canManageMembers(userRole)}
+          canChangeRoles={canChangeRolesFn(userRole)}
+          invitations={invitations}
+          teams={teams}
+          onInviteMember={onInviteMember}
+          onUpdateRole={updateMemberRole}
+          onRemoveMember={removeMember}
+          onCancelInvitation={cancelInvitation}
+        />
+      )}
     </BaseModal>
   );
 }

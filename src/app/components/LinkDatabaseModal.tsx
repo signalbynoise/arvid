@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LoaderPinwheel, Database } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
+import { PickerList, PickerItem } from './ui/PickerList';
 import { useStore } from '../store';
 import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
@@ -48,28 +49,21 @@ export function LinkDatabaseModal({ isOpen, onClose, projectId, onLinked }: Link
           <LoaderPinwheel size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : supabaseProjects.length === 0 ? (
-        <p className="text-[13px] text-text-quaternary text-center py-8">No active projects found.</p>
+        <p className="text-caption-lg text-text-quaternary text-center py-8">No active projects found.</p>
       ) : (
-        <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-0.5">
-          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
+        <PickerList>
+          {error && <p className="text-caption-lg text-status-error px-3">{error}</p>}
           {supabaseProjects.map(proj => (
-            <button
+            <PickerItem
               key={proj.id}
-              type="button"
+              icon={<Database size={ICON_SIZE.md} />}
+              label={proj.name}
+              right={<span className="text-label text-text-quaternary">{proj.region}</span>}
               disabled={isLinking}
               onClick={() => handleSelect(proj.id)}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
-            >
-              <span className="shrink-0 text-text-quaternary">
-                <Database size={ICON_SIZE.md} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[13px] text-text-secondary truncate">{proj.name}</p>
-                <p className="text-[12px] text-text-quaternary">{proj.region}</p>
-              </div>
-            </button>
+            />
           ))}
-        </div>
+        </PickerList>
       )}
     </BaseModal>
   );

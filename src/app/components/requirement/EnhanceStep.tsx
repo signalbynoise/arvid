@@ -1,9 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import { ArrowLeft, LoaderPinwheel } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { LoaderPinwheel, Pencil, Image, BarChart3 } from 'lucide-react';
 import { ICON_SIZE } from '../../../constants/icons';
 import { FormField } from '../ui/FormField';
 import { TextInput } from '../ui/TextInput';
 import { TextArea } from '../ui/TextArea';
+import { ModalSidebar } from '../ui/ModalSidebar';
+import type { ModalSidebarItem } from '../ui/ModalSidebar';
+import { ModalFooter } from '../ui/ModalFooter';
 import { SubmitButton } from '../ui/SubmitButton';
 import { FigmaDesignGrid } from './FigmaDesignGrid';
 import { ScoreBadge } from '../ScoreBadge';
@@ -21,6 +24,14 @@ interface ScoreAnalysis {
   riskReasoning?: string;
 }
 
+type EnhanceTab = 'general' | 'designs' | 'analysis';
+
+const TAB_CONFIG: ModalSidebarItem[] = [
+  { id: 'general', label: 'General', icon: <Pencil size={ICON_SIZE.sm} /> },
+  { id: 'designs', label: 'Design Files', icon: <Image size={ICON_SIZE.sm} /> },
+  { id: 'analysis', label: 'Analysis', icon: <BarChart3 size={ICON_SIZE.sm} /> },
+];
+
 interface Props {
   isEnhancing: boolean;
   title: string;
@@ -31,16 +42,64 @@ interface Props {
   onDescriptionChange: (value: string) => void;
   onBack: () => void;
   onCreate: () => void;
+  renderSidebar: (sidebar: React.ReactNode) => void;
+  renderFooter: (footer: React.ReactNode | undefined) => void;
 }
 
-export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, scores, onTitleChange, onDescriptionChange, onBack, onCreate }: Props) {
+export function EnhanceStep({
+  isEnhancing,
+  title,
+  description,
+  figmaDesigns,
+  scores,
+  onTitleChange,
+  onDescriptionChange,
+  onBack,
+  onCreate,
+  renderSidebar,
+  renderFooter,
+}: Props) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [activeTab, setActiveTab] = useState<EnhanceTab>('general');
+  const hasFigmaDesigns = figmaDesigns.length > 0;
+
+  const visibleTabs = hasFigmaDesigns
+    ? TAB_CONFIG
+    : [TAB_CONFIG[0], TAB_CONFIG[2]];
 
   useEffect(() => {
     if (!isEnhancing && descriptionRef.current) {
       descriptionRef.current.focus();
     }
   }, [isEnhancing]);
+
+  useEffect(() => {
+    if (isEnhancing) {
+      renderSidebar(null);
+      renderFooter(undefined);
+      return;
+    }
+
+    renderSidebar(
+      <ModalSidebar
+        items={visibleTabs}
+        activeId={activeTab}
+        onSelect={(id) => setActiveTab(id as EnhanceTab)}
+      />,
+    );
+
+    const backButton = (
+      <button onClick={onBack} className="btn-ghost">
+        Back
+      </button>
+    );
+
+    renderFooter(
+      <ModalFooter back={backButton}>
+        <SubmitButton onClick={onCreate} disabled={!description.trim()} label="Create" />
+      </ModalFooter>,
+    );
+  }, [isEnhancing, activeTab, description, hasFigmaDesigns]);
 
   if (isEnhancing) {
     return (
@@ -53,12 +112,10 @@ export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, sco
     );
   }
 
-  const hasFigmaDesigns = figmaDesigns.length > 0;
-
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex gap-10">
-        <div className="flex-1 min-w-0 flex flex-col gap-6">
+    <>
+      {activeTab === 'general' && (
+        <div className="p-5 space-y-4">
           <FormField label="Title">
             <TextInput
               value={title}
@@ -72,51 +129,55 @@ export function EnhanceStep({ isEnhancing, title, description, figmaDesigns, sco
               value={description}
               onChange={onDescriptionChange}
               textareaRef={descriptionRef}
-              className="min-h-[240px]"
             />
           </FormField>
         </div>
+      )}
 
-        {hasFigmaDesigns && (
-          <div className="flex-1 min-w-0 self-stretch">
+      {activeTab === 'designs' && (
+        <div className="p-5">
+          {hasFigmaDesigns ? (
             <FigmaDesignGrid designs={figmaDesigns} />
-          </div>
-        )}
-      </div>
-
-      {scores?.clarityScore != null && scores?.riskScore != null && (
-        <div className="rounded-card bg-surface-frost-02 border border-border-default p-4 space-y-3">
-          <span className="text-[11px] font-[var(--fw-medium)] text-text-tertiary uppercase tracking-widest">
-            Analysis
-          </span>
-          <div className="flex gap-4">
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <ScoreBadge label="Clarity" score={scores.clarityScore} />
-              </div>
-              {scores.clarityReasoning && (
-                <p className="text-caption-lg text-text-tertiary">{scores.clarityReasoning}</p>
-              )}
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <ScoreBadge label="Risk" score={scores.riskScore} invert />
-              </div>
-              {scores.riskReasoning && (
-                <p className="text-caption-lg text-text-tertiary">{scores.riskReasoning}</p>
-              )}
-            </div>
-          </div>
+          ) : (
+            <p className="text-caption-lg text-text-empty text-center py-6">
+              No design files linked.
+            </p>
+          )}
         </div>
       )}
 
-      <div className="flex justify-between items-center pt-6">
-        <button onClick={onBack} className="btn-ghost flex items-center gap-1.5 -ml-2">
-          <ArrowLeft size={ICON_SIZE.sm} />
-          <span>Back</span>
-        </button>
-        <SubmitButton onClick={onCreate} disabled={!description.trim()} label="Create new requirement" />
-      </div>
-    </div>
+      {activeTab === 'analysis' && (
+        <div className="p-5 space-y-4">
+          {scores?.clarityScore != null && scores?.riskScore != null ? (
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ScoreBadge label="Clarity" score={scores.clarityScore} />
+                </div>
+                {scores.clarityReasoning && (
+                  <FormField label="Clarity Analysis">
+                    <TextArea value={scores.clarityReasoning} onChange={() => {}} disabled />
+                  </FormField>
+                )}
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ScoreBadge label="Risk" score={scores.riskScore} invert />
+                </div>
+                {scores.riskReasoning && (
+                  <FormField label="Risk Analysis">
+                    <TextArea value={scores.riskReasoning} onChange={() => {}} disabled />
+                  </FormField>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-caption-lg text-text-empty text-center py-6">
+              Analysis scores are being computed...
+            </p>
+          )}
+        </div>
+      )}
+    </>
   );
 }

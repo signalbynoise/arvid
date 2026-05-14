@@ -282,7 +282,7 @@ export async function enhanceRequirement(rawText: string, context?: EnhanceConte
     contextBlock += `\n\n${buildDbContextBlock(context.dbContext)}Use the database schema context to ground the requirement in the actual data model, table structures, and relationships of the project.`;
   }
   if (context?.figmaDesigns && context.figmaDesigns.length > 0) {
-    contextBlock += `\n\n${buildFigmaDesignContextBlock(context.figmaDesigns)}Use the Figma design context to understand the intended UI layout, components, and visual structure. Reference specific design elements when writing acceptance criteria. Do not ask questions about UI elements that are already specified in the design.`;
+    contextBlock += `\n\n${buildFigmaDesignContextBlock(context.figmaDesigns)}CRITICAL: Figma design files are attached. You MUST describe the ACTUAL design — the specific screens, components, layout structure, text content, and interactions visible in the design data above. Do NOT write a generic "implement the Figma file" description. Instead, enumerate the concrete UI elements, their arrangement, states, and behaviors based on the structural summary provided. The requirement description must read as if someone could implement it WITHOUT access to the Figma file.`;
   }
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -309,7 +309,7 @@ Rules for the description:
 - Be specific about what is expected: inputs, outputs, constraints, acceptance criteria.
 - Include edge cases and error handling considerations if they can be reasonably inferred.
 - Use terminology and framing consistent with the project context and existing requirements.
-- If Figma design context is provided, use it to understand the visual structure, component hierarchy, and layout. Reference specific design elements when writing acceptance criteria.
+- If Figma design context is provided, you MUST describe the specific screens, components, text content, layout structure, and interactions from the design data. NEVER write generic statements like "implement the attached Figma file" — instead, enumerate the actual UI elements, their arrangement, and expected behaviors so the requirement is self-contained and implementable without the Figma file.
 - Do NOT duplicate or restate any existing requirement — the new requirement must add distinct value.
 
 Your output MUST be valid JSON with exactly these keys:

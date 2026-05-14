@@ -6,6 +6,7 @@ import { BaseModal } from './BaseModal';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { SubmitButton } from './ui/SubmitButton';
+import { ModalFooter } from './ui/ModalFooter';
 
 interface Props {
   isOpen: boolean;
@@ -59,24 +60,24 @@ export function RenameProjectModal({ isOpen, onClose, projectId, currentName }: 
 
   const displayError = validationError || error;
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Project" size="sm">
-      <div className="flex flex-col gap-6">
-        <FormField label="Name" error={displayError}>
-          <TextInput
-            value={name}
-            onChange={(v) => { setName(v); setValidationError(null); }}
-            onKeyDown={handleKeyDown}
-            inputRef={inputRef}
-            hasError={!!displayError}
-          />
-        </FormField>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={onClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Save" loadingLabel="Saving..." isLoading={isSubmitting} />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={onClose} className="btn-ghost">Cancel</button>
-          <SubmitButton onClick={handleSubmit} disabled={!name.trim()} label="Save" loadingLabel="Saving..." isLoading={isSubmitting} />
-        </div>
-      </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Rename Project" size="sm" footer={modalFooter}>
+      <FormField label="Name" error={displayError}>
+        <TextInput
+          value={name}
+          onChange={(v) => { setName(v); setValidationError(null); }}
+          onKeyDown={handleKeyDown}
+          inputRef={inputRef}
+          hasError={!!displayError}
+        />
+      </FormField>
     </BaseModal>
   );
 }

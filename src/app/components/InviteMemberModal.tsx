@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
 import { useSendInvitation } from '../machines/mutations/useSendInvitation';
 import { BaseModal } from './BaseModal';
+import { ModalFooter } from './ui/ModalFooter';
 import { FormField } from './ui/FormField';
 import { TextInput } from './ui/TextInput';
 import { DropdownPanel } from './ui/DropdownPanel';
@@ -80,42 +81,42 @@ export function InviteMemberModal({ isOpen, onClose, workspaceId, scope, scopeId
     reset();
   };
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title={SCOPE_TITLES[scope]} size="sm">
-      <div className="flex flex-col gap-6">
-        <div className="relative">
-          <FormField
-            label="Name or Email"
-            error={error}
-            hint="Add multiple users on separate rows"
-          >
-            <TextInput
-              value={email}
-              onChange={(v) => setEmail(v)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-              placeholder="name@mail.com"
-              type="email"
-              autoComplete="off"
-              hasError={!!error}
-              inputRef={inputRef}
-            />
-          </FormField>
-          <DropdownPanel isOpen={showSuggestions && suggestions.length > 0} position="below">
-            {suggestions.map((s, i) => (
-              <button
-                key={s.id}
-                onClick={() => selectSuggestion(s)}
-                className={`w-full px-3 py-2 text-left text-caption-lg transition-colors ${i === activeSuggestionIndex ? 'bg-surface-frost-08 text-text-primary' : 'text-text-tertiary hover:text-text-primary'}`}
-              >{s.email}</button>
-            ))}
-          </DropdownPanel>
-        </div>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={handleClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSubmit} disabled={!email.trim()} label="Add new user" loadingLabel="Adding..." isLoading={isSubmitting} />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <SubmitButton onClick={handleSubmit} disabled={!email.trim()} label="Add new user" loadingLabel="Adding..." isLoading={isSubmitting} />
-        </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={handleClose} title={SCOPE_TITLES[scope]} size="sm" footer={modalFooter}>
+      <div className="relative">
+        <FormField
+          label="Name or Email"
+          error={error}
+          hint="Add multiple users on separate rows"
+        >
+          <TextInput
+            value={email}
+            onChange={(v) => setEmail(v)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+            placeholder="name@mail.com"
+            type="email"
+            autoComplete="off"
+            hasError={!!error}
+            inputRef={inputRef}
+          />
+        </FormField>
+        <DropdownPanel isOpen={showSuggestions && suggestions.length > 0} position="below">
+          {suggestions.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => selectSuggestion(s)}
+              className={`w-full px-3 py-2 text-left text-caption-lg transition-colors ${i === activeSuggestionIndex ? 'bg-surface-frost-08 text-text-primary' : 'text-text-tertiary hover:text-text-primary'}`}
+            >{s.email}</button>
+          ))}
+        </DropdownPanel>
       </div>
     </BaseModal>
   );

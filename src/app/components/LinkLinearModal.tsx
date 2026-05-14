@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LoaderPinwheel, ChevronLeft } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
+import { PickerList, PickerItem } from './ui/PickerList';
 import { useStore } from '../store';
 import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
@@ -66,51 +67,45 @@ export function LinkLinearModal({ isOpen, onClose, projectId, onLinked }: LinkLi
         </div>
       ) : selectedTeamId === null ? (
         linearTeams.length === 0 ? (
-          <p className="text-[13px] text-text-quaternary text-center py-8">No teams found.</p>
+          <p className="text-caption-lg text-text-quaternary text-center py-8">No teams found.</p>
         ) : (
-          <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-0.5">
+          <PickerList>
             {linearTeams.map(team => (
-              <button
+              <PickerItem
                 key={team.id}
-                type="button"
+                label={team.name}
+                right={<span className="font-mono text-label text-text-quaternary">{team.key}</span>}
                 onClick={() => handleSelectTeam(team.id)}
-                className="flex items-center justify-between w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04"
-              >
-                <span className="text-[13px] text-text-secondary">{team.name}</span>
-                <span className="font-mono text-[12px] text-text-quaternary">{team.key}</span>
-              </button>
+              />
             ))}
-          </div>
+          </PickerList>
         )
       ) : (
-        <div className="max-h-[320px] overflow-y-auto hide-scrollbar">
+        <PickerList>
           <button
             type="button"
             onClick={() => setSelectedTeamId(null)}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[13px] text-text-quaternary hover:text-text-secondary transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-2 text-caption-lg text-text-quaternary hover:text-text-secondary transition-colors"
           >
             <ChevronLeft size={ICON_SIZE.sm} />
             <span>Back to teams</span>
           </button>
-          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
+          {error && <p className="text-caption-lg text-status-error px-3">{error}</p>}
           <div className="space-y-0.5 mt-1">
             {linearProjects.length === 0 ? (
-              <p className="text-[13px] text-text-quaternary text-center py-6">No projects in this team.</p>
+              <p className="text-caption-lg text-text-quaternary text-center py-6">No projects in this team.</p>
             ) : (
               linearProjects.map(proj => (
-                <button
+                <PickerItem
                   key={proj.id}
-                  type="button"
+                  label={proj.name}
                   disabled={isLinking}
                   onClick={() => handleSelectProject(proj.id, proj.name)}
-                  className="flex items-center w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
-                >
-                  <span className="text-[13px] text-text-secondary">{proj.name}</span>
-                </button>
+                />
               ))
             )}
           </div>
-        </div>
+        </PickerList>
       )}
     </BaseModal>
   );

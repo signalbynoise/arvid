@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Image, Trash2, ExternalLink, Loader2, Plus } from 'lucide-react';
 import { ICON_SIZE } from '../../../constants/icons';
-import { FormField } from '../ui/FormField';
 import { TextInput } from '../ui/TextInput';
 import { api } from '../../api';
 import type { FigmaDesignLink } from '../../api';
@@ -101,45 +100,22 @@ export function DesignFilesTab({ requirementId }: Props) {
   }
 
   return (
-    <div className="p-5 space-y-6">
-      {links.length > 0 && (
-        <FormField label={`Linked Designs (${links.length})`}>
-          <div className="space-y-2">
-            {links.map(link => (
-              <DesignLinkRow
-                key={link.id}
-                link={link}
-                isRemoving={removingId === link.id}
-                onRemove={() => handleRemove(link.id)}
-              />
-            ))}
-          </div>
-        </FormField>
-      )}
-
-      {links.length === 0 && loadState === 'ready' && (
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <Image size={ICON_SIZE['2xl']} className="text-text-empty" />
-          <p className="text-caption-lg text-text-empty">No design files linked yet</p>
-        </div>
-      )}
-
+    <div className="p-5 space-y-4">
       {isConnected && (
-        <FormField label="Add Figma Link" error={error}>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <TextInput
-                value={newUrl}
-                onChange={(val) => { setNewUrl(val); setError(null); }}
-                placeholder="Paste a Figma design URL..."
-                type="url"
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
-              />
-            </div>
+        <div>
+          <div className="relative">
+            <TextInput
+              value={newUrl}
+              onChange={(val) => { setNewUrl(val); setError(null); }}
+              placeholder="Paste a Figma design URL..."
+              type="url"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+              hasError={!!error}
+            />
             <button
               onClick={handleAdd}
               disabled={isAdding || !newUrl.trim()}
-              className="btn-primary shrink-0 flex items-center gap-1.5"
+              className="btn-primary absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1"
             >
               {isAdding ? (
                 <Loader2 size={ICON_SIZE.sm} className="animate-spin" />
@@ -149,7 +125,10 @@ export function DesignFilesTab({ requirementId }: Props) {
               Add
             </button>
           </div>
-        </FormField>
+          {error && (
+            <p className="text-label text-status-error mt-1">{error}</p>
+          )}
+        </div>
       )}
 
       {!isConnected && (
@@ -158,6 +137,25 @@ export function DesignFilesTab({ requirementId }: Props) {
             Connect your Figma account in Settings to add design links.
           </p>
         </div>
+      )}
+
+      {links.length > 0 && (
+        <div className="space-y-2">
+          {links.map(link => (
+            <DesignLinkRow
+              key={link.id}
+              link={link}
+              isRemoving={removingId === link.id}
+              onRemove={() => handleRemove(link.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {links.length === 0 && loadState === 'ready' && (
+        <p className="text-caption-lg text-text-empty text-center py-6">
+          No design files linked yet.
+        </p>
       )}
     </div>
   );

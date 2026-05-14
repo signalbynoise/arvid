@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LoaderPinwheel, Hash, Lock } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { BaseModal } from './BaseModal';
+import { PickerList, PickerItem } from './ui/PickerList';
 import { useStore } from '../store';
 import { useLinkIntegration } from '../machines/mutations/useLinkIntegration';
 
@@ -46,27 +47,22 @@ export function LinkSlackChannelModal({ isOpen, onClose, projectId }: LinkSlackC
           <LoaderPinwheel size={ICON_SIZE.lg} className="animate-spin text-text-quaternary" />
         </div>
       ) : nonImChannels.length === 0 ? (
-        <p className="text-[13px] text-text-quaternary text-center py-8">
+        <p className="text-caption-lg text-text-quaternary text-center py-8">
           No channels found. Reinstall the Slack app to grant channel permissions.
         </p>
       ) : (
-        <div className="max-h-[320px] overflow-y-auto hide-scrollbar space-y-0.5">
-          {error && <p className="text-[13px] text-status-error px-3">{error}</p>}
+        <PickerList>
+          {error && <p className="text-caption-lg text-status-error px-3">{error}</p>}
           {nonImChannels.map(ch => (
-            <button
+            <PickerItem
               key={ch.id}
-              type="button"
+              icon={ch.isPrivate ? <Lock size={ICON_SIZE.md} /> : <Hash size={ICON_SIZE.md} />}
+              label={ch.name}
               disabled={isLinking}
               onClick={() => handleSelect(ch.id)}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-comfortable text-left transition-colors hover:bg-surface-frost-04 disabled:opacity-50"
-            >
-              <span className="shrink-0 text-text-quaternary">
-                {ch.isPrivate ? <Lock size={ICON_SIZE.md} /> : <Hash size={ICON_SIZE.md} />}
-              </span>
-              <span className="text-[13px] text-text-secondary">{ch.name}</span>
-            </button>
+            />
           ))}
-        </div>
+        </PickerList>
       )}
     </BaseModal>
   );

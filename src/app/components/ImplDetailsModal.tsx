@@ -1,7 +1,9 @@
 import React from 'react';
 import { BaseModal } from './BaseModal';
+import { ModalFooter } from './ui/ModalFooter';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
+import { ICON_SIZE } from '../../constants/icons';
 import { ACCORDANCE_WEIGHTS } from '../../../shared/schemas';
 import type { Requirement } from '../types';
 import type { ImplAnalysis } from '../../../shared/schemas';
@@ -53,27 +55,24 @@ export function ImplDetailsModal({ isOpen, onClose, requirement, isChecking, onR
     </div>
   ) : undefined;
 
+  const recheckButton = onRecheck ? (
+    <button
+      className="btn-ghost flex items-center gap-2"
+      disabled={isChecking}
+      onClick={() => onRecheck(requirement.id)}
+    >
+      <AnimateIcon animate={isChecking || false}>
+        <LoaderPinwheel size={ICON_SIZE.sm} />
+      </AnimateIcon>
+      {isChecking ? 'Analyzing...' : 'Re-analyze'}
+    </button>
+  ) : undefined;
+
   const modalFooter = (
-    <>
-      <div>
-        {onRecheck && (
-          <button
-            className="btn-ghost flex items-center gap-2"
-            disabled={isChecking}
-            onClick={() => onRecheck(requirement.id)}
-          >
-            <AnimateIcon animate={isChecking || false}>
-              <LoaderPinwheel size={14} />
-            </AnimateIcon>
-            {isChecking ? 'Analyzing...' : 'Re-analyze'}
-          </button>
-        )}
-      </div>
-      <div className="flex items-center gap-3">
-        <button className="btn-ghost" onClick={onClose}>Cancel</button>
-        <button className="btn-primary">Share Analysis</button>
-      </div>
-    </>
+    <ModalFooter back={recheckButton}>
+      <button className="btn-ghost" onClick={onClose}>Cancel</button>
+      <button className="btn-primary">Share Analysis</button>
+    </ModalFooter>
   );
 
   return (
@@ -91,7 +90,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement, isChecking, onR
           <div className="h-2 bg-surface-frost-04 rounded-pill overflow-hidden">
             <div
               className={`h-full rounded-pill transition-all ${scoreBarColor(confidence * 100)}`}
-              style={{ width: `${Math.round(confidence * 100)}%` }}
+              style={{ '--progress': `${Math.round(confidence * 100)}%` } as React.CSSProperties}
             />
           </div>
         </div>
@@ -103,7 +102,7 @@ export function ImplDetailsModal({ isOpen, onClose, requirement, isChecking, onR
               <div className="h-2 bg-surface-frost-04 rounded-pill overflow-hidden">
                 <div
                   className={`h-full rounded-pill transition-all ${scoreBarColor(analysis.accordance_score)}`}
-                  style={{ width: `${analysis.accordance_score}%` }}
+                  style={{ '--progress': `${analysis.accordance_score}%` } as React.CSSProperties}
                 />
               </div>
             </div>

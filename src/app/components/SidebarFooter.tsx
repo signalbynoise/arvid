@@ -7,7 +7,7 @@ import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
 import { SlackNotifySelector } from './SlackNotifySelector';
 import { SupabaseProjectSelector } from './SupabaseProjectSelector';
-import { useStore, selectProjects, selectSelectedProjectId } from '../store';
+import { useStore } from '../store';
 import type { Project } from '../types';
 
 type IntegrationKey = 'repository' | 'project' | 'alerts' | 'database';
@@ -26,6 +26,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
 
+  const [isExpanded, setIsExpanded] = useState(true);
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
   const [unlocked, setUnlocked] = useState<Set<IntegrationKey>>(new Set());
 
@@ -91,92 +92,134 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
 
   return (
     <>
-      <div className="border-t border-border-subtle shrink-0 py-4 space-y-4">
-        {showGithub && (
-          <SidebarFooterItem
-            icon={
-              <>
-                <img src="/github.svg" alt="" className="w-3.5 h-3.5 opacity-40" />
-                {repoFetchStatus === 'fetching' && (
-                  <Loader2 size={10} className="animate-spin text-text-quaternary" />
+      <div
+        className={`border-t border-border-subtle shrink-0 flex flex-col ${
+          isExpanded ? 'p-4 gap-4' : 'px-4 py-4 gap-4'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsExpanded(prev => !prev)}
+          className="text-left text-caption-lg text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+        >
+          Integrations
+        </button>
+
+        {isExpanded ? (
+          <div className="flex flex-col gap-4">
+            {showGithub && (
+              <SidebarFooterItem
+                icon={
+                  <>
+                    <img src="/github.svg" alt="" className="w-3.5 h-3.5 opacity-40" />
+                    {repoFetchStatus === 'fetching' && (
+                      <Loader2 size={10} className="animate-spin text-text-quaternary" />
+                    )}
+                  </>
+                }
+                label="Repository"
+                isConnected={!!project.githubRepo}
+              >
+                {project.githubRepo && !isUnlocked('repository') ? (
+                  <FooterDropdownTrigger onClick={() => handleRequestChange('repository')}>
+                    <span className="text-text-primary">{project.githubRepo}</span>
+                  </FooterDropdownTrigger>
+                ) : (
+                  <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
                 )}
-              </>
-            }
-            label="Repository"
-            isConnected={!!project.githubRepo}
-          >
-            {project.githubRepo && !isUnlocked('repository') ? (
-              <FooterDropdownTrigger onClick={() => handleRequestChange('repository')}>
-                <span className="text-text-primary">{project.githubRepo}</span>
-              </FooterDropdownTrigger>
-            ) : (
-              <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
+              </SidebarFooterItem>
             )}
-          </SidebarFooterItem>
-        )}
 
-        {showLinear && (
-          <>
-            {showGithub && <div className="border-t border-border-subtle" />}
-            <SidebarFooterItem
-              icon={<img src="/linear.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
-              label="Project"
-              isConnected={!!project.linearProjectName}
-            >
-              {project.linearProjectName && !isUnlocked('project') ? (
-                <FooterDropdownTrigger onClick={() => handleRequestChange('project')}>
-                  <span className="text-text-primary">{project.linearProjectName}</span>
-                </FooterDropdownTrigger>
-              ) : (
-                <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
-              )}
-            </SidebarFooterItem>
-          </>
-        )}
+            {showSupabase && (
+              <SidebarFooterItem
+                icon={
+                  <>
+                    <img src="/supabase.svg" alt="" className="w-3.5 h-3.5 opacity-40" />
+                    {dbFetchStatus === 'fetching' && (
+                      <Loader2 size={10} className="animate-spin text-text-quaternary" />
+                    )}
+                  </>
+                }
+                label="Database"
+                isConnected={!!project.supabaseProjectRef}
+              >
+                {project.supabaseProjectRef && !isUnlocked('database') ? (
+                  <FooterDropdownTrigger onClick={() => handleRequestChange('database')}>
+                    <span className="text-text-primary">{project.supabaseProjectRef}</span>
+                  </FooterDropdownTrigger>
+                ) : (
+                  <SupabaseProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                )}
+              </SidebarFooterItem>
+            )}
 
-        {showSlack && (
-          <>
-            {(showGithub || showLinear) && <div className="border-t border-border-subtle" />}
-            <SidebarFooterItem
-              icon={<img src="/slack.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
-              label="Alerts"
-              isConnected={!!project.slackNotificationChannelId}
-            >
-              {project.slackNotificationChannelId && !isUnlocked('alerts') ? (
-                <FooterDropdownTrigger onClick={() => handleRequestChange('alerts')}>
-                  <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : 'Channel set'}</span>
-                </FooterDropdownTrigger>
-              ) : (
-                <SlackNotifySelector projectId={project.id} />
-              )}
-            </SidebarFooterItem>
-          </>
-        )}
+            {showLinear && (
+              <SidebarFooterItem
+                icon={<img src="/linear.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
+                label="Project"
+                isConnected={!!project.linearProjectName}
+              >
+                {project.linearProjectName && !isUnlocked('project') ? (
+                  <FooterDropdownTrigger onClick={() => handleRequestChange('project')}>
+                    <span className="text-text-primary">{project.linearProjectName}</span>
+                  </FooterDropdownTrigger>
+                ) : (
+                  <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                )}
+              </SidebarFooterItem>
+            )}
 
-        {showSupabase && (
-          <>
-            {(showGithub || showLinear || showSlack) && <div className="border-t border-border-subtle" />}
-            <SidebarFooterItem
-              icon={
-                <>
-                  <img src="/supabase.svg" alt="" className="w-3.5 h-3.5 opacity-40" />
-                  {dbFetchStatus === 'fetching' && (
-                    <Loader2 size={10} className="animate-spin text-text-quaternary" />
-                  )}
-                </>
-              }
-              label="Database"
-              isConnected={!!project.supabaseProjectRef}
-            >
-              {project.supabaseProjectRef && !isUnlocked('database') ? (
-                <FooterDropdownTrigger onClick={() => handleRequestChange('database')}>
-                  <span className="text-text-primary">{project.supabaseProjectRef}</span>
-                </FooterDropdownTrigger>
-              ) : (
-                <SupabaseProjectSelector projectId={project.id} onLinked={onProjectsReload} />
-              )}
-            </SidebarFooterItem>
-          </>
+            {showSlack && (
+              <SidebarFooterItem
+                icon={<img src="/slack.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
+                label="Alerts"
+                isConnected={!!project.slackNotificationChannelId}
+              >
+                {project.slackNotificationChannelId && !isUnlocked('alerts') ? (
+                  <FooterDropdownTrigger onClick={() => handleRequestChange('alerts')}>
+                    <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : 'Channel set'}</span>
+                  </FooterDropdownTrigger>
+                ) : (
+                  <SlackNotifySelector projectId={project.id} />
+                )}
+              </SidebarFooterItem>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            {showGithub && (
+              <div className="relative">
+                <img src="/github.svg" alt="GitHub" className="w-4 h-4 opacity-50" />
+                {!!project.githubRepo && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
+              </div>
+            )}
+            {showSupabase && (
+              <div className="relative">
+                <img src="/supabase.svg" alt="Supabase" className="w-4 h-4 opacity-50" />
+                {!!project.supabaseProjectRef && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
+              </div>
+            )}
+            {showLinear && (
+              <div className="relative">
+                <img src="/linear.svg" alt="Linear" className="w-4 h-4 opacity-50" />
+                {!!project.linearProjectName && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
+              </div>
+            )}
+            {showSlack && (
+              <div className="relative">
+                <img src="/slack.svg" alt="Slack" className="w-4 h-4 opacity-50" />
+                {!!project.slackNotificationChannelId && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

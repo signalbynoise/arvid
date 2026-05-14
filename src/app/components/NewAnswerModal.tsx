@@ -3,6 +3,7 @@ import { useStore, selectSelectedQuestionId } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { useCreateEntity } from '../machines/mutations/useCreateEntity';
 import { BaseModal } from './BaseModal';
+import { ModalFooter } from './ui/ModalFooter';
 import { FormField } from './ui/FormField';
 import { TextArea } from './ui/TextArea';
 import { SubmitButton } from './ui/SubmitButton';
@@ -75,28 +76,28 @@ export function NewAnswerModal({ isOpen, onClose }: Props) {
 
   const displayError = validationError || error;
 
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="New Answer" size="md">
-      <div className="flex flex-col gap-6">
-        <FormField
-          label="Answer"
-          error={displayError}
-          hint={<>Answering as <span className="text-text-secondary font-[var(--fw-medium)]">{authorName}</span></>}
-        >
-          <TextArea
-            value={text}
-            onChange={(v) => { setText(v); setValidationError(null); }}
-            placeholder="Provide your answer or clarification..."
-            hasError={!!displayError}
-            textareaRef={textareaRef}
-          />
-        </FormField>
+  const modalFooter = (
+    <ModalFooter>
+      <button onClick={handleClose} className="btn-ghost">Cancel</button>
+      <SubmitButton onClick={handleSubmit} disabled={!text.trim()} label="Submit" loadingLabel="Submitting..." isLoading={isSubmitting} />
+    </ModalFooter>
+  );
 
-        <div className="flex justify-end gap-3 pt-6">
-          <button onClick={handleClose} className="btn-ghost">Cancel</button>
-          <SubmitButton onClick={handleSubmit} disabled={!text.trim()} label="Submit" loadingLabel="Submitting..." isLoading={isSubmitting} />
-        </div>
-      </div>
+  return (
+    <BaseModal isOpen={isOpen} onClose={handleClose} title="New Answer" size="md" footer={modalFooter}>
+      <FormField
+        label="Answer"
+        error={displayError}
+        hint={<>Answering as <span className="text-text-secondary">{authorName}</span></>}
+      >
+        <TextArea
+          value={text}
+          onChange={(v) => { setText(v); setValidationError(null); }}
+          placeholder="Provide your answer or clarification..."
+          hasError={!!displayError}
+          textareaRef={textareaRef}
+        />
+      </FormField>
     </BaseModal>
   );
 }

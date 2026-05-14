@@ -1,16 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, ReactNode } from 'react';
 import { useStore, selectSelectedProjectId, selectPendingScores } from '../store';
 import { useAuth } from '../auth/AuthProvider';
 import { RequirementInputSchema } from '../../../shared/schemas';
 import { isValidFigmaUrl } from '../../../shared/figmaUrl';
 import { BaseModal } from './BaseModal';
-import { ChooseMethodStep } from './requirement/ChooseMethodStep';
-import { WriteStep } from './requirement/WriteStep';
-import { EnhanceStep } from './requirement/EnhanceStep';
-import { SuccessStep } from './requirement/SuccessStep';
-import { ImportFromFiles } from './ImportFromFiles';
-import { ImportFromEmail } from './ImportFromEmail';
-import { ImportFromSlack } from './ImportFromSlack';
+import { StepContent } from './requirement/StepContent';
 
 interface Props {
   isOpen: boolean;
@@ -28,8 +22,6 @@ const STEP_TITLES: Record<Step, string> = {
   SLACK_IMPORT: 'Import from Slack',
   SUCCESS: 'Success',
 };
-
-const WIDE_STEPS: Set<Step> = new Set(['WRITE', 'ENHANCE']);
 
 export function NewRequirementModal({ isOpen, onClose }: Props) {
   const createRequirement = useStore(s => s.createRequirement);
@@ -51,6 +43,8 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [slackWideMode, setSlackWideMode] = useState(false);
   const [figmaLinks, setFigmaLinks] = useState<string[]>([]);
+  const [modalSidebar, setModalSidebar] = useState<ReactNode>(null);
+  const [modalFooter, setModalFooter] = useState<ReactNode | undefined>(undefined);
 
   const resolveFigmaDesigns = useStore(s => s.resolveFigmaDesigns);
   const clearResolvedDesigns = useStore(s => s.clearResolvedDesigns);
@@ -68,6 +62,9 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     [resolvedDesigns, validFigmaLinks],
   );
 
+  const handleSetSidebar = useCallback((sidebar: ReactNode) => setModalSidebar(sidebar), []);
+  const handleSetFooter = useCallback((footer: ReactNode | undefined) => setModalFooter(footer), []);
+
   const reset = () => {
     setStep('CHOOSE');
     setRawText('');
@@ -77,6 +74,8 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     setIsEnhancing(false);
     setSlackWideMode(false);
     setFigmaLinks([]);
+    setModalSidebar(null);
+    setModalFooter(undefined);
     clearResolvedDesigns();
   };
 
@@ -143,63 +142,51 @@ export function NewRequirementModal({ isOpen, onClose }: Props) {
     setStep(target as Step);
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 'CHOOSE':
-        return (
-          <ChooseMethodStep
-            onNavigate={handleNavigate}
-            onClose={handleClose}
-          />
-        );
-      case 'WRITE':
-        return (
-          <WriteStep
-            text={rawText}
-            validationError={validationError}
-            figmaLinks={figmaLinks}
-            onTextChange={(v) => { setRawText(v); setValidationError(null); }}
-            onFigmaLinksChange={setFigmaLinks}
-            onNext={handleNext}
-            onClose={handleClose}
-          />
-        );
-      case 'ENHANCE':
-        return (
-          <EnhanceStep
-            isEnhancing={isEnhancing}
-            title={title}
-            description={description}
-            figmaDesigns={figmaDesigns}
-            scores={pendingScores}
-            onTitleChange={setTitle}
-            onDescriptionChange={setDescription}
-            onBack={() => setStep('WRITE')}
-            onCreate={handleCreate}
-          />
-        );
-      case 'FILE_UPLOAD':
-        return <ImportFromFiles onBack={() => setStep('CHOOSE')} onImport={handleImportComplete} onImportMultiple={handleImportMultiple} onWideChange={setSlackWideMode} />;
-      case 'EMAIL_IMPORT':
-        return <ImportFromEmail onBack={() => setStep('CHOOSE')} onImport={handleImportComplete} />;
-      case 'SLACK_IMPORT':
-        return <ImportFromSlack onBack={() => { setStep('CHOOSE'); setSlackWideMode(false); }} onImport={handleImportComplete} onImportMultiple={handleImportMultiple} onWideChange={setSlackWideMode} />;
-      case 'SUCCESS':
-        return <SuccessStep />;
-    }
-  };
-
   const isImportWide = (step === 'SLACK_IMPORT' || step === 'FILE_UPLOAD') && slackWideMode;
-  const isWriteWide = WIDE_STEPS.has(step);
-  const modalSize = isImportWide ? 'xl' : isWriteWide ? 'wide' : 'lg';
+  const isEnhanceStep = step === 'ENHANCE';
+  const isFileUploadStep = step === 'FILE_UPLOAD';
+  const modalSize = isImportWide ? 'xl' : isEnhanceStep ? 'xl' : step === 'WRITE' ? 'wide' : 'lg';
 
   const modalTitle = step === 'ENHANCE' && isEnhancing
     ? 'Processing new requirement'
     : STEP_TITLES[step];
 
+  const activeSidebar = isEnhanceStep ? modalSidebar : undefined;
+  const activeFooter = (isEnhanceStep || isFileUploadStep) ? modalFooter : undefined;
+
   return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title={modalTitle} size={modalSize}>
-      {renderStep()}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={modalTitle}
+      size={modalSize}
+      sidebar={activeSidebar}
+      footer={activeFooter}
+    >
+      <StepContent
+        step={step}
+        rawText={rawText}
+        validationError={validationError}
+        figmaLinks={figmaLinks}
+        isEnhancing={isEnhancing}
+        title={title}
+        description={description}
+        figmaDesigns={figmaDesigns}
+        scores={pendingScores}
+        onTextChange={(v) => { setRawText(v); setValidationError(null); }}
+        onFigmaLinksChange={setFigmaLinks}
+        onTitleChange={setTitle}
+        onDescriptionChange={setDescription}
+        onNext={handleNext}
+        onBack={handleNavigate}
+        onCreate={handleCreate}
+        onClose={handleClose}
+        onImportComplete={handleImportComplete}
+        onImportMultiple={handleImportMultiple}
+        onWideChange={setSlackWideMode}
+        renderSidebar={handleSetSidebar}
+        renderFooter={handleSetFooter}
+      />
     </BaseModal>
   );
 }

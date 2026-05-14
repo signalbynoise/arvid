@@ -1,11 +1,12 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { ArrowLeft, UploadCloud, Loader2, FileText, Check, Sparkles, AlertCircle, X } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect, ReactNode } from 'react';
+import { ArrowLeft, UploadCloud, LoaderPinwheel, FileText, AlertCircle, X } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore } from '../store';
 import { api } from '../api';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { SubmitButton } from './ui/SubmitButton';
+import { ModalFooter } from './ui/ModalFooter';
 import { DocumentPreview } from './document/DocumentPreview';
 import { ExtractedRequirementCard } from './document/ExtractedRequirementCard';
 
@@ -33,6 +34,7 @@ interface Props {
   onImport: (text: string) => void;
   onImportMultiple?: (items: Array<{ title: string; description: string }>) => void;
   onWideChange?: (wide: boolean) => void;
+  renderFooter: (footer: ReactNode | undefined) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -54,7 +56,7 @@ function isValidFile(file: File): string | null {
   return null;
 }
 
-export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChange }: Props) {
+export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChange, renderFooter }: Props) {
   const selectedProjectId = useStore(s => s.selectedProjectId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +68,8 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
   const [requirements, setRequirements] = useState<ExtractedRequirement[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>('');
+
+  const selectedCount = requirements.filter(r => r.selected).length;
 
   useEffect(() => {
     onWideChange?.(step === 'review');
@@ -224,6 +228,49 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
     }
   };
 
+  useEffect(() => {
+    if (step === 'upload') {
+      renderFooter(
+        <ModalFooter
+          back={
+            <button onClick={onBack} className="btn-ghost flex items-center gap-1.5">
+              <ArrowLeft size={ICON_SIZE.sm} />
+              <span>Back</span>
+            </button>
+          }
+        >
+          <SubmitButton
+            onClick={handleUpload}
+            disabled={!selectedFile || !selectedProjectId}
+            label="Extract Requirements"
+          />
+        </ModalFooter>,
+      );
+    } else if (step === 'review') {
+      renderFooter(
+        <ModalFooter
+          back={
+            <button
+              onClick={() => { setStep('upload'); onWideChange?.(false); }}
+              className="btn-ghost flex items-center gap-1.5"
+            >
+              <ArrowLeft size={ICON_SIZE.sm} />
+              <span>Back</span>
+            </button>
+          }
+        >
+          <SubmitButton
+            onClick={handleConfirm}
+            disabled={selectedCount === 0}
+            label={`Create ${selectedCount} Requirement${selectedCount !== 1 ? 's' : ''}`}
+          />
+        </ModalFooter>,
+      );
+    } else {
+      renderFooter(undefined);
+    }
+  }, [step, selectedFile, selectedProjectId, selectedCount]);
+
   // --- UPLOAD STEP ---
   if (step === 'upload') {
     return (
@@ -242,16 +289,16 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
             className="hidden"
           />
           <UploadCloud size={ICON_SIZE['2xl']} className="text-text-tertiary mb-4" />
-          <p className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-1">
+          <p className="text-caption-lg text-text-primary mb-1">
             Click or drag files here
           </p>
-          <p className="text-[13px] text-text-quaternary">
+          <p className="text-caption text-text-quaternary">
             Supports PDF, DOCX, TXT, MD (Max 10 MB)
           </p>
         </div>
 
         {fileError && (
-          <div className="flex items-center gap-2 text-[13px] text-status-danger">
+          <div className="flex items-center gap-2 text-caption text-status-danger">
             <AlertCircle size={ICON_SIZE.sm} />
             <span>{fileError}</span>
           </div>
@@ -261,10 +308,10 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-comfortable border border-border-default bg-surface-frost-02">
             <FileText size={ICON_SIZE.md} className="text-text-tertiary shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-[var(--fw-medium)] text-text-primary truncate">
+              <p className="text-caption text-text-primary truncate">
                 {selectedFile.name}
               </p>
-              <p className="text-[11px] text-text-quaternary">
+              <p className="text-label-sm text-text-quaternary">
                 {formatFileSize(selectedFile.size)}
               </p>
             </div>
@@ -276,18 +323,6 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
             </button>
           </div>
         )}
-
-        <div className="flex justify-between items-center pt-2">
-          <button onClick={onBack} className="btn-ghost flex items-center space-x-1.5 -ml-2">
-            <ArrowLeft size={ICON_SIZE.sm} />
-            <span>Back</span>
-          </button>
-          <SubmitButton
-            onClick={handleUpload}
-            disabled={!selectedFile || !selectedProjectId}
-            label="Extract Requirements"
-          />
-        </div>
       </div>
     );
   }
@@ -297,11 +332,11 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
     return (
       <div className="space-y-5">
         <div className="bg-surface-frost-02 border border-border-default rounded-card p-8 text-center">
-          <Loader2 size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3 animate-spin" />
-          <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">
+          <LoaderPinwheel size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3 animate-spin" />
+          <h3 className="text-caption-lg text-text-primary mb-2">
             Processing Document
           </h3>
-          <p className="text-[13px] text-text-tertiary">
+          <p className="text-caption text-text-tertiary">
             {processingStatus}
           </p>
         </div>
@@ -314,11 +349,11 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
     return (
       <div className="space-y-5">
         <div className="bg-surface-frost-02 border border-border-default rounded-card p-8 text-center">
-          <Loader2 size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3 animate-spin" />
-          <h3 className="text-[14px] font-[var(--fw-medium)] text-text-primary mb-2">
+          <LoaderPinwheel size={ICON_SIZE.xl} className="mx-auto text-text-tertiary mb-3 animate-spin" />
+          <h3 className="text-caption-lg text-text-primary mb-2">
             Creating Requirements
           </h3>
-          <p className="text-[13px] text-text-tertiary">
+          <p className="text-caption text-text-tertiary">
             Saving {requirements.filter(r => r.selected).length} requirement{requirements.filter(r => r.selected).length !== 1 ? 's' : ''}...
           </p>
         </div>
@@ -327,66 +362,35 @@ export function ImportFromFiles({ onBack, onImport, onImportMultiple, onWideChan
   }
 
   // --- REVIEW STEP (split-pane) ---
-  const selectedCount = requirements.filter(r => r.selected).length;
-
   return (
-    <div className="flex flex-col min-h-[500px]">
-      <div className="flex flex-1 min-h-0">
-        {/* Left: Document Preview */}
-        <div className="w-1/2 border-r border-border-subtle overflow-y-auto">
-          <div className="px-4 pt-4 pb-2">
-            <p className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest mb-2">
-              Source Document
-            </p>
-            <p className="text-[12px] text-text-tertiary truncate">{filename}</p>
-          </div>
-          <DocumentPreview url={previewUrl} mimeType={selectedFile?.type ?? ''} filename={filename} />
-        </div>
-
-        {/* Right: Extracted Requirements */}
-        <div className="w-1/2 overflow-y-auto p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={13} className="text-text-tertiary" />
-            <p className="text-[11px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-widest">
-              Extracted Requirements ({requirements.length})
-            </p>
-          </div>
-
-          {requirements.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-[13px] text-text-quaternary">
-                No actionable requirements found in this document.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {requirements.map((r, i) => (
-                <ExtractedRequirementCard
-                  key={i}
-                  requirement={r}
-                  onToggle={() => toggleRequirement(i)}
-                  onUpdate={(updates) => updateRequirement(i, updates)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="flex flex-1 min-h-0">
+      <div className="w-1/2 border-r border-border-subtle overflow-y-auto p-5">
+        <DocumentPreview url={previewUrl} mimeType={selectedFile?.type ?? ''} filename={filename} />
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center px-4 py-3 border-t border-border-subtle shrink-0">
-        <button
-          onClick={() => { setStep('upload'); onWideChange?.(false); }}
-          className="btn-ghost flex items-center space-x-1.5"
-        >
-          <ArrowLeft size={ICON_SIZE.sm} />
-          <span>Upload another</span>
-        </button>
-        <SubmitButton
-          onClick={handleConfirm}
-          disabled={selectedCount === 0}
-          label={`Create ${selectedCount} Requirement${selectedCount !== 1 ? 's' : ''}`}
-        />
+      <div className="w-1/2 overflow-y-auto p-5">
+        <p className="text-label-upper text-text-tertiary mb-3">
+          Extracted Requirements ({requirements.length})
+        </p>
+
+        {requirements.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-caption text-text-quaternary">
+              No actionable requirements found in this document.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {requirements.map((r, i) => (
+              <ExtractedRequirementCard
+                key={i}
+                requirement={r}
+                onToggle={() => toggleRequirement(i)}
+                onUpdate={(updates) => updateRequirement(i, updates)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
