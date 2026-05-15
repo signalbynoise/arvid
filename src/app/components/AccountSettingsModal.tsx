@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2 } from 'lucide-react';
+import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSubscription, selectSubscriptionLoading } from '../store';
 import { useAuth } from '../auth/AuthProvider';
@@ -16,13 +16,15 @@ import { api } from '../api';
 import { logger } from '../logger';
 import { PLAN_DISPLAY } from '../../../shared/schemas/subscription';
 import { resolvePlan, getPlanFeatures, formatSubscriptionStatus, formatPeriodEndLabel } from '../domain/billing';
+import { IntegrationsTab } from './account-settings/IntegrationsTab';
 
 const log = logger.create('AccountSettings');
 
-type SettingsTab = 'account' | 'plan' | 'invoices';
+type SettingsTab = 'account' | 'integrations' | 'plan' | 'invoices';
 
 const TAB_CONFIG: ModalSidebarItem[] = [
   { id: 'account', label: 'Account', icon: <UserIcon size={ICON_SIZE.sm} /> },
+  { id: 'integrations', label: 'Integrations', icon: <Plug size={ICON_SIZE.sm} /> },
   { id: 'plan', label: 'Plan', icon: <Crown size={ICON_SIZE.sm} /> },
   { id: 'invoices', label: 'Invoices', icon: <Receipt size={ICON_SIZE.sm} /> },
 ];
@@ -199,6 +201,10 @@ export function AccountSettingsModal({ isOpen, onClose }: Props) {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'integrations' && (
+          <IntegrationsTab />
         )}
 
         {activeTab === 'plan' && (
