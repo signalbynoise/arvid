@@ -6,6 +6,8 @@ import { RenameTeamModal } from '../RenameTeamModal';
 import { DeactivateModal } from '../DeactivateModal';
 import { CreateWorkspaceModal } from '../CreateWorkspaceModal';
 import { WorkspaceSettingsModal } from '../WorkspaceSettingsModal';
+import { TeamSettingsModal } from '../TeamSettingsModal';
+import { ProjectSettingsModal } from '../ProjectSettingsModal';
 import { CreateTeamModal } from '../CreateTeamModal';
 import { InviteMemberModal } from '../InviteMemberModal';
 import type { Project, Team, Workspace } from '../../types';
@@ -38,6 +40,7 @@ export function useSidebarModals(
   activeWorkspace: Workspace | undefined,
   teams: Team[],
   projects: Project[],
+  onSelectProject?: (projectId: string) => void,
 ) {
   const activeWorkspaceId = useStore(selectActiveWorkspaceId);
   const deleteWorkspace = useStore(s => s.deleteWorkspace);
@@ -62,6 +65,12 @@ export function useSidebarModals(
 
   const [isInviteMemberOpen, setIsInviteMemberOpen] = useState(false);
   const [inviteContext, setInviteContext] = useState<InviteContext | null>(null);
+
+  const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
+  const [teamSettingsId, setTeamSettingsId] = useState<string | null>(null);
+
+  const [isProjectSettingsOpen, setIsProjectSettingsOpen] = useState(false);
+  const [projectSettingsId, setProjectSettingsId] = useState<string | null>(null);
 
   const pendingModal = useStore(selectPendingModal);
   const clearPendingModal = useStore(s => s.clearPendingModal);
@@ -181,6 +190,16 @@ export function useSidebarModals(
   const openCreateWorkspace = () => setIsCreateWsOpen(true);
   const openCreateTeam = () => setIsCreateTeamOpen(true);
 
+  const openTeamSettings = (teamId: string) => {
+    setTeamSettingsId(teamId);
+    setIsTeamSettingsOpen(true);
+  };
+
+  const openProjectSettings = (projectId: string) => {
+    setProjectSettingsId(projectId);
+    setIsProjectSettingsOpen(true);
+  };
+
   const renderModals = () => (
     <>
       {createProjectContext && (
@@ -260,6 +279,43 @@ export function useSidebarModals(
           scopeName={inviteContext.scopeName}
         />
       )}
+
+      {teamSettingsId && (
+        <TeamSettingsModal
+          isOpen={isTeamSettingsOpen}
+          onClose={() => { setIsTeamSettingsOpen(false); setTeamSettingsId(null); }}
+          teamId={teamSettingsId}
+          onSelectProject={(projectId) => {
+            setIsTeamSettingsOpen(false);
+            setTeamSettingsId(null);
+            onSelectProject?.(projectId);
+          }}
+          onDeactivate={() => {
+            const team = teams.find(t => t.id === teamSettingsId);
+            if (team) {
+              setIsTeamSettingsOpen(false);
+              setTeamSettingsId(null);
+              openDeactivate(team.id, team.name, 'team');
+            }
+          }}
+        />
+      )}
+
+      {projectSettingsId && (
+        <ProjectSettingsModal
+          isOpen={isProjectSettingsOpen}
+          onClose={() => { setIsProjectSettingsOpen(false); setProjectSettingsId(null); }}
+          projectId={projectSettingsId}
+          onDeactivate={() => {
+            const project = projects.find(p => p.id === projectSettingsId);
+            if (project) {
+              setIsProjectSettingsOpen(false);
+              setProjectSettingsId(null);
+              openDeactivate(project.id, project.name, 'project');
+            }
+          }}
+        />
+      )}
     </>
   );
 
@@ -272,6 +328,8 @@ export function useSidebarModals(
     openSettings,
     openCreateWorkspace,
     openCreateTeam,
+    openTeamSettings,
+    openProjectSettings,
     renderModals,
   };
 }

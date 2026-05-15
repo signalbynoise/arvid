@@ -38,6 +38,8 @@ interface TeamSectionProps {
   onCreateProjectInTeam: (teamId: string) => void;
   onDeactivateProject: (nodeId: string, nodeName: string) => void;
   onDeactivateTeam: (teamId: string, teamName: string) => void;
+  onTeamSettings: (teamId: string) => void;
+  onProjectSettings: (projectId: string) => void;
   getTeamId: (nodeId: string) => string | undefined;
 }
 
@@ -60,6 +62,8 @@ export function TeamSection({
   onCreateProjectInTeam,
   onDeactivateProject,
   onDeactivateTeam,
+  onTeamSettings,
+  onProjectSettings,
   getTeamId,
 }: TeamSectionProps) {
   if (teams.length === 0) {
@@ -78,6 +82,7 @@ export function TeamSection({
             onRename={onRenameProject}
             onCreateSubProject={onCreateSubProject}
             onDeactivate={onDeactivateProject}
+            onSettings={onProjectSettings}
             getTeamId={getTeamId}
             expandedMap={expandedMap}
             selectedProjectId={selectedProjectId}
@@ -109,7 +114,7 @@ export function TeamSection({
                   onRename={() => onRenameTeam(team.id, team.name)}
                   onMove={() => {}}
                   onCreateProject={() => onCreateProjectInTeam(team.id)}
-                  onSettings={() => {}}
+                  onSettings={() => onTeamSettings(team.id)}
                   onDeactivate={() => onDeactivateTeam(team.id, team.name)}
                 />
               }
@@ -139,6 +144,7 @@ export function TeamSection({
                       onRename={onRenameProject}
                       onCreateSubProject={onCreateSubProject}
                       onDeactivate={onDeactivateProject}
+                      onSettings={onProjectSettings}
                       getTeamId={getTeamId}
                       expandedMap={expandedMap}
                       selectedProjectId={selectedProjectId}
@@ -172,6 +178,7 @@ export function TeamSection({
                 onRename={onRenameProject}
                 onCreateSubProject={onCreateSubProject}
                 onDeactivate={onDeactivateProject}
+                onSettings={onProjectSettings}
                 getTeamId={getTeamId}
                 expandedMap={expandedMap}
                 selectedProjectId={selectedProjectId}

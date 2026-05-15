@@ -31,9 +31,13 @@ import {
   ProjectSimilaritiesResponseSchema,
   SearchResultRowSchema,
   SearchResultSchema,
+  TeamMembershipRowSchema,
+  TeamMembershipSchema,
+  ProjectMembershipRowSchema,
+  ProjectMembershipSchema,
 } from '../../shared/schemas';
 import type { ImplAnalysis, PlanLimitsResponse, Invoice } from '../../shared/schemas';
-import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee, UserSubscription, SimilarRequirement, SearchResult } from './types';
+import { Requirement, Question, Answer, Project, Summary, Workspace, Team, Membership, Invitation, CardAssignee, UserSubscription, SimilarRequirement, SearchResult, TeamMembership, ProjectMembership } from './types';
 import { API_BASE } from './constants';
 import { supabase } from './lib/supabase';
 import { logger } from './logger';
@@ -227,6 +231,38 @@ export const api = {
 
   async deleteTeam(id: string): Promise<void> {
     await request<void>('DELETE', `/teams/${id}`);
+  },
+
+  // --- Team Memberships ---
+
+  async getTeamMembers(teamId: string, signal?: AbortSignal): Promise<TeamMembership[]> {
+    const rows = await request<unknown[]>('GET', `/team-memberships?team_id=${teamId}`, undefined, signal);
+    return parseArray(TeamMembershipRowSchema, TeamMembershipSchema, rows, '/team-memberships');
+  },
+
+  async addTeamMember(teamId: string, email: string, role: string): Promise<TeamMembership> {
+    const row = await request<unknown>('POST', '/team-memberships', { team_id: teamId, email, role });
+    return parseSingle(TeamMembershipRowSchema, TeamMembershipSchema, row, '/team-memberships');
+  },
+
+  async removeTeamMember(id: string): Promise<void> {
+    await request<void>('DELETE', `/team-memberships/${id}`);
+  },
+
+  // --- Project Memberships ---
+
+  async getProjectMembers(projectId: string, signal?: AbortSignal): Promise<ProjectMembership[]> {
+    const rows = await request<unknown[]>('GET', `/project-memberships?project_id=${projectId}`, undefined, signal);
+    return parseArray(ProjectMembershipRowSchema, ProjectMembershipSchema, rows, '/project-memberships');
+  },
+
+  async addProjectMember(projectId: string, email: string, role: string): Promise<ProjectMembership> {
+    const row = await request<unknown>('POST', '/project-memberships', { project_id: projectId, email, role });
+    return parseSingle(ProjectMembershipRowSchema, ProjectMembershipSchema, row, '/project-memberships');
+  },
+
+  async removeProjectMember(id: string): Promise<void> {
+    await request<void>('DELETE', `/project-memberships/${id}`);
   },
 
   // --- Members ---

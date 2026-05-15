@@ -68,8 +68,6 @@ export function Sidebar({ isOpen }: SidebarProps) {
     return initial;
   });
 
-  const modals = useSidebarModals(activeWorkspace, teams, projects);
-
   useEffect(() => {
     loadSlackStatus();
   }, [loadSlackStatus]);
@@ -86,15 +84,6 @@ export function Sidebar({ isOpen }: SidebarProps) {
       loadDeactivationMap(activeWorkspaceId);
     }
   }, [activeWorkspaceId, projectsDataState.status, teamsDataState.status, loadDeactivationMap]);
-
-  useEffect(() => {
-    if (pendingModal?.type === 'createProject') {
-      const { selectedProjectId, projects: storeProjects } = useStore.getState();
-      const currentProject = selectedProjectId ? storeProjects.find(p => p.id === selectedProjectId) : undefined;
-      modals.openCreate(currentProject?.id, currentProject?.teamId);
-      clearPendingModal();
-    }
-  }, [pendingModal, clearPendingModal]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -131,6 +120,17 @@ export function Sidebar({ isOpen }: SidebarProps) {
       if (path) navigate(path);
     }
   }, [projects, activeWorkspace, teams, navigate]);
+
+  const modals = useSidebarModals(activeWorkspace, teams, projects, handleSelectProject);
+
+  useEffect(() => {
+    if (pendingModal?.type === 'createProject') {
+      const { selectedProjectId, projects: storeProjects } = useStore.getState();
+      const currentProject = selectedProjectId ? storeProjects.find(p => p.id === selectedProjectId) : undefined;
+      modals.openCreate(currentProject?.id, currentProject?.teamId);
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal]);
 
   const getTeamId = useCallback((nodeId: string) => {
     return projects.find(p => p.id === nodeId)?.teamId;
@@ -185,6 +185,8 @@ export function Sidebar({ isOpen }: SidebarProps) {
             onCreateProjectInTeam={(teamId) => modals.openCreate(undefined, teamId)}
             onDeactivateProject={(id, name) => modals.openDeactivate(id, name, 'project')}
             onDeactivateTeam={(id, name) => modals.openDeactivate(id, name, 'team')}
+            onTeamSettings={modals.openTeamSettings}
+            onProjectSettings={modals.openProjectSettings}
             getTeamId={getTeamId}
           />
         ) : (

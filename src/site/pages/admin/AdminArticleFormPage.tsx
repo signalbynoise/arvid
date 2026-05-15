@@ -78,6 +78,7 @@ export function AdminArticleFormPage() {
   const [tags, setTags] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [miniDemoId, setMiniDemoId] = useState('');
+  const [direction, setDirection] = useState('');
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [editorTab, setEditorTab] = useState<EditorTab>('write');
@@ -216,7 +217,7 @@ export function AdminArticleFormPage() {
       const { jobId } = await adminRequest<{ jobId: string }>(
         'POST',
         '/api/cms/articles/generate',
-        { title, type },
+        { title, type, direction: direction.trim() || undefined },
       );
       saveJobToStorage({
         jobId,
@@ -231,7 +232,7 @@ export function AdminArticleFormPage() {
       setGenerating(false);
       console.error('[error] [admin:articleForm:generate]', { message });
     }
-  }, [title, slug, type, status, miniDemoId, author, startPolling]);
+  }, [title, slug, type, status, miniDemoId, direction, author, startPolling]);
 
   const handleSave = useCallback(async () => {
     setError(null);
@@ -352,6 +353,16 @@ export function AdminArticleFormPage() {
                 <option key={opt.id} value={opt.id}>{opt.label}</option>
               ))}
             </select>
+          </FieldGroup>
+
+          <FieldGroup label="Direction for Arvid">
+            <textarea
+              value={direction}
+              onChange={(e) => setDirection(e.target.value)}
+              rows={3}
+              className="resize-none rounded-comfortable border border-border-default bg-surface-panel p-3 text-caption-lg text-text-primary placeholder:text-text-empty focus:border-border-focus focus:outline-none"
+              placeholder="Optional: guide the angle, tone, or focus. E.g. 'Write from the perspective of a frustrated engineering manager. Open with a story about a failed handoff. Avoid mentioning competitors.'"
+            />
           </FieldGroup>
 
           <button

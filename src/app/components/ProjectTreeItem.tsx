@@ -28,6 +28,7 @@ interface ProjectTreeItemProps {
   onRename: (nodeId: string, nodeName: string) => void;
   onCreateSubProject: (nodeId: string, teamId?: string) => void;
   onDeactivate: (nodeId: string, nodeName: string) => void;
+  onSettings: (projectId: string) => void;
   getTeamId: (nodeId: string) => string | undefined;
   expandedMap: Record<string, boolean>;
   selectedProjectId: string | null;
@@ -44,6 +45,7 @@ export function ProjectTreeItem({
   onRename,
   onCreateSubProject,
   onDeactivate,
+  onSettings,
   getTeamId,
   expandedMap,
   selectedProjectId,
@@ -67,7 +69,7 @@ export function ProjectTreeItem({
             onRename={() => onRename(node.id, node.name)}
             onMove={() => {}}
             onCreateSubProject={!node.parentId ? () => onCreateSubProject(node.id, getTeamId(node.id)) : undefined}
-            onSettings={() => {}}
+            onSettings={() => onSettings(node.id)}
             onDeactivate={() => onDeactivate(node.id, node.name)}
           />
         }
@@ -97,6 +99,7 @@ export function ProjectTreeItem({
                 onRename={onRename}
                 onCreateSubProject={onCreateSubProject}
                 onDeactivate={onDeactivate}
+                onSettings={onSettings}
                 getTeamId={getTeamId}
                 expandedMap={expandedMap}
                 selectedProjectId={selectedProjectId}

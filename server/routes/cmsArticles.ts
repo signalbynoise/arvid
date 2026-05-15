@@ -1,11 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'node:crypto';
-import { createUserClient } from '../supabase';
+import { createUserClient, supabase } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateArticleBodySchema, UpdateArticleBodySchema } from '../../shared/schemas';
 import { generateArticle } from '../openrouter';
 import type { GenerateArticleResult } from '../openrouter';
-import { supabase } from '../supabase';
+import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../../shared/schemas/repoContext';
+import type { DbAnalysis, DbTable, DbRelationship } from '../../shared/schemas/dbContext';
 
 const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
 
@@ -60,11 +61,13 @@ function slugify(text: string): string {
 
 cmsArticlesRouter.post('/generate', async (req, res) => {
   const db = createUserClient(req.accessToken!);
-  const { title, type } = req.body;
+  const { title, type, direction } = req.body;
 
   if (!title || typeof title !== 'string') {
     return res.status(400).json({ error: 'title is required' });
   }
+
+  const directionText = typeof direction === 'string' ? direction.trim() : undefined;
 
   pruneStaleJobs();
 
@@ -100,33 +103,75 @@ cmsArticlesRouter.post('/generate', async (req, res) => {
       tags: a.tags,
     }));
 
-    const { data: repoRow } = await supabase
+    const { data: repoRow, error: repoErr } = await supabase
       .from('repo_contexts')
-      .select('analysis')
+      .select('analysis, file_tree, key_files, recent_commits')
       .eq('status', 'ready')
       .order('fetched_at', { ascending: false })
       .limit(1)
       .single();
 
-    const { data: dbRow } = await supabase
+    if (repoErr) {
+      console.debug('[debug] [cms:articles:generate] No repo context found', { error: repoErr.message });
+    }
+
+    const { data: dbRow, error: dbErr } = await supabase
       .from('db_contexts')
-      .select('analysis')
+      .select('analysis, tables, relationships')
       .eq('status', 'ready')
       .order('fetched_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    if (dbErr) {
+      console.debug('[debug] [cms:articles:generate] No DB context found', { error: dbErr.message });
+    }
+
+    const repoAnalysis = repoRow?.analysis as RepoAnalysis | undefined;
+    const repoFileTree = repoRow?.file_tree as FileTreeEntry[] | undefined;
+    const repoKeyFiles = repoRow?.key_files as Record<string, string> | undefined;
+    const repoRecentCommits = repoRow?.recent_commits as CommitEntry[] | undefined;
+    const dbAnalysis = dbRow?.analysis as DbAnalysis | undefined;
+    const dbTables = dbRow?.tables as DbTable[] | undefined;
+    const dbRelationships = dbRow?.relationships as DbRelationship[] | undefined;
+
     console.info('[info] [cms:articles:generate] Starting AI article generation', {
       jobId, title, type: articleType, existingCount: catalog.length,
-      hasRepoContext: Boolean(repoRow?.analysis), hasDbContext: Boolean(dbRow?.analysis),
+      hasDirection: Boolean(directionText),
+      directionPreview: directionText ? directionText.substring(0, 120) : null,
+    });
+
+    console.debug('[debug] [cms:articles:generate] Repo context detail', {
+      jobId,
+      hasAnalysis: Boolean(repoAnalysis),
+      fileTreeCount: repoFileTree?.length ?? 0,
+      keyFileNames: repoKeyFiles ? Object.keys(repoKeyFiles) : null,
+      recentCommitCount: repoRecentCommits?.length ?? 0,
+      languages: repoAnalysis?.languages?.slice(0, 3) ?? null,
+      frameworks: repoAnalysis?.frameworks ?? null,
+      patterns: repoAnalysis?.patterns ?? null,
+    });
+
+    console.debug('[debug] [cms:articles:generate] DB context detail', {
+      jobId,
+      hasAnalysis: Boolean(dbAnalysis),
+      tableCount: dbTables?.length ?? 0,
+      tableNames: dbTables?.filter((t) => t.schema === 'public').slice(0, 15).map((t) => t.name) ?? null,
+      relationshipCount: dbRelationships?.length ?? 0,
     });
 
     const result = await generateArticle({
       title,
       type: articleType,
+      direction: directionText,
       existingArticles: catalog,
-      repoContext: repoRow?.analysis ?? undefined,
-      dbContext: dbRow?.analysis ?? undefined,
+      repoContext: repoAnalysis,
+      repoFileTree,
+      repoKeyFiles,
+      repoRecentCommits,
+      dbContext: dbAnalysis,
+      dbTables,
+      dbRelationships,
     });
 
     job.status = 'completed';

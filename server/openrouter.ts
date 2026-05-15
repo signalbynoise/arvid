@@ -5,7 +5,8 @@ import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../shared/schemas
 import type { DbAnalysis, DbTable, DbRelationship, DbFunction, EdgeFunction } from '../shared/schemas/dbContext';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODEL = 'x-ai/grok-4.1-fast';
+const OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash';
+const OPENROUTER_ARTICLE_MODEL = 'x-ai/grok-4.3';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
@@ -1878,9 +1879,69 @@ export interface ExistingArticleSummary {
 export interface GenerateArticleInput {
   title: string;
   type: 'article' | 'feature' | 'docs';
+  direction?: string;
   existingArticles?: ExistingArticleSummary[];
   repoContext?: RepoAnalysis;
+  repoFileTree?: FileTreeEntry[];
+  repoKeyFiles?: Record<string, string>;
+  repoRecentCommits?: CommitEntry[];
   dbContext?: DbAnalysis;
+  dbTables?: DbTable[];
+  dbRelationships?: DbRelationship[];
+}
+
+function buildProductCapabilitiesBlock(): string {
+  return `## Arvid Product Capabilities (from actual implementation)
+Use these REAL capabilities when writing. Do not fabricate features — only reference what is described here.
+
+### Requirement Enhancement
+When a user provides a rough requirement (even a single sentence), Arvid enhances it into a structured specification with a clear title, detailed description, acceptance criteria, and edge cases. It uses connected codebase context (file tree, key files, recent commits) and database schema to ground the spec in the actual project — referencing real table names, existing patterns, and technology choices.
+
+### Risk & Clarity Scoring
+Every requirement is automatically scored on two dimensions (1-10 scale):
+
+**Clarity Score** evaluates: language precision and ambiguity, whether acceptance criteria are stated, completeness of constraints and edge cases, consistency of domain terminology. Low (1-3) means an engineer would need to make many assumptions. High (7-10) means they can confidently begin.
+
+**Risk Score** evaluates: security and compliance concerns (auth, PII, payments), integration complexity (external APIs/services), data sensitivity, performance and scalability concerns, deployment risk (migrations, breaking changes), technical unknowns. Low (1-3) is straightforward. High (7-10) means significant unknowns or high-stakes data.
+
+### Adaptive Question Depth (3-Tier System)
+Arvid generates clarifying questions that adapt their complexity based on how much is already known:
+
+**Tier 1 — Layman**: When a requirement is new with few or no answers. Questions use everyday language with no technical terms. Focused on WHAT and WHY, never HOW. Designed for non-technical stakeholders. Example: "Who will be using this feature?" or "What should happen when something goes wrong?"
+
+**Tier 2 — Intermediate**: Once basic business context is established (2+ categories covered, some critical answers). Questions reference specific behaviors, data flows, and system boundaries at a conceptual level. Example: "If two people edit this at the same time, who wins?" or "Should we keep a history of changes?"
+
+**Tier 3 — Technical**: When strong coverage exists (3+ categories, multiple critical and important answers). Questions address architecture decisions, edge cases, performance constraints, and security boundaries using technical terminology. Example: "Should this endpoint support pagination?" or "Is eventual consistency acceptable here?"
+
+Tier progression is computed automatically from: number of answered questions, category coverage (Scope, Data, Time, Output, Quality), count of critical vs. important answers resolved.
+
+### Score-Aware Question Prioritization
+The risk and clarity scores directly shape which questions Arvid asks:
+- High risk (>=7): Arvid prioritizes security, compliance, integration risks, data sensitivity, and failure modes.
+- Low clarity (<=3): Arvid asks broader scoping and definition questions before diving into specifics.
+- High clarity + low risk: Arvid generates fewer or no questions — the requirement is likely ready.
+
+### Knowledge Graph Construction
+Requirements, questions, answers, and connected tool data form an interconnected knowledge graph. Each requirement links to its questions, each question to its answers, and answers can reference codebase artifacts, Slack discussions, Linear issues, or database schemas. The graph grows richer as stakeholders answer questions and Arvid suggests follow-ups.
+
+### Connected Tool Integrations
+- **GitHub**: Repository analysis (file tree, key files, recent commits), code-aware questions that avoid asking about already-implemented functionality.
+- **Linear**: Issue and project tracking context.
+- **Slack**: Message analysis that extracts implicit requirements from team conversations.
+- **Supabase**: Database schema analysis for grounding requirements in real data models.
+- **Figma**: Design file context for avoiding redundant UI questions and referencing actual screen layouts.
+
+### Document Analysis
+Arvid can analyze uploaded documents (PDFs, specs, RFPs) and extract structured requirements, preserving the original intent while identifying ambiguities and gaps.
+
+### AI-Suggested Answers
+For questions that can be answered from codebase context, technical best practices, or widely-known patterns, Arvid suggests answers automatically — distinguishing clearly between what the code already shows and what requires human judgment.
+
+### Implementation Detection
+Arvid can analyze whether a requirement has been partially or fully implemented in the connected codebase, comparing the specification against actual code artifacts.
+
+### Summary Generation
+Arvid generates structured summaries of requirements and their knowledge graph state, including coverage analysis across question categories.`;
 }
 
 export interface GenerateArticleResult {
@@ -1890,8 +1951,9 @@ export interface GenerateArticleResult {
   meta_description: string;
 }
 
-const ARTICLE_FRAMEWORK = `## Voice & Tone
-- Third-person when describing the product ("Arvid does X", "Arvid understands Y"). First-person plural ("we") sparingly when speaking as the team.
+const ARTICLE_FRAMEWORK = `## Voice & Tone (defaults — editorial direction can override)
+- Default: third-person when describing the product ("Arvid does X", "Arvid understands Y"). First-person plural ("we") sparingly when speaking as the team.
+- If the editorial direction specifies a different voice (e.g. first-person as Arvid, second-person addressing the reader), follow the direction instead.
 - Authoritative and clear. Like a well-reasoned essay by someone who deeply understands both the problem and the product.
 - Plain language. No buzzwords ("leverage", "synergy", "cutting-edge", "revolutionary", "game-changer").
 - Vary sentence length naturally. Mix short declarative sentences with longer explanatory ones. Let the prose flow.
@@ -1958,7 +2020,41 @@ Formatting for docs:
 - Never claim Arvid does something it doesn't.
 - Articles: assume reader is a senior engineer or engineering manager.
 - Features: assume reader is evaluating Arvid as a potential user.
-- Docs: assume reader is an active user trying to get something done.`;
+- Docs: assume reader is an active user trying to get something done.
+
+## Variety & Natural Voice
+Each article must feel distinct. Vary these dimensions unpredictably across articles:
+
+Opening strategies (pick ONE per article — never default to the same one):
+- Start with a concrete story or scenario a reader would recognize
+- Open with a surprising statistic or research finding from the web search
+- Begin with a provocative claim or contrarian take
+- Lead with a question the reader has been asking themselves
+- Start mid-action: describe what happens when something goes wrong
+- Open with a historical parallel or analogy from outside software
+
+Structural approaches:
+- The structure guidelines above are a compass, not a rail. Rearrange, merge, or skip sections when the argument demands it.
+- Sometimes the thesis comes first. Sometimes it emerges halfway through. Let the topic dictate the shape.
+- Vary paragraph density: some articles benefit from short punchy paragraphs, others from longer flowing ones.
+
+Tone range within the voice:
+- Some articles should feel urgent and direct. Others contemplative and measured.
+- Match the tone to the topic: a piece about incident response should feel different from one about knowledge management.
+- Occasionally be wry or understated rather than purely authoritative.
+
+Arvid integration:
+- Not every article needs to mention Arvid in the first half. Some pieces earn more trust by establishing the problem deeply before introducing any solution.
+- Vary how Arvid appears: sometimes as the central subject, sometimes as one example in a broader argument, sometimes only in the final third.
+- Some articles can be almost entirely about the industry problem, with Arvid as a brief, natural conclusion.
+
+Absolute prohibitions (these create the "same article" feeling):
+- Never open with "In the world of software engineering..." or any variant of "In today's..."
+- Never open with a dictionary definition
+- Never use "Let's explore..." or "Let's dive into..."
+- Never start two consecutive articles the same way
+- Never use "game-changer", "revolutionize", "paradigm shift", "cutting-edge", "next-level"
+- Never structure the argument identically to any article in the existing catalog`;
 
 function stripNativeCitations(text: string): string {
   return text
@@ -1972,7 +2068,7 @@ function stripNativeCitations(text: string): string {
     .trim();
 }
 
-const ARTICLE_FALLBACK_MODEL = 'anthropic/claude-sonnet-4';
+const ARTICLE_FALLBACK_MODEL = OPENROUTER_MODEL;
 
 async function callArticleModel(model: string, messages: { role: string; content: string }[]): Promise<{ content: string; data: unknown }> {
   const useOnlineVariant = !model.includes(':online');
@@ -1991,7 +2087,8 @@ async function callArticleModel(model: string, messages: { role: string; content
     body: JSON.stringify({
       model: modelSlug,
       messages,
-      temperature: 0.6,
+      temperature: 0.8,
+      reasoning: { effort: 'low' },
       response_format: { type: 'json_object' },
     }),
   });
@@ -2024,17 +2121,101 @@ export async function generateArticle(input: GenerateArticleInput): Promise<Gene
     throw new Error('OPENROUTER_API_KEY is not configured');
   }
 
-  let contextBlock = '';
-  if (input.repoContext) {
-    contextBlock += buildCodebaseContextBlock(input.repoContext);
+  const productBlock = buildProductCapabilitiesBlock();
+
+  let repoBlock = input.repoContext ? buildCodebaseContextBlock(input.repoContext) : '';
+
+  if (input.repoFileTree && input.repoFileTree.length > 0) {
+    const filePaths = input.repoFileTree
+      .filter(f => f.type === 'blob')
+      .map(f => f.path);
+    if (filePaths.length > 0) {
+      repoBlock += `## Repository File Tree (${filePaths.length} files)\n`;
+      repoBlock += filePaths.slice(0, 200).join('\n') + '\n';
+      if (filePaths.length > 200) {
+        repoBlock += `... and ${filePaths.length - 200} more files\n`;
+      }
+      repoBlock += '\n';
+    }
   }
-  if (input.dbContext) {
-    contextBlock += buildDbContextBlock(input.dbContext);
+
+  if (input.repoKeyFiles) {
+    const keyFileEntries = Object.entries(input.repoKeyFiles);
+    if (keyFileEntries.length > 0) {
+      repoBlock += `## Key File Contents\n`;
+      for (const [path, fileContent] of keyFileEntries.slice(0, 15)) {
+        const truncated = fileContent.length > 3000
+          ? fileContent.substring(0, 3000) + '\n... (truncated)'
+          : fileContent;
+        repoBlock += `\n### ${path}\n\`\`\`\n${truncated}\n\`\`\`\n`;
+      }
+      repoBlock += '\n';
+    }
   }
+
+  if (input.repoRecentCommits && input.repoRecentCommits.length > 0) {
+    const commits = input.repoRecentCommits.slice(0, 15);
+    repoBlock += `## Recent Commits\n`;
+    for (const c of commits) {
+      repoBlock += `- ${c.message} (${c.author}, ${c.date})\n`;
+    }
+    repoBlock += '\n';
+  }
+
+  let dbBlock = input.dbContext ? buildDbContextBlock(input.dbContext) : '';
+
+  if (!dbBlock && input.dbTables && input.dbTables.length > 0) {
+    const publicTables = input.dbTables.filter(t => t.schema === 'public');
+    if (publicTables.length > 0) {
+      dbBlock += `## Database Schema Context\nTables (${publicTables.length}):\n`;
+      for (const table of publicTables.slice(0, 20)) {
+        const cols = table.columns
+          .map(c => {
+            let desc = `${c.name} (${c.type}`;
+            if (c.isPrimaryKey) desc += ', PK';
+            if (c.isForeignKey && c.references) desc += `, FK→${c.references.table}`;
+            if (!c.isNullable) desc += ', NOT NULL';
+            desc += ')';
+            return desc;
+          })
+          .join(', ');
+        const rlsTag = table.hasRls ? ' [RLS]' : '';
+        dbBlock += `  ${table.name}${rlsTag}: ${cols}\n`;
+      }
+    }
+  }
+
+  if (input.dbRelationships && input.dbRelationships.length > 0) {
+    dbBlock += `\nRelationships (${input.dbRelationships.length}):\n`;
+    for (const rel of input.dbRelationships.slice(0, 15)) {
+      dbBlock += `  ${rel.fromTable}.${rel.fromColumn} → ${rel.toTable}.${rel.toColumn}\n`;
+    }
+  }
+
+  const contextBlock = [productBlock, repoBlock, dbBlock].filter(Boolean).join('\n\n');
 
   const catalogBlock = input.existingArticles && input.existingArticles.length > 0
     ? `\n\n## Existing Article Catalog (${input.existingArticles.length} published)\nThese articles already exist on arvid.work. You MUST NOT repeat their topics, arguments, angles, or examples. Find a fresh perspective that adds distinct value to the catalog.\n\n${input.existingArticles.map((a) => `- "${a.title}" (${a.type}) — ${a.excerpt || 'no excerpt'} [tags: ${(a.tags || []).join(', ') || 'none'}]`).join('\n')}`
     : '';
+
+  console.debug('[debug] [openrouter:generateArticle] Context blocks assembled', JSON.stringify({
+    title: input.title,
+    type: input.type,
+    hasDirection: Boolean(input.direction),
+    directionLength: input.direction?.length ?? 0,
+    productBlockLength: productBlock.length,
+    repoBlockLength: repoBlock.length,
+    repoBlockPreview: repoBlock ? repoBlock.substring(0, 500) : '(empty — no repo context)',
+    dbBlockLength: dbBlock.length,
+    dbBlockPreview: dbBlock ? dbBlock.substring(0, 500) : '(empty — no db context)',
+    fileTreeCount: input.repoFileTree?.length ?? 0,
+    keyFileCount: input.repoKeyFiles ? Object.keys(input.repoKeyFiles).length : 0,
+    commitCount: input.repoRecentCommits?.length ?? 0,
+    dbTableCount: input.dbTables?.length ?? 0,
+    dbRelCount: input.dbRelationships?.length ?? 0,
+    catalogArticleCount: input.existingArticles?.length ?? 0,
+    totalContextLength: contextBlock.length,
+  }));
 
   const messages = [
     {
@@ -2076,18 +2257,30 @@ Respond ONLY with the JSON object, no markdown fences.`,
     {
       role: 'user',
       content: `Write a ${input.type} article with this title: "${input.title}"
-
+${input.direction ? `\n## Editorial Direction\nThe editor has provided specific direction for this piece. Follow it closely:\n${input.direction}\n` : ''}
 Research the topic using web search to find relevant industry context, then write the article grounded in both Arvid's capabilities and the broader engineering conversation.
 
-${contextBlock ? `Use this product context to ground the article in real capabilities:\n\n${contextBlock}` : ''}${catalogBlock}`,
+Use this product context to ground the article in real capabilities — only reference features described here, never fabricate:
+
+${contextBlock}${catalogBlock}`,
     },
   ];
+
+  const userMessage = messages[1].content;
+  const systemMessage = messages[0].content;
+  console.debug('[debug] [openrouter:generateArticle] System message length', JSON.stringify({
+    systemMessageLength: systemMessage.length,
+  }));
+  console.debug('[debug] [openrouter:generateArticle] Full user message', JSON.stringify({
+    userMessageLength: userMessage.length,
+    userMessage,
+  }));
 
   let content: string;
 
   try {
-    console.info(`[INFO] [openrouter:generateArticle] Trying ${OPENROUTER_MODEL}`, JSON.stringify({ title: input.title, type: input.type }));
-    const result = await callArticleModel(OPENROUTER_MODEL, messages);
+    console.info(`[INFO] [openrouter:generateArticle] Trying ${OPENROUTER_ARTICLE_MODEL}`, JSON.stringify({ title: input.title, type: input.type }));
+    const result = await callArticleModel(OPENROUTER_ARTICLE_MODEL, messages);
     content = result.content;
   } catch (primaryErr) {
     const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
