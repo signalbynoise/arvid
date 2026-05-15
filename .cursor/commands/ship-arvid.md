@@ -24,7 +24,7 @@ After pushing, monitor the Render deploy to confirm it succeeds.
 
 Using Render MCP tools (`user-render` or `plugin-render-render`):
 
-1. Ensure the workspace is selected via `get_selected_workspace()` / `select_workspace()`.
+1. Select the **Arvid** workspace: `select_workspace(ownerID: "tea-d7rm1iosfn5c73cdpqrg")`. No need to ask — always use this workspace.
 2. Identify the services from `render.yaml` or by listing services.
 3. Poll `list_deploys(serviceId, limit: 1)` until the latest deploy matches the pushed commit.
 4. Watch for the deploy status to reach `live` or `build_failed`.

@@ -27,6 +27,7 @@ export interface ResolverActions {
   setActiveWorkspace: (id: string) => void;
   loadProjects: (workspaceId: string) => void;
   loadTeams: (workspaceId: string) => void;
+  loadMembers: (workspaceId: string) => void;
   setSelectedProjectId: (id: string) => void;
   selectRequirement: (id: string | null) => void;
   selectQuestion: (id: string | null) => void;
@@ -177,6 +178,7 @@ export function createRouterResolverMachine(actions: ResolverActions) {
           actions.setActiveWorkspace(ws.id);
           actions.loadProjects(ws.id);
           actions.loadTeams(ws.id);
+          actions.loadMembers(ws.id);
         },
         on: {
           DATA_LOADED: {

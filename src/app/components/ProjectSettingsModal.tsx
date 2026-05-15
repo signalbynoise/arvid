@@ -79,6 +79,14 @@ export function ProjectSettingsModal({ isOpen, onClose, projectId, onDeactivate 
   const userRole = (currentMember?.role ?? 'member') as WorkspaceRole;
   const canManage = canManageProject(userRole);
 
+  const creator = useMemo(() => {
+    if (!project?.userId) return undefined;
+    const member = members.find(m => m.userId === project.userId);
+    if (member?.email) return { userId: project.userId, email: member.email };
+    if (user?.id === project.userId && user.email) return { userId: project.userId, email: user.email };
+    return { userId: project.userId, email: undefined };
+  }, [project, members, user]);
+
   useEffect(() => {
     if (isOpen && project) {
       setNameValue(project.name);
@@ -199,6 +207,7 @@ export function ProjectSettingsModal({ isOpen, onClose, projectId, onDeactivate 
           members={projectMembers}
           currentUserId={user?.id}
           canManage={canManage}
+          creator={creator}
           onAddMember={handleAddMember}
           onRemoveMember={handleRemoveMember}
         />

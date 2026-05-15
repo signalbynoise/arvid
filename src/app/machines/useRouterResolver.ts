@@ -21,6 +21,7 @@ export function useRouterResolver() {
   const setActiveWorkspace = useStore(s => s.setActiveWorkspace);
   const loadProjects = useStore(s => s.loadProjects);
   const loadTeams = useStore(s => s.loadTeams);
+  const loadMembers = useStore(s => s.loadMembers);
   const setSelectedProjectId = useStore(s => s.setSelectedProjectId);
 
   const setReqId = (id: string | null) => {
@@ -38,6 +39,7 @@ export function useRouterResolver() {
     setActiveWorkspace,
     loadProjects,
     loadTeams,
+    loadMembers,
     setSelectedProjectId,
     selectRequirement: setReqId,
     selectQuestion: setQuestionId,
@@ -52,6 +54,7 @@ export function useRouterResolver() {
     setActiveWorkspace,
     loadProjects,
     loadTeams,
+    loadMembers,
     setSelectedProjectId,
     selectRequirement: setReqId,
     selectQuestion: setQuestionId,

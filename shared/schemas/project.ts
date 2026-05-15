@@ -28,6 +28,7 @@ export const ProjectSchema = ProjectRowSchema.transform(row => ({
   shortId: row.short_id ?? undefined,
   parentId: row.parent_id ?? undefined,
   createdAt: row.created_at ?? undefined,
+  userId: row.user_id ?? undefined,
   workspaceId: row.workspace_id ?? undefined,
   teamId: row.team_id ?? undefined,
   isDeleted: row.is_deleted ?? false,

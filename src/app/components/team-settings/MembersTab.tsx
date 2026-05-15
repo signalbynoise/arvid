@@ -11,15 +11,21 @@ const ROLE_OPTIONS = [
   { value: 'member', label: 'Member' },
 ];
 
+interface Creator {
+  userId: string;
+  email: string | undefined;
+}
+
 interface MembersTabProps {
   members: TeamMembership[];
   currentUserId: string | undefined;
   canManage: boolean;
+  creator: Creator | undefined;
   onAddMember: (email: string, role: string) => Promise<string | undefined>;
   onRemoveMember: (membershipId: string) => void;
 }
 
-export function MembersTab({ members, currentUserId, canManage, onAddMember, onRemoveMember }: MembersTabProps) {
+export function MembersTab({ members, currentUserId, canManage, creator, onAddMember, onRemoveMember }: MembersTabProps) {
   const [addEmail, setAddEmail] = useState('');
   const [addRole, setAddRole] = useState('member');
   const [addError, setAddError] = useState<string | null>(null);
@@ -45,11 +51,14 @@ export function MembersTab({ members, currentUserId, canManage, onAddMember, onR
     }
   };
 
+  const creatorInList = creator ? members.some(m => m.userId === creator.userId) : true;
+  const totalCount = members.length + (creator && !creatorInList ? 1 : 0);
+
   return (
     <div className="p-5 space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-label-upper text-text-tertiary">
-          Members ({members.length})
+          Members ({totalCount})
         </span>
         {canManage && (
           <button
@@ -91,6 +100,26 @@ export function MembersTab({ members, currentUserId, canManage, onAddMember, onR
       )}
 
       <div className="space-y-1">
+        {creator && !creatorInList && (
+          <div className="flex items-center justify-between p-3 rounded-card bg-surface-frost-02 border border-border-default">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-7 w-7 rounded-full bg-surface-frost-08 flex items-center justify-center shrink-0">
+                <span className="text-label text-text-primary">
+                  {(creator.email ?? '?')[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-caption-lg text-text-primary truncate">
+                  {creator.email ?? 'Unknown'}
+                </p>
+              </div>
+            </div>
+            <span className="text-label text-text-tertiary px-2 py-1 bg-surface-frost-04 rounded-pill shrink-0">
+              Owner
+            </span>
+          </div>
+        )}
+
         {members.map(member => (
           <div
             key={member.id}
@@ -126,10 +155,6 @@ export function MembersTab({ members, currentUserId, canManage, onAddMember, onR
             </div>
           </div>
         ))}
-
-        {members.length === 0 && (
-          <p className="text-caption-lg text-text-empty text-center py-6">No members yet.</p>
-        )}
       </div>
     </div>
   );

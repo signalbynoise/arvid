@@ -75,6 +75,14 @@ export function TeamSettingsModal({ isOpen, onClose, teamId, onSelectProject, on
   const userRole = (currentMember?.role ?? 'member') as WorkspaceRole;
   const canManage = canManageTeams(userRole);
 
+  const creator = useMemo(() => {
+    if (!team) return undefined;
+    const member = members.find(m => m.userId === team.createdBy);
+    if (member?.email) return { userId: team.createdBy, email: member.email };
+    if (user?.id === team.createdBy && user.email) return { userId: team.createdBy, email: user.email };
+    return { userId: team.createdBy, email: undefined };
+  }, [team, members, user]);
+
   useEffect(() => {
     if (isOpen && team) {
       setNameValue(team.name);
@@ -201,6 +209,7 @@ export function TeamSettingsModal({ isOpen, onClose, teamId, onSelectProject, on
           members={teamMembers}
           currentUserId={user?.id}
           canManage={canManage}
+          creator={creator}
           onAddMember={handleAddMember}
           onRemoveMember={handleRemoveMember}
         />
