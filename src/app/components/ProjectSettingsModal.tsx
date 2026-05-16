@@ -82,9 +82,8 @@ export function ProjectSettingsModal({ isOpen, onClose, projectId, onDeactivate 
   const creator = useMemo(() => {
     if (!project?.userId) return undefined;
     const member = members.find(m => m.userId === project.userId);
-    if (member?.email) return { userId: project.userId, email: member.email };
-    if (user?.id === project.userId && user.email) return { userId: project.userId, email: user.email };
-    return { userId: project.userId, email: undefined };
+    const displayName = member?.displayName ?? member?.email ?? (user?.id === project.userId ? user.email : undefined);
+    return { userId: project.userId, email: displayName };
   }, [project, members, user]);
 
   useEffect(() => {

@@ -35,7 +35,7 @@ export function AddUserPopover({
   const filteredMembers = useMemo(() => {
     const q = filter.toLowerCase().trim();
     if (!q) return members;
-    return members.filter(m => m.email?.toLowerCase().includes(q));
+    return members.filter(m => m.displayName?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
   }, [members, filter]);
 
   const handleToggle = (userId: string) => {
@@ -74,7 +74,7 @@ export function AddUserPopover({
                 onClick={() => handleToggle(member.userId)}
                 className="w-full flex items-center justify-between px-3 py-2 rounded-standard text-caption-lg text-text-primary hover:bg-surface-frost-05 transition-all"
               >
-                <span className="truncate">{member.email || member.userId}</span>
+                <span className="truncate">{member.displayName || member.email || member.userId}</span>
                 {isAssigned && <Check size={ICON_SIZE.sm} className="text-status-success shrink-0" />}
               </button>
             );

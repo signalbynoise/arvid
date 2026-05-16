@@ -53,7 +53,7 @@ export function UsersTab({
       const member = members.find(m => m.userId === authorUserId);
       entries.push({
         userId: authorUserId,
-        label: authorName || member?.email || 'Unknown',
+        label: authorName || member?.displayName || member?.email || 'Unknown',
         role: 'author',
       });
       seen.add(authorUserId);
@@ -65,7 +65,7 @@ export function UsersTab({
       const member = members.find(m => m.userId === a.userId);
       entries.push({
         userId: a.userId,
-        label: member?.email || a.userId,
+        label: member?.displayName || member?.email || a.userId,
         role: 'assigned',
         assigneeId: a.id,
       });
@@ -82,7 +82,7 @@ export function UsersTab({
     return members.filter(
       m =>
         !involvedIds.has(m.userId) &&
-        (m.email?.toLowerCase().includes(trimmed)),
+        (m.displayName?.toLowerCase().includes(trimmed) || m.email?.toLowerCase().includes(trimmed)),
     );
   }, [search, members, users]);
 
@@ -109,7 +109,7 @@ export function UsersTab({
                   onClick={() => handleAdd(m.userId)}
                   className="w-full text-left px-3 py-2 text-caption-lg text-text-primary hover:bg-surface-frost-04 transition-colors"
                 >
-                  {m.email ?? 'Unknown'}
+                  {m.displayName ?? m.email ?? 'Unknown'}
                 </button>
               ))}
             </div>

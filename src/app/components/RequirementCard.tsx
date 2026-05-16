@@ -49,9 +49,8 @@ export function RequirementCard({
   const assignees = allAssignees[`requirement:${req.id}`] || [];
   const similar = similarities[req.id];
 
-  const authorName = req.createdBy
-    ? (members.find(m => m.userId === req.createdBy)?.email?.split('@')[0] || req.owner)
-    : req.owner;
+  const creatorMember = req.createdBy ? members.find(m => m.userId === req.createdBy) : undefined;
+  const authorName = creatorMember?.displayName ?? creatorMember?.email?.split('@')[0] ?? req.owner;
 
   return (
     <Card

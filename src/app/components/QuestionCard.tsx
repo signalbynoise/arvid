@@ -39,9 +39,8 @@ export function QuestionCard({
   const allAssignees = useStore(selectCardAssignees);
   const assignees = allAssignees[`question:${q.id}`] || [];
 
-  const authorName = q.createdBy
-    ? (members.find(m => m.userId === q.createdBy)?.email?.split('@')[0] || q.author || 'Unknown')
-    : (q.author || 'Unknown');
+  const creatorMember = q.createdBy ? members.find(m => m.userId === q.createdBy) : undefined;
+  const authorName = creatorMember?.displayName ?? creatorMember?.email?.split('@')[0] ?? q.author ?? 'Unknown';
 
   return (
     <Card

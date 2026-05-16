@@ -78,9 +78,8 @@ export function TeamSettingsModal({ isOpen, onClose, teamId, onSelectProject, on
   const creator = useMemo(() => {
     if (!team) return undefined;
     const member = members.find(m => m.userId === team.createdBy);
-    if (member?.email) return { userId: team.createdBy, email: member.email };
-    if (user?.id === team.createdBy && user.email) return { userId: team.createdBy, email: user.email };
-    return { userId: team.createdBy, email: undefined };
+    const displayName = member?.displayName ?? member?.email ?? (user?.id === team.createdBy ? user.email : undefined);
+    return { userId: team.createdBy, email: displayName };
   }, [team, members, user]);
 
   useEffect(() => {

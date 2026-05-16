@@ -29,9 +29,8 @@ export function AnswerCard({
   const allAssignees = useStore(selectCardAssignees);
   const assignees = allAssignees[`answer:${ans.id}`] || [];
 
-  const authorName = ans.createdBy
-    ? (members.find(m => m.userId === ans.createdBy)?.email?.split('@')[0] || ans.author)
-    : ans.author;
+  const creatorMember = ans.createdBy ? members.find(m => m.userId === ans.createdBy) : undefined;
+  const authorName = creatorMember?.displayName ?? creatorMember?.email?.split('@')[0] ?? ans.author;
 
   return (
     <Card

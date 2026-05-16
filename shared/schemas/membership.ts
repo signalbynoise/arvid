@@ -10,6 +10,7 @@ export const MembershipRowSchema = z.object({
   role: WorkspaceRoleEnum,
   joined_at: z.string(),
   email: z.string().optional(),
+  display_name: z.string().optional(),
 });
 
 export const MembershipSchema = MembershipRowSchema.transform(row => ({
@@ -19,6 +20,7 @@ export const MembershipSchema = MembershipRowSchema.transform(row => ({
   role: row.role,
   joinedAt: row.joined_at,
   email: row.email ?? undefined,
+  displayName: row.display_name ?? undefined,
 }));
 
 export const CreateMembershipBodySchema = z.object({
