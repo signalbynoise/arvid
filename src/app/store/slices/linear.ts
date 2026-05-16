@@ -127,13 +127,24 @@ export const createLinearSlice: StateCreator<LinearSlice, [], [], LinearSlice> =
     set({ linearLinkStatus: 'loading' });
 
     try {
-      await api.updateProject(projectId, {
+      const updated = await api.updateProject(projectId, {
         linear_project_id: linearProjectId,
         linear_project_name: linearProjectName,
         linear_team_id: linearTeamId,
-      } as Record<string, string>);
-      set({ linearLinkStatus: 'idle' });
-      log.info('linkLinearProject', 'Linear project linked');
+      });
+
+      set(state => {
+        const appState = state as unknown as {
+          projects: Array<{ id: string }>;
+        };
+        return {
+          linearLinkStatus: 'idle' as const,
+          projects: appState.projects.map(p =>
+            p.id === projectId ? { ...p, ...updated } : p,
+          ),
+        } as Partial<LinearSlice>;
+      });
+      log.info('linkLinearProject', 'Linear project linked, local state updated');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       set({ linearLinkStatus: 'error' });

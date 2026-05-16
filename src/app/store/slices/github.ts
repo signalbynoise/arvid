@@ -107,11 +107,38 @@ export const createGitHubSlice: StateCreator<GitHubSlice, [], [], GitHubSlice> =
     log.info('linkRepoToProject', 'Linking repo to project', { projectId, repoFullName });
 
     try {
-      await api.updateProject(projectId, {
+      const updated = await api.updateProject(projectId, {
         github_repo_full_name: repoFullName,
         github_repo_default_branch: defaultBranch,
-      } as Record<string, string>);
-      log.info('linkRepoToProject', 'Repo linked successfully');
+      });
+
+      set(state => {
+        const appState = state as unknown as {
+          projects: Array<{ id: string }>;
+          summary: unknown;
+          summaryDataState: { status: string };
+          similarities: Record<string, unknown>;
+          requirements: Array<{ id: string; implStatus?: string }>;
+        };
+        return {
+          repoFetchStatus: 'idle',
+          projects: appState.projects.map(p =>
+            p.id === projectId ? { ...p, ...updated } : p,
+          ),
+          summary: null,
+          summaryDataState: { status: 'idle' },
+          similarities: {},
+          requirements: appState.requirements.map(r => ({
+            ...r,
+            implStatus: r.implStatus && r.implStatus !== 'Not Checked' ? 'Not Checked' : r.implStatus,
+            implConfidence: undefined,
+            implCheckedAt: undefined,
+            implEvidence: undefined,
+            implAnalysis: undefined,
+          })),
+        } as Partial<GitHubSlice>;
+      });
+      log.info('linkRepoToProject', 'Repo linked, stale context cleared');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('linkRepoToProject', 'Failed to link repo', { error: message });

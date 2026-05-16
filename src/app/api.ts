@@ -335,7 +335,16 @@ export const api = {
     return parseSingle(ProjectRowSchema, ProjectSchema, row, '/projects');
   },
 
-  async updateProject(id: string, updates: { name?: string; github_repo_full_name?: string | null; github_repo_default_branch?: string | null }): Promise<Project> {
+  async updateProject(id: string, updates: {
+    name?: string;
+    github_repo_full_name?: string | null;
+    github_repo_default_branch?: string | null;
+    linear_project_id?: string | null;
+    linear_project_name?: string | null;
+    linear_team_id?: string | null;
+    slack_notification_channel_id?: string | null;
+    supabase_project_ref?: string | null;
+  }): Promise<Project> {
     const row = await request<unknown>('PATCH', `/projects/${id}`, updates);
     return parseSingle(ProjectRowSchema, ProjectSchema, row, `/projects/${id}`);
   },

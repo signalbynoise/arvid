@@ -95,10 +95,28 @@ export const createSupabaseConnectSlice: StateCreator<SupabaseConnectSlice, [], 
     log.info('linkToProject', 'Linking Supabase project', { projectId, supabaseProjectRef });
 
     try {
-      await api.updateProject(projectId, {
+      const updated = await api.updateProject(projectId, {
         supabase_project_ref: supabaseProjectRef,
-      } as Record<string, string>);
-      log.info('linkToProject', 'Supabase project linked successfully');
+      });
+
+      set(state => {
+        const appState = state as unknown as {
+          projects: Array<{ id: string }>;
+          summary: unknown;
+          summaryDataState: { status: string };
+          similarities: Record<string, unknown>;
+        };
+        return {
+          dbFetchStatus: 'idle',
+          projects: appState.projects.map(p =>
+            p.id === projectId ? { ...p, ...updated } : p,
+          ),
+          summary: null,
+          summaryDataState: { status: 'idle' },
+          similarities: {},
+        } as Partial<SupabaseConnectSlice>;
+      });
+      log.info('linkToProject', 'Supabase project linked, stale context cleared');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log.error('linkToProject', 'Failed to link Supabase project', { error: message });

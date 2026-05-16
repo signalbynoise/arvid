@@ -382,7 +382,10 @@ export default function App() {
             isOpen={linkRepoOpen}
             onClose={() => setLinkRepoOpen(false)}
             projectId={selectedProjectId}
-            onLinked={() => loadProjects(activeWorkspaceId ?? undefined)}
+            onLinked={() => {
+              loadProjects(activeWorkspaceId ?? undefined);
+              loadEntities(selectedProjectId);
+            }}
           />
           <LinkLinearModal
             isOpen={linkLinearOpen}
@@ -399,7 +402,10 @@ export default function App() {
             isOpen={linkDatabaseOpen}
             onClose={() => setLinkDatabaseOpen(false)}
             projectId={selectedProjectId}
-            onLinked={() => loadProjects(activeWorkspaceId ?? undefined)}
+            onLinked={() => {
+              loadProjects(activeWorkspaceId ?? undefined);
+              loadEntities(selectedProjectId);
+            }}
           />
         </>
       )}

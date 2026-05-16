@@ -90,43 +90,88 @@ projectsRouter.post('/', checkProjectLimit, validateBody(CreateProjectBodySchema
 
 projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
+  const projectId = req.params.id;
+
+  const repoChanging = req.body.github_repo_full_name !== undefined;
+  const dbChanging = req.body.supabase_project_ref !== undefined;
+  const linearChanging = req.body.linear_project_id !== undefined;
 
   const updates: Record<string, unknown> = {};
   if (req.body.name !== undefined) updates.name = req.body.name;
-  if (req.body.github_repo_full_name !== undefined) {
+  if (repoChanging) {
     updates.github_repo_full_name = req.body.github_repo_full_name;
     updates.github_connected_at = req.body.github_repo_full_name ? new Date().toISOString() : null;
   }
   if (req.body.github_repo_default_branch !== undefined) {
     updates.github_repo_default_branch = req.body.github_repo_default_branch;
   }
-  if (req.body.linear_project_id !== undefined) updates.linear_project_id = req.body.linear_project_id;
+  if (linearChanging) updates.linear_project_id = req.body.linear_project_id;
   if (req.body.linear_project_name !== undefined) updates.linear_project_name = req.body.linear_project_name;
   if (req.body.linear_team_id !== undefined) updates.linear_team_id = req.body.linear_team_id;
-  if (req.body.supabase_project_ref !== undefined) {
+  if (dbChanging) {
     updates.supabase_project_ref = req.body.supabase_project_ref;
     updates.supabase_connected_at = req.body.supabase_project_ref ? new Date().toISOString() : null;
   }
   const { data, error } = await db
     .from('projects')
     .update(updates)
-    .eq('id', req.params.id)
+    .eq('id', projectId)
     .select()
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
 
-  if (req.body.github_repo_full_name) {
+  if (repoChanging) {
+    const clearOps: Promise<unknown>[] = [];
+
+    clearOps.push(
+      supabase
+        .from('repo_contexts')
+        .delete()
+        .eq('project_id', projectId)
+        .then(({ error: delErr }) => {
+          if (delErr) {
+            console.error('[ERROR] [projects:patch] Failed to clear old repo_contexts', JSON.stringify({ projectId, error: delErr.message }));
+          } else {
+            console.info('[INFO] [projects:patch] Cleared old repo_contexts', JSON.stringify({ projectId }));
+          }
+        }),
+    );
+
+    clearOps.push(
+      supabase
+        .from('requirements')
+        .update({
+          impl_status: 'Not Checked',
+          impl_confidence: null,
+          impl_checked_at: null,
+          impl_evidence: null,
+          impl_analysis: null,
+        })
+        .eq('project_id', projectId)
+        .in('impl_status', ['No Repo', 'Implemented', 'Partial', 'Not Found', 'Checking'])
+        .then(({ error: resetErr, count }) => {
+          if (resetErr) {
+            console.error('[ERROR] [projects:patch] Failed to reset impl_status after repo change', JSON.stringify({ projectId, error: resetErr.message }));
+          } else if (count && count > 0) {
+            console.info('[INFO] [projects:patch] Reset impl_status after repo change', JSON.stringify({ projectId, count }));
+          }
+        }),
+    );
+
+    Promise.all(clearOps).catch(() => {});
+  }
+
+  if (dbChanging) {
     supabase
-      .from('requirements')
-      .update({ impl_status: 'Not Checked', impl_confidence: null, impl_checked_at: null })
-      .eq('project_id', req.params.id)
-      .eq('impl_status', 'No Repo')
-      .then(({ error: resetErr, count }) => {
-        if (resetErr) {
-          console.error('[ERROR] [projects:patch] Failed to reset No Repo requirements', JSON.stringify({ error: resetErr.message }));
-        } else if (count && count > 0) {
-          console.info('[INFO] [projects:patch] Reset No Repo requirements after repo connected', JSON.stringify({ projectId: req.params.id, count }));
+      .from('db_contexts')
+      .delete()
+      .eq('project_id', projectId)
+      .then(({ error: delErr }) => {
+        if (delErr) {
+          console.error('[ERROR] [projects:patch] Failed to clear old db_contexts', JSON.stringify({ projectId, error: delErr.message }));
+        } else {
+          console.info('[INFO] [projects:patch] Cleared old db_contexts', JSON.stringify({ projectId }));
         }
       });
   }
