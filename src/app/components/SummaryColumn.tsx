@@ -1,21 +1,24 @@
 import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react';
-import { FileText, LoaderPinwheel, MoreHorizontal, BarChart3 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { FileText, LoaderPinwheel, MoreHorizontal } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectRequirements, selectQuestions, selectAnswers, selectSelectedReqId, selectSummary, selectSummaryDataState, selectProjects, selectSelectedProjectId } from '../store';
 import { buildCursorPrompt, openInCursor } from '../lib/cursorDeeplink';
+import { buildRequirementPath } from '../domain/paths';
 import { api } from '../api';
 import { ColumnShell, ColumnBody, ColumnEmptyState } from './ColumnShell';
-import { IconButton } from './IconButton';
 import { Card } from './ui/Card';
-import { Button } from './Button';
 import { KnowledgeCompleteness } from './summary/KnowledgeCompleteness';
 import { TaskOverview } from './summary/TaskOverview';
 import { ImplementationDetails } from './summary/ImplementationDetails';
 import { RulesAndConstraints } from './summary/RulesAndConstraints';
 import { KnowledgeGraph } from './summary/KnowledgeGraph';
 import { OpenQuestionsAndBlockers } from './summary/OpenQuestionsAndBlockers';
+import { SummaryMenu } from './summary/SummaryMenu';
+import { EmailRequirementModal } from './summary/EmailRequirementModal';
 
 export function SummaryColumn() {
+  const { wsShortId, teamShortId, projectShortId } = useParams();
   const requirements = useStore(selectRequirements);
   const allQuestions = useStore(selectQuestions);
   const allAnswers = useStore(selectAnswers);
@@ -81,14 +84,16 @@ export function SummaryColumn() {
 
   const isIdle = summaryDataState.status !== 'generating' && summaryDataState.status !== 'loading';
 
+  const isImplemented = requirement?.implStatus === 'Implemented';
+
   const doGenerate = useCallback(() => {
-    if (!selectedReqId || !hasAcceptedQuestions) return;
+    if (!selectedReqId || !hasAcceptedQuestions || isImplemented) return;
     if (summaryDataState.status === 'generating') return;
     generateSummary(selectedReqId);
-  }, [selectedReqId, hasAcceptedQuestions, summaryDataState.status, generateSummary]);
+  }, [selectedReqId, hasAcceptedQuestions, isImplemented, summaryDataState.status, generateSummary]);
 
   useEffect(() => {
-    if (!selectedReqId || !hasAcceptedQuestions || !isIdle) return;
+    if (!selectedReqId || !hasAcceptedQuestions || !isIdle || isImplemented) return;
 
     if (prevFingerprintRef.current === null) {
       prevFingerprintRef.current = treeFingerprint;
@@ -107,7 +112,7 @@ export function SummaryColumn() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [treeFingerprint, selectedReqId, hasAcceptedQuestions, isIdle, summary, doGenerate]);
+  }, [treeFingerprint, selectedReqId, hasAcceptedQuestions, isIdle, isImplemented, summary, doGenerate]);
 
   if (!requirement) {
     return (
@@ -135,6 +140,35 @@ export function SummaryColumn() {
 
   const canSend = completeness >= 80;
 
+  const handleSendToLinear = useCallback(() => {
+    if (requirement?.linearIssueUrl) {
+      window.open(requirement.linearIssueUrl, '_blank');
+      return;
+    }
+    if (selectedReqId) sendToLinear(selectedReqId);
+  }, [requirement, selectedReqId, sendToLinear]);
+
+  const handleSendToCursor = useCallback(() => {
+    if (!summary || !requirement) return;
+    openInCursor(buildCursorPrompt(summary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined));
+    api.notifyCursorSent(requirement.id);
+  }, [summary, requirement, figmaUrls]);
+
+  const handleCopyRequirementLink = useCallback(() => {
+    if (!requirement?.shortId || !wsShortId || !teamShortId || !projectShortId) return;
+    const path = buildRequirementPath(wsShortId, teamShortId, projectShortId, requirement.shortId);
+    const url = `${window.location.origin}${path}`;
+    navigator.clipboard.writeText(url);
+  }, [requirement, wsShortId, teamShortId, projectShortId]);
+
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+
+  const requirementUrl = useMemo(() => {
+    if (!requirement?.shortId || !wsShortId || !teamShortId || !projectShortId) return '';
+    const path = buildRequirementPath(wsShortId, teamShortId, projectShortId, requirement.shortId);
+    return `${window.location.origin}${path}`;
+  }, [requirement, wsShortId, teamShortId, projectShortId]);
+
   return (
     <ColumnShell
       title="Summary"
@@ -144,9 +178,17 @@ export function SummaryColumn() {
           {(isGenerating || isLoading) && (
             <LoaderPinwheel size={ICON_SIZE.sm} className="text-text-tertiary animate-spin mr-1" />
           )}
-          <IconButton title="Analytics" onClick={() => {}}>
-            <BarChart3 size={ICON_SIZE.sm} />
-          </IconButton>
+          <SummaryMenu
+            onSendToLinear={handleSendToLinear}
+            onSendToCursor={handleSendToCursor}
+            onDashboard={() => {}}
+            onGraph={() => {}}
+            onEmailRequirementLink={() => setEmailModalOpen(true)}
+            onCopyRequirementLink={handleCopyRequirementLink}
+            linearDisabled={!canSend || !hasLinearProject || sendToLinearStatus === 'sending'}
+            cursorDisabled={!canSend || !summary}
+            linearLabel={requirement.linearIssueUrl ? (requirement.linearIssueIdentifier || 'View in Linear') : 'Send to Linear'}
+          />
         </>
       }
     >
@@ -185,41 +227,15 @@ export function SummaryColumn() {
               />
             )}
           </div>
-
-          <div className="flex items-center gap-2">
-            {requirement.linearIssueUrl ? (
-              <Button
-                className="flex-1 flex items-center justify-center gap-2"
-                onClick={() => window.open(requirement.linearIssueUrl, '_blank')}
-              >
-                <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
-                <span>{requirement.linearIssueIdentifier || 'View in Linear'}</span>
-              </Button>
-            ) : (
-              <Button
-                className="flex-1 flex items-center justify-center gap-2"
-                disabled={!canSend || !hasLinearProject || sendToLinearStatus === 'sending'}
-                onClick={() => selectedReqId && sendToLinear(selectedReqId)}
-              >
-                <img src="/linear.svg" alt="" className="w-4 h-4 opacity-60" />
-                <span>Send to Linear</span>
-              </Button>
-            )}
-            <Button
-              className="flex-1 flex items-center justify-center gap-2"
-              disabled={!canSend || !summary}
-              onClick={() => {
-                if (!summary) return;
-                openInCursor(buildCursorPrompt(summary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined));
-                api.notifyCursorSent(requirement.id);
-              }}
-            >
-              <img src="/cursor.svg" alt="" className="w-4 h-4 opacity-60" />
-              <span>Send to Cursor</span>
-            </Button>
-          </div>
         </Card>
       </ColumnBody>
+
+      <EmailRequirementModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        requirementUrl={requirementUrl}
+        requirementTitle={requirement.title}
+      />
     </ColumnShell>
   );
 }

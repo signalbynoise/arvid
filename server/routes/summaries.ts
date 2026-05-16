@@ -49,6 +49,20 @@ summariesRouter.post('/generate/:requirementId', async (req, res) => {
     return res.status(404).json({ error: `Requirement ${requirementId} not found` });
   }
 
+  if (context.requirement.impl_status === 'Implemented') {
+    console.info(
+      '[INFO] [summaries:generate] Requirement is implemented, skipping regeneration',
+      JSON.stringify({ requirementId }),
+    );
+    const { data: existing } = await db
+      .from('summaries')
+      .select('*')
+      .eq('requirement_id', requirementId)
+      .single();
+    if (existing) return res.status(200).json(existing);
+    return res.status(200).json({ skipped: true, reason: 'Requirement is implemented' });
+  }
+
   const input: SummaryGenerationInput = {
     requirement: {
       title: context.requirement.title,

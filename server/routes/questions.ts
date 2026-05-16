@@ -126,6 +126,14 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
     return res.status(404).json({ error: `Requirement ${requirementId} not found` });
   }
 
+  if (context.requirement.impl_status === 'Implemented') {
+    console.info(
+      '[INFO] [questions:suggest] Requirement is implemented, skipping suggestions',
+      JSON.stringify({ requirementId }),
+    );
+    return res.status(200).json([]);
+  }
+
   try {
     const existingQuestionsForDepth = context.questions.map(q => ({
       text: q.text,

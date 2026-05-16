@@ -26,6 +26,7 @@ import { billingRouter } from './routes/billing';
 import { stripeWebhooksRouter } from './routes/stripeWebhooks';
 import { searchRouter } from './routes/search';
 import { renderRouter } from './routes/render';
+import { shareRouter } from './routes/share';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -91,6 +92,7 @@ app.use('/api/cms/articles', cmsArticlesRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/render', renderRouter);
+app.use('/api/share', shareRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR] [express:unhandled]', err.message, err.stack);

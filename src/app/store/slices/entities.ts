@@ -346,9 +346,15 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   },
 
   suggestQuestions: async (requirementId: string) => {
-    const { suggestingForRequirements } = get();
+    const { suggestingForRequirements, requirements } = get();
     if (suggestingForRequirements.has(requirementId)) {
       log.debug('suggestQuestions', 'Already suggesting for this requirement, skipping', { requirementId });
+      return;
+    }
+
+    const req = requirements.find(r => r.id === requirementId);
+    if (req?.implStatus === 'Implemented') {
+      log.debug('suggestQuestions', 'Requirement is implemented, skipping suggestions', { requirementId });
       return;
     }
 

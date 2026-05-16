@@ -894,4 +894,10 @@ export const api = {
     const rows = await request<unknown[]>('GET', `/search?${params}`, undefined, signal);
     return parseArray(SearchResultRowSchema, SearchResultSchema, rows, '/search');
   },
+
+  // --- Share ---
+
+  async emailRequirementLink(to: string, url: string, requirementTitle?: string): Promise<void> {
+    await request<{ success: boolean }>('POST', '/share/email-requirement', { to, url, requirementTitle });
+  },
 };

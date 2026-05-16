@@ -40,6 +40,7 @@ export interface RequirementFullContext {
     clarity: string;
     risk: string;
     project_id?: string;
+    impl_status?: string;
     clarity_score?: number;
     risk_score?: number;
     clarity_reasoning?: string;
