@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { BaseModal } from '../BaseModal';
 import { ModalFooter } from '../ui/ModalFooter';
 import { FormField } from '../ui/FormField';
@@ -26,6 +27,7 @@ export function EmailRequirementModal({ isOpen, onClose, requirementUrl, require
     setError(null);
     try {
       await api.emailRequirementLink(email, requirementUrl, requirementTitle);
+      toast.success(`Requirement sent to ${email}`);
       setEmail('');
       onClose();
     } catch (err) {

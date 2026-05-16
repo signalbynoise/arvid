@@ -67,7 +67,6 @@ export function ShareRequirementEmail({
                 arvid.work
               </Link>
             </Text>
-            <Text style={footerUrl}>{url}</Text>
           </Section>
         </Container>
       </Body>
@@ -163,14 +162,9 @@ const footerText: React.CSSProperties = {
 };
 
 const footerLink: React.CSSProperties = {
-  color: '#7170ff',
-  textDecoration: 'none',
+  color: '#d0d6e0',
+  textDecoration: 'underline',
+  textDecorationStyle: 'dashed' as const,
+  textUnderlineOffset: '3px',
 };
 
-const footerUrl: React.CSSProperties = {
-  fontSize: '11px',
-  color: 'rgba(255,255,255,0.15)',
-  lineHeight: '1.5',
-  margin: 0,
-  wordBreak: 'break-all' as const,
-};
