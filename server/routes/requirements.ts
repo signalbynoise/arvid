@@ -494,26 +494,64 @@ async function checkDeployStatusForRequirement(
   userId: string,
 ): Promise<{ deploy_status: string; deploy_url: string | null; deploy_commit_sha: string | null; deploy_checked_at: string } | null> {
   try {
-    const { data: proj } = await supabase
+    const { data: proj, error: projError } = await supabaseAdmin
       .from('projects')
       .select('github_repo_full_name, user_id')
       .eq('id', projectId)
       .single();
 
-    if (!proj?.github_repo_full_name) return null;
+    if (!proj?.github_repo_full_name) {
+      console.info(
+        '[INFO] [requirements:deployCheck] No github_repo_full_name on project, skipping',
+        JSON.stringify({ requirementId, projectId, hasProj: !!proj, error: projError?.message }),
+      );
+      return null;
+    }
 
-    const lookupUserId = proj.user_id ?? userId;
-    const { data: conn } = await supabase
-      .from('render_connections')
-      .select('api_key, render_owner_id')
-      .eq('user_id', lookupUserId)
-      .single();
+    const candidateUserIds = proj.user_id && proj.user_id !== userId
+      ? [proj.user_id, userId]
+      : [userId];
 
-    if (!conn?.api_key) return null;
+    let conn: { api_key: string; render_owner_id: string | null } | null = null;
+    for (const uid of candidateUserIds) {
+      const { data, error: connError } = await supabaseAdmin
+        .from('render_connections')
+        .select('api_key, render_owner_id')
+        .eq('user_id', uid)
+        .single();
+
+      if (data?.api_key) {
+        conn = data;
+        break;
+      }
+      console.debug(
+        '[DEBUG] [requirements:deployCheck] No Render connection for user',
+        JSON.stringify({ requirementId, userId: uid, error: connError?.message }),
+      );
+    }
+
+    if (!conn) {
+      console.info(
+        '[INFO] [requirements:deployCheck] No Render connection found for any candidate user, skipping',
+        JSON.stringify({ requirementId, candidateUserIds }),
+      );
+      return null;
+    }
 
     const client = new RenderClient({ apiKey: conn.api_key });
     const allServices = await client.listServices(conn.render_owner_id ?? undefined);
     const matched = allServices.filter(s => repoMatches(s.service.repo, proj.github_repo_full_name));
+
+    console.info(
+      '[INFO] [requirements:deployCheck] Service matching',
+      JSON.stringify({
+        requirementId,
+        repoFullName: proj.github_repo_full_name,
+        totalServices: allServices.length,
+        matchedServices: matched.length,
+        serviceRepos: allServices.map(s => ({ name: s.service.name, repo: s.service.repo, type: s.service.type })),
+      }),
+    );
 
     if (matched.length === 0) return null;
 
@@ -521,6 +559,20 @@ async function checkDeployStatusForRequirement(
       matched.map(async (s) => {
         const deploys = await client.listDeploys(s.service.id, { limit: 1 });
         return { service: s.service, latest: deploys[0] ?? null };
+      }),
+    );
+
+    console.info(
+      '[INFO] [requirements:deployCheck] Deploy results',
+      JSON.stringify({
+        requirementId,
+        deploys: deployResults.map(d => ({
+          serviceName: d.service.name,
+          serviceType: d.service.type,
+          hasLatest: !!d.latest,
+          latestStatus: d.latest?.status,
+          latestId: d.latest?.id,
+        })),
       }),
     );
 
@@ -550,7 +602,7 @@ async function checkDeployStatusForRequirement(
 
     const result = { deploy_status: aggregateStatus, deploy_url: deployUrl, deploy_commit_sha: commitSha, deploy_checked_at: now };
 
-    await supabase
+    await supabaseAdmin
       .from('requirements')
       .update({
         deploy_status: aggregateStatus,
@@ -842,6 +894,33 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
 
     res.status(500).json({ error: `Implementation check failed: ${message}` });
   }
+});
+
+requirementsRouter.post('/:id/check-deploy', async (req, res) => {
+  const requirementId = req.params.id;
+
+  console.info(
+    '[INFO] [requirements:checkDeploy] Starting deploy check',
+    JSON.stringify({ requirementId }),
+  );
+
+  const { data: requirement, error } = await supabaseAdmin
+    .from('requirements')
+    .select('id, project_id')
+    .eq('id', requirementId)
+    .single();
+
+  if (error || !requirement) {
+    return res.status(404).json({ error: 'Requirement not found' });
+  }
+
+  const result = await checkDeployStatusForRequirement(requirementId, requirement.project_id, req.user!.id);
+
+  if (!result) {
+    return res.json({ deploy_status: 'unknown', deploy_url: null, deploy_commit_sha: null, deploy_checked_at: new Date().toISOString() });
+  }
+
+  res.json(result);
 });
 
 requirementsRouter.patch('/:id/deactivate', async (req, res) => {

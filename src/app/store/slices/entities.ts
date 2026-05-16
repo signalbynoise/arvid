@@ -30,6 +30,7 @@ export interface EntitiesSlice {
   suggestingAnswerForQuestions: Set<string>;
   skippedAnswerSuggestions: Set<string>;
   checkingImplementation: Set<string>;
+  checkingDeploy: Set<string>;
   scoringRequirements: Set<string>;
   pendingScores: { clarityScore?: number; riskScore?: number; clarityReasoning?: string; riskReasoning?: string } | null;
 
@@ -55,6 +56,7 @@ export interface EntitiesSlice {
   hideSuggestion: (id: string) => Promise<void>;
   toggleCurrentAnswer: (answerId: string) => Promise<void>;
   checkImplementation: (requirementId: string) => Promise<void>;
+  checkDeployStatus: (requirementId: string) => Promise<void>;
 
   fetchCardAssignees: (projectId: string) => Promise<void>;
   assignUser: (entityType: EntityType, entityId: string, userId: string) => Promise<void>;
@@ -75,6 +77,7 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
   suggestingAnswerForQuestions: new Set(),
   skippedAnswerSuggestions: new Set(),
   checkingImplementation: new Set(),
+  checkingDeploy: new Set(),
   scoringRequirements: new Set(),
   pendingScores: null,
 
@@ -666,6 +669,11 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
                   implCheckedAt: result.impl_checked_at,
                   implEvidence: result.impl_evidence,
                   implAnalysis: result.impl_analysis ?? undefined,
+                  ...(result.deploy_status ? {
+                    deployStatus: result.deploy_status as Requirement['deployStatus'],
+                    deployUrl: result.deploy_url ?? undefined,
+                    deployCheckedAt: result.deploy_checked_at,
+                  } : {}),
                 }
               : r,
           ),
@@ -687,6 +695,61 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
         };
       });
       log.error('checkImplementation', 'Implementation check failed', { requirementId, error: message });
+    }
+  },
+
+  checkDeployStatus: async (requirementId: string) => {
+    const { checkingDeploy } = get();
+    if (checkingDeploy.has(requirementId)) {
+      log.debug('checkDeployStatus', 'Already checking deploy for this requirement', { requirementId });
+      return;
+    }
+
+    log.info('checkDeployStatus', 'Starting deploy check', { requirementId });
+    const nextSet = new Set(checkingDeploy);
+    nextSet.add(requirementId);
+    set(state => ({
+      checkingDeploy: nextSet,
+      requirements: state.requirements.map(r =>
+        r.id === requirementId ? { ...r, deployStatus: 'checking' as Requirement['deployStatus'] } : r,
+      ),
+    }));
+
+    try {
+      const result = await api.checkDeployStatus(requirementId);
+
+      set(state => {
+        const updatedSet = new Set(state.checkingDeploy);
+        updatedSet.delete(requirementId);
+        return {
+          requirements: state.requirements.map(r =>
+            r.id === requirementId
+              ? {
+                  ...r,
+                  deployStatus: result.deploy_status as Requirement['deployStatus'],
+                  deployUrl: result.deploy_url ?? undefined,
+                  deployCheckedAt: result.deploy_checked_at,
+                }
+              : r,
+          ),
+          checkingDeploy: updatedSet,
+        };
+      });
+
+      log.info('checkDeployStatus', 'Deploy check complete', { requirementId, status: result.deploy_status });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      set(state => {
+        const updatedSet = new Set(state.checkingDeploy);
+        updatedSet.delete(requirementId);
+        return {
+          checkingDeploy: updatedSet,
+          requirements: state.requirements.map(r =>
+            r.id === requirementId ? { ...r, deployStatus: 'unknown' as Requirement['deployStatus'] } : r,
+          ),
+        };
+      });
+      log.error('checkDeployStatus', 'Deploy check failed', { requirementId, error: message });
     }
   },
 

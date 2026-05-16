@@ -411,8 +411,27 @@ export const api = {
     await request<void>('DELETE', `/requirements/${id}`);
   },
 
-  async checkImplementation(requirementId: string): Promise<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string; impl_analysis?: ImplAnalysis | null }> {
-    return request<{ impl_status: string; impl_confidence: number | null; impl_checked_at: string; impl_evidence?: string; impl_analysis?: ImplAnalysis | null }>('POST', `/requirements/${requirementId}/check-implementation`);
+  async checkImplementation(requirementId: string): Promise<{
+    impl_status: string;
+    impl_confidence: number | null;
+    impl_checked_at: string;
+    impl_evidence?: string;
+    impl_analysis?: ImplAnalysis | null;
+    deploy_status?: string;
+    deploy_url?: string | null;
+    deploy_commit_sha?: string | null;
+    deploy_checked_at?: string;
+  }> {
+    return request('POST', `/requirements/${requirementId}/check-implementation`);
+  },
+
+  async checkDeployStatus(requirementId: string): Promise<{
+    deploy_status: string;
+    deploy_url: string | null;
+    deploy_commit_sha: string | null;
+    deploy_checked_at: string;
+  }> {
+    return request('POST', `/requirements/${requirementId}/check-deploy`);
   },
 
   async createQuestion(q: { text: string; requirementId: string; importance: string; category: string }): Promise<Question> {

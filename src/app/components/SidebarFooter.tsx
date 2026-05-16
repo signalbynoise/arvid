@@ -7,7 +7,6 @@ import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
 import { SlackNotifySelector } from './SlackNotifySelector';
 import { SupabaseProjectSelector } from './SupabaseProjectSelector';
-import { RenderAutoServices } from './RenderAutoServices';
 import { useStore } from '../store';
 import type { Project } from '../types';
 
@@ -27,7 +26,6 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const slackChannels = useStore(s => s.slackChannels);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
-  const projectServicesMatched = useStore(s => s.projectServicesMatched);
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
@@ -193,9 +191,11 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <SidebarFooterItem
                 icon={<img src="/render.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
                 label="Deployment"
-                isConnected={projectServicesMatched}
+                isConnected={renderConnection.status === 'connected'}
               >
-                <RenderAutoServices projectId={project.id} hasRepo={!!project.githubRepo} />
+                <FooterDropdownTrigger onClick={() => {}} disabled>
+                  <span className="text-text-primary">{renderConnection.ownerName ?? 'Connected'}</span>
+                </FooterDropdownTrigger>
               </SidebarFooterItem>
             )}
           </div>
@@ -236,9 +236,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showRender && (
               <div className="relative">
                 <img src="/render.svg" alt="Render" className="w-4 h-4 opacity-50" />
-                {projectServicesMatched && (
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
-                )}
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
               </div>
             )}
           </div>

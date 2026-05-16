@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug } from 'lucide-react';
+import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug, Rocket } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSubscription, selectSubscriptionLoading } from '../store';
 import { useAuth } from '../auth/AuthProvider';
@@ -17,14 +17,16 @@ import { logger } from '../logger';
 import { PLAN_DISPLAY } from '../../../shared/schemas/subscription';
 import { resolvePlan, getPlanFeatures, formatSubscriptionStatus, formatPeriodEndLabel } from '../domain/billing';
 import { IntegrationsTab } from './account-settings/IntegrationsTab';
+import { DeploymentTab } from './account-settings/DeploymentTab';
 
 const log = logger.create('AccountSettings');
 
-type SettingsTab = 'account' | 'integrations' | 'plan' | 'invoices';
+type SettingsTab = 'account' | 'integrations' | 'deployment' | 'plan' | 'invoices';
 
 const TAB_CONFIG: ModalSidebarItem[] = [
   { id: 'account', label: 'Account', icon: <UserIcon size={ICON_SIZE.sm} /> },
   { id: 'integrations', label: 'Integrations', icon: <Plug size={ICON_SIZE.sm} /> },
+  { id: 'deployment', label: 'Deployment', icon: <Rocket size={ICON_SIZE.sm} /> },
   { id: 'plan', label: 'Plan', icon: <Crown size={ICON_SIZE.sm} /> },
   { id: 'invoices', label: 'Invoices', icon: <Receipt size={ICON_SIZE.sm} /> },
 ];
@@ -32,6 +34,7 @@ const TAB_CONFIG: ModalSidebarItem[] = [
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: SettingsTab;
 }
 
 interface Invoice {
@@ -68,7 +71,7 @@ const FORMAT_LONG_DATE = (isoString: string) =>
     day: 'numeric',
   });
 
-export function AccountSettingsModal({ isOpen, onClose }: Props) {
+export function AccountSettingsModal({ isOpen, onClose, initialTab }: Props) {
   const { user, updateProfile } = useAuth();
   const subscription = useStore(selectSubscription);
   const subscriptionLoading = useStore(selectSubscriptionLoading);
@@ -96,8 +99,11 @@ export function AccountSettingsModal({ isOpen, onClose }: Props) {
       loadSubscription();
       setNameValue(originalName);
       setNameError(null);
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
     }
-  }, [isOpen, loadSubscription, originalName]);
+  }, [isOpen, loadSubscription, originalName, initialTab]);
 
   useEffect(() => {
     if (isOpen && activeTab === 'invoices') {
@@ -205,6 +211,10 @@ export function AccountSettingsModal({ isOpen, onClose }: Props) {
 
         {activeTab === 'integrations' && (
           <IntegrationsTab />
+        )}
+
+        {activeTab === 'deployment' && (
+          <DeploymentTab />
         )}
 
         {activeTab === 'plan' && (

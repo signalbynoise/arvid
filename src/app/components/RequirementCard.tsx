@@ -22,6 +22,8 @@ interface RequirementCardProps {
   onAddUser: (id: string) => void;
   onDeactivate: (id: string) => void;
   onCheckImplementation: (id: string) => void;
+  onCheckDeploy: (id: string) => void;
+  renderConnected: boolean;
   onViewImplDetails: (id: string) => void;
 }
 
@@ -37,6 +39,8 @@ export function RequirementCard({
   onAddUser,
   onDeactivate,
   onCheckImplementation,
+  onCheckDeploy,
+  renderConnected,
   onViewImplDetails,
 }: RequirementCardProps) {
   const members = useStore(selectMembers);
@@ -112,11 +116,14 @@ export function RequirementCard({
           onRetry={() => onCheckImplementation(req.id)}
           onViewDetails={() => onViewImplDetails(req.id)}
         />
-        <RenderStatusChip
-          deployStatus={req.deployStatus}
-          deployUrl={req.deployUrl}
-          deployCheckedAt={req.deployCheckedAt}
-        />
+        {renderConnected && (
+          <RenderStatusChip
+            deployStatus={req.deployStatus}
+            deployUrl={req.deployUrl}
+            deployCheckedAt={req.deployCheckedAt}
+            onCheck={() => onCheckDeploy(req.id)}
+          />
+        )}
       </div>
 
       <Card.Footer

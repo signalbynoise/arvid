@@ -46,6 +46,8 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
   const selectedId = useStore(selectSelectedReqId);
   const checkImplementation = useStore(s => s.checkImplementation);
   const checkingImplementation = useStore(s => s.checkingImplementation);
+  const checkDeployStatus = useStore(s => s.checkDeployStatus);
+  const renderConnected = useStore(s => s.renderConnection.status === 'connected');
   const hintCards = useStore(selectHintRequirementCards);
 
   const [groupBy, setGroupBy] = useState('none');
@@ -101,6 +103,8 @@ export function RequirementColumn({ onNewReqClick, onOpenDetails, onEdit, onAddU
         onAddUser={onAddUser ? (id) => onAddUser('requirement', id) : () => {}}
         onDeactivate={onDeactivate ? (id) => onDeactivate('requirement', id) : () => {}}
         onCheckImplementation={checkImplementation}
+        onCheckDeploy={checkDeployStatus}
+        renderConnected={renderConnected}
         onViewImplDetails={(id) => setImplDetailReqId(id)}
       />
     ));

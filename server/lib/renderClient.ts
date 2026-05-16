@@ -36,6 +36,11 @@ interface RenderDeployResponse {
   createdAt: string;
 }
 
+interface RenderDeployListItem {
+  deploy: RenderDeployResponse;
+  cursor?: string;
+}
+
 export class RenderClient {
   private apiKey: string;
 
@@ -135,9 +140,10 @@ export class RenderClient {
   }
 
   async listDeploys(serviceId: string, opts?: { limit?: number }): Promise<RenderDeployResponse[]> {
-    return this.request<RenderDeployResponse[]>(`/services/${serviceId}/deploys`, {
+    const raw = await this.request<RenderDeployListItem[]>(`/services/${serviceId}/deploys`, {
       params: { limit: String(opts?.limit ?? 5) },
     });
+    return raw.map(item => item.deploy);
   }
 }
 
