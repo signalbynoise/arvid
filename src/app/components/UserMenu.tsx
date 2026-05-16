@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LogOut, UserRound, CreditCard } from 'lucide-react';
+import { LogOut, UserRound, CreditCard, Sun, Moon } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { IconButton } from './IconButton';
 import { DropdownPanel } from './ui/DropdownPanel';
@@ -10,6 +10,7 @@ import { ToggleIndicator } from './ToggleIndicator';
 import { AccountSettingsModal } from './AccountSettingsModal';
 import { useAuth } from '../auth/AuthProvider';
 import { useStore } from '../store';
+import { useTheme } from '../hooks/useTheme';
 import { logger } from '../logger';
 
 const log = logger.create('UserMenu');
@@ -22,6 +23,8 @@ export function UserMenu() {
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsInitialTab, setAccountSettingsInitialTab] = useState<SettingsTab | undefined>(undefined);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const { theme, toggleTheme } = useTheme();
 
   const githubConnection = useStore(s => s.githubConnection);
   const linearConnection = useStore(s => s.linearConnection);
@@ -100,6 +103,19 @@ export function UserMenu() {
           <DropdownItem
             icon={<UserRound size={ICON_SIZE.md} />}
             label={fullName || email}
+          />
+        </DropdownSection>
+
+        <DropdownDivider />
+
+        <DropdownSection label="Appearance">
+          <DropdownItem
+            icon={theme === 'dark'
+              ? <Moon size={ICON_SIZE.md} />
+              : <Sun size={ICON_SIZE.md} />}
+            label={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+            right={<ToggleIndicator connected={theme === 'light'} />}
+            onClick={toggleTheme}
           />
         </DropdownSection>
 

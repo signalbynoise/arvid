@@ -7,6 +7,9 @@ import { LoginPage } from './app/pages/LoginPage';
 import { WorkspaceRedirect } from './app/components/WorkspaceRedirect';
 import { WorkspaceLayout } from './app/components/WorkspaceLayout';
 import './styles/index.css';
+import { initTheme } from './app/hooks/useTheme';
+
+initTheme();
 
 createRoot(document.getElementById('root')!).render(
   <BrowserRouter>

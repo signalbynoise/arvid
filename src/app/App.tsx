@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
+import { useTheme } from './hooks/useTheme';
 import { RequirementColumn } from './components/RequirementColumn';
 import { QuestionColumn } from './components/QuestionColumn';
 import { AnswerColumn } from './components/AnswerColumn';
@@ -25,6 +26,7 @@ import { LinkDatabaseModal } from './components/LinkDatabaseModal';
 import { supabase } from './lib/supabase';
 
 export default function App() {
+  const { theme } = useTheme();
   const dataState = useStore(selectDataState);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
@@ -403,7 +405,7 @@ export default function App() {
       )}
       <CommandPalette />
       <Toaster
-        theme="dark"
+        theme={theme}
         position="bottom-right"
         toastOptions={{
           className: 'bg-surface-elevated border border-border-subtle text-text-primary text-[13px] shadow-modal',

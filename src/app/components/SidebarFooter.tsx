@@ -27,7 +27,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
 
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
   const [unlocked, setUnlocked] = useState<Set<IntegrationKey>>(new Set());
 

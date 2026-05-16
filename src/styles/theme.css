@@ -175,6 +175,97 @@
 }
 
 /* ============================================================
+   LIGHT MODE OVERRIDES
+   Applied when <html> has class="light".
+   Dark mode is the default — these tokens flip surfaces, text,
+   borders, overlays, and interactive colors for light contexts.
+   ============================================================ */
+
+:root.light {
+  /* --- Surfaces --- */
+  --surface-base: #f5f6f7;
+  --surface-panel: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-menu: #ffffff;
+  --surface-frost-01: rgba(0, 0, 0, 0.01);
+  --surface-frost-02: rgba(0, 0, 0, 0.02);
+  --surface-frost-03: rgba(0, 0, 0, 0.03);
+  --surface-frost-04: rgba(0, 0, 0, 0.04);
+  --surface-frost-05: rgba(0, 0, 0, 0.05);
+  --surface-frost-06: rgba(0, 0, 0, 0.06);
+  --surface-frost-08: rgba(0, 0, 0, 0.08);
+  --surface-frost-10: rgba(0, 0, 0, 0.1);
+  --surface-frost-12: rgba(0, 0, 0, 0.12);
+  --surface-frost-15: rgba(0, 0, 0, 0.15);
+
+  /* --- Text --- */
+  --text-primary: #111113;
+  --text-secondary: #3c4149;
+  --text-tertiary: #6b7280;
+  --text-quaternary: #9ca3af;
+  --text-empty: #d1d5db;
+  --text-on-primary: #ffffff;
+
+  /* --- Borders --- */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --border-hover: rgba(0, 0, 0, 0.18);
+  --border-focus: rgba(0, 0, 0, 0.25);
+  --border-focus-max: rgba(0, 0, 0, 0.35);
+
+  /* --- Status: Success --- */
+  --status-success-surface: rgba(16, 185, 129, 0.08);
+  --status-success-border: rgba(16, 185, 129, 0.2);
+  --status-success-green-halo: rgba(39, 166, 68, 0.1);
+
+  /* --- Status: Warning --- */
+  --status-warning-surface: rgba(245, 158, 11, 0.08);
+  --status-warning-surface-subtle: rgba(245, 158, 11, 0.04);
+  --status-warning-border: rgba(245, 158, 11, 0.2);
+  --status-warning-border-muted: rgba(245, 158, 11, 0.12);
+
+  /* --- Status: Error / Destructive --- */
+  --status-error-surface: rgba(239, 68, 68, 0.06);
+  --status-error-surface-subtle: rgba(239, 68, 68, 0.04);
+  --status-error-border: rgba(239, 68, 68, 0.18);
+  --status-error-border-muted: rgba(239, 68, 68, 0.12);
+  --status-error-border-focus: rgba(239, 68, 68, 0.4);
+  --status-error-fill-hover: rgba(239, 68, 68, 0.15);
+  --status-error-border-strong: rgba(239, 68, 68, 0.25);
+  --status-error-fill-muted: rgba(239, 68, 68, 0.1);
+  --status-error-fill-faint: rgba(239, 68, 68, 0.08);
+
+  /* --- Accent --- */
+  --accent-surface-subtle: rgba(113, 112, 255, 0.04);
+  --accent-surface: rgba(113, 112, 255, 0.1);
+  --accent-surface-hover: rgba(113, 112, 255, 0.16);
+  --accent-ring-inset: rgba(113, 112, 255, 0.08);
+  --accent-border: rgba(113, 112, 255, 0.25);
+
+  /* --- Overlay --- */
+  --overlay-scrim: rgba(0, 0, 0, 0.5);
+
+  /* --- Interactive / Primary Button --- */
+  --btn-primary-bg: #111113;
+  --btn-primary-hover: #2a2a2e;
+
+  /* --- Shadows / Elevation --- */
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 24px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.04);
+  --shadow-card-selected: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-accent-selected: inset 0 0 0 1px rgba(113, 112, 255, 0.12);
+}
+
+:root.light img[src$=".svg"] {
+  filter: brightness(0);
+}
+
+/* ============================================================
    TAILWIND THEME REGISTRATION
    Maps CSS variables to Tailwind utility classes.
    Usage: bg-surface-panel, text-primary, border-default, etc.
@@ -503,7 +594,7 @@
 }
 
 @keyframes field-shimmer {
-  0%   { border-color: rgba(255,255,255,0.08); }
-  50%  { border-color: rgba(255,255,255,0.16); }
-  100% { border-color: rgba(255,255,255,0.08); }
+  0%   { border-color: var(--border-default); }
+  50%  { border-color: var(--border-focus); }
+  100% { border-color: var(--border-default); }
 }
