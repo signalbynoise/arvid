@@ -8,6 +8,9 @@ export const QuestionTypeEnum = z.enum(['Auto-generated', 'Manual']);
 export const CategoryEnum = z.enum(['Scope', 'Data', 'Time', 'Output', 'Quality']);
 export const ImplStatusEnum = z.enum(['Not Checked', 'Checking', 'Implemented', 'Partially Implemented', 'Not Implemented', 'No Repo', 'Unknown']);
 
+export const DeployStatusEnum = z.enum(['live', 'not_deployed', 'deploy_failed', 'unknown']);
+export type DeployStatus = z.infer<typeof DeployStatusEnum>;
+
 export type Clarity = z.infer<typeof ClarityEnum>;
 export type Risk = z.infer<typeof RiskEnum>;
 export type Status = z.infer<typeof StatusEnum>;

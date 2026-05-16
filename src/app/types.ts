@@ -26,4 +26,5 @@ export type {
   SimilarRequirement,
   SearchResult,
   SearchEntityType,
+  DeployStatus,
 } from '../../shared/schemas';

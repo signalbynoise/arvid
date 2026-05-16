@@ -7,6 +7,7 @@ import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
 import { SlackNotifySelector } from './SlackNotifySelector';
 import { SupabaseProjectSelector } from './SupabaseProjectSelector';
+import { RenderAutoServices } from './RenderAutoServices';
 import { useStore } from '../store';
 import type { Project } from '../types';
 
@@ -22,9 +23,11 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const linearConnection = useStore(s => s.linearConnection);
   const slackConnection = useStore(s => s.slackConnection);
   const supabaseConnection = useStore(s => s.supabaseConnection);
+  const renderConnection = useStore(s => s.renderConnection);
   const slackChannels = useStore(s => s.slackChannels);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
+  const projectServicesMatched = useStore(s => s.projectServicesMatched);
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
@@ -85,8 +88,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const showLinear = linearConnection.status === 'connected';
   const showSlack = slackConnection.status === 'connected';
   const showSupabase = supabaseConnection.status === 'connected';
+  const showRender = renderConnection.status === 'connected';
 
-  if (!showGithub && !showLinear && !showSlack && !showSupabase) return null;
+  if (!showGithub && !showLinear && !showSlack && !showSupabase && !showRender) return null;
 
   const slackChannel = slackChannels.find(c => c.id === project.slackNotificationChannelId);
 
@@ -184,6 +188,16 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                 )}
               </SidebarFooterItem>
             )}
+
+            {showRender && (
+              <SidebarFooterItem
+                icon={<img src="/render.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
+                label="Deployment"
+                isConnected={projectServicesMatched}
+              >
+                <RenderAutoServices projectId={project.id} hasRepo={!!project.githubRepo} />
+              </SidebarFooterItem>
+            )}
           </div>
         ) : (
           <div className="flex items-center gap-4">
@@ -215,6 +229,14 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <div className="relative">
                 <img src="/slack.svg" alt="Slack" className="w-4 h-4 opacity-50" />
                 {!!project.slackNotificationChannelId && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
+              </div>
+            )}
+            {showRender && (
+              <div className="relative">
+                <img src="/render.svg" alt="Render" className="w-4 h-4 opacity-50" />
+                {projectServicesMatched && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
                 )}
               </div>

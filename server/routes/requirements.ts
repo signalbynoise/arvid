@@ -11,7 +11,9 @@ import type { DbAnalysis } from '../../shared/schemas/dbContext';
 import { parseFigmaUrl } from '../../shared/figmaUrl';
 import { getFileNodes, getImages, extractDesignSummary } from '../lib/figmaClient';
 import { GitHubClient } from '../lib/githubClient';
+import { RenderClient } from '../lib/renderClient';
 import { analyzeRepo } from '../analysis/repoAnalyzer';
+import { repoMatches } from '../../shared/lib/repoMatch';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
 import { checkRequirementLimit } from '../middleware/checkPlanLimits';
@@ -483,6 +485,97 @@ async function resolveFigmaDesignsForAI(userId: string, figmaLinks: string[]): P
   return designs;
 }
 
+const FAILED_DEPLOY_STATUSES = ['build_failed', 'update_failed', 'canceled', 'deactivated'];
+const PREFERRED_URL_TYPES = ['static_site', 'web_service'];
+
+async function checkDeployStatusForRequirement(
+  requirementId: string,
+  projectId: string,
+  userId: string,
+): Promise<{ deploy_status: string; deploy_url: string | null; deploy_commit_sha: string | null; deploy_checked_at: string } | null> {
+  try {
+    const { data: proj } = await supabase
+      .from('projects')
+      .select('github_repo_full_name, user_id')
+      .eq('id', projectId)
+      .single();
+
+    if (!proj?.github_repo_full_name) return null;
+
+    const lookupUserId = proj.user_id ?? userId;
+    const { data: conn } = await supabase
+      .from('render_connections')
+      .select('api_key, render_owner_id')
+      .eq('user_id', lookupUserId)
+      .single();
+
+    if (!conn?.api_key) return null;
+
+    const client = new RenderClient({ apiKey: conn.api_key });
+    const allServices = await client.listServices(conn.render_owner_id ?? undefined);
+    const matched = allServices.filter(s => repoMatches(s.service.repo, proj.github_repo_full_name));
+
+    if (matched.length === 0) return null;
+
+    const deployResults = await Promise.all(
+      matched.map(async (s) => {
+        const deploys = await client.listDeploys(s.service.id, { limit: 1 });
+        return { service: s.service, latest: deploys[0] ?? null };
+      }),
+    );
+
+    const statuses = deployResults.map(d => {
+      if (!d.latest) return 'unknown';
+      if (d.latest.status === 'live') return 'live';
+      if (FAILED_DEPLOY_STATUSES.includes(d.latest.status)) return 'deploy_failed';
+      return 'not_deployed';
+    });
+
+    let aggregateStatus: string;
+    if (statuses.every(s => s === 'live')) {
+      aggregateStatus = 'live';
+    } else if (statuses.some(s => s === 'deploy_failed')) {
+      aggregateStatus = 'deploy_failed';
+    } else if (statuses.some(s => s === 'not_deployed')) {
+      aggregateStatus = 'not_deployed';
+    } else {
+      aggregateStatus = 'unknown';
+    }
+
+    const preferredService = deployResults.find(d => PREFERRED_URL_TYPES.includes(d.service.type))
+      ?? deployResults[0];
+    const deployUrl = preferredService?.service.serviceDetails?.url ?? null;
+    const commitSha = deployResults.find(d => d.latest?.commit?.id)?.latest?.commit?.id ?? null;
+    const now = new Date().toISOString();
+
+    const result = { deploy_status: aggregateStatus, deploy_url: deployUrl, deploy_commit_sha: commitSha, deploy_checked_at: now };
+
+    await supabase
+      .from('requirements')
+      .update({
+        deploy_status: aggregateStatus,
+        deploy_url: deployUrl,
+        deploy_commit_sha: commitSha,
+        deploy_checked_at: now,
+      })
+      .eq('id', requirementId);
+
+    console.info(
+      '[INFO] [requirements:deployCheck] Deploy status updated',
+      JSON.stringify({ requirementId, deployStatus: aggregateStatus, serviceCount: matched.length, commitSha }),
+    );
+
+    return result;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.warn(
+      '[WARN] [requirements:deployCheck] Deploy check failed, skipping',
+      JSON.stringify({ requirementId, error: message }),
+    );
+    return null;
+  }
+}
+
 requirementsRouter.post('/:id/check-implementation', async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const requirementId = req.params.id;
@@ -724,7 +817,16 @@ requirementsRouter.post('/:id/check-implementation', async (req, res) => {
       }),
     );
 
-    res.json({ impl_status: result.status, impl_confidence: result.confidence, impl_checked_at: now, impl_evidence: result.evidence, impl_analysis: implAnalysis });
+    const deployResult = await checkDeployStatusForRequirement(requirementId, requirement.project_id, req.user!.id);
+
+    res.json({
+      impl_status: result.status,
+      impl_confidence: result.confidence,
+      impl_checked_at: now,
+      impl_evidence: result.evidence,
+      impl_analysis: implAnalysis,
+      ...(deployResult ?? {}),
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(

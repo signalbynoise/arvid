@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card } from './ui/Card';
-import { CompletenessChip } from './CompletenessChip';
+import { CardHeaderScores } from './CardHeaderScores';
 import { LinearStatusPill } from './LinearStatusPill';
 import { GitHubStatusChip } from './GitHubStatusChip';
+import { RenderStatusChip } from './RenderStatusChip';
 import { CardItemMenu } from './CardItemMenu';
-import { ScoreBadge } from './ScoreBadge';
 import { formatCardDate } from '../lib/formatDate';
 import { scrollToRequirement } from '../domain/scrollToRequirement';
 import { useStore, selectMembers, selectCardAssignees, selectSimilarities } from '../store';
@@ -61,6 +61,13 @@ export function RequirementCard({
     >
       <Card.Header
         shortId={req.shortId}
+        labels={
+          <CardHeaderScores
+            clarityScore={req.clarityScore}
+            riskScore={req.riskScore}
+            completeness={completeness}
+          />
+        }
         actions={
           <CardItemMenu
             onAddUser={() => onAddUser(req.id)}
@@ -96,7 +103,6 @@ export function RequirementCard({
       </Card.Body>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <CompletenessChip value={completeness} />
         <LinearStatusPill status={req.linearStatus} statusType={req.linearStatusType} issueUrl={req.linearIssueUrl} issueIdentifier={req.linearIssueIdentifier} />
         <GitHubStatusChip
           implStatus={req.implStatus ?? 'Not Checked'}
@@ -106,35 +112,17 @@ export function RequirementCard({
           onRetry={() => onCheckImplementation(req.id)}
           onViewDetails={() => onViewImplDetails(req.id)}
         />
+        <RenderStatusChip
+          deployStatus={req.deployStatus}
+          deployUrl={req.deployUrl}
+          deployCheckedAt={req.deployCheckedAt}
+        />
       </div>
 
       <Card.Footer
         meta={`${req.owner} - ${formatCardDate(req.createdAt)}`}
         authorName={authorName}
         assigneeCount={assignees.length}
-        indicators={
-          req.clarityScore != null && req.riskScore != null ? (
-            <>
-              <ScoreBadge label="C" score={req.clarityScore} separator="" title={`Clarity: ${req.clarityScore}/10 — ${req.clarity}`} />
-              <ScoreBadge label="R" score={req.riskScore} separator="" invert title={`Risk: ${req.riskScore}/10 — ${req.risk}`} />
-            </>
-          ) : (
-            <>
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  req.clarity === 'High' ? 'bg-indicator-high' : req.clarity === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
-                }`}
-                title={`Clarity: ${req.clarity}`}
-              />
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  req.risk === 'Low' ? 'bg-indicator-high' : req.risk === 'Medium' ? 'bg-indicator-medium' : 'bg-indicator-low'
-                }`}
-                title={`Risk: ${req.risk}`}
-              />
-            </>
-          )
-        }
       />
     </Card>
   );

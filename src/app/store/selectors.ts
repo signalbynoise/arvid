@@ -41,6 +41,7 @@ export const selectGitHubConnection = (state: AppState) => state.githubConnectio
 export const selectLinearConnection = (state: AppState) => state.linearConnection;
 export const selectSupabaseConnection = (state: AppState) => state.supabaseConnection;
 export const selectFigmaConnection = (state: AppState) => state.figmaConnection;
+export const selectRenderConnection = (state: AppState) => state.renderConnection;
 
 export const selectSimilarities = (state: AppState) => state.similarities;
 export const selectScoringRequirements = (state: AppState) => state.scoringRequirements;

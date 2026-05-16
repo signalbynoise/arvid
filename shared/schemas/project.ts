@@ -20,6 +20,10 @@ export const ProjectRowSchema = z.object({
   slack_notification_channel_id: z.string().nullable().optional(),
   supabase_project_ref: z.string().nullable().optional(),
   supabase_connected_at: z.string().nullable().optional(),
+  render_service_id: z.string().nullable().optional(),
+  render_service_name: z.string().nullable().optional(),
+  render_service_url: z.string().nullable().optional(),
+  render_connected_at: z.string().nullable().optional(),
 });
 
 export const ProjectSchema = ProjectRowSchema.transform(row => ({
@@ -42,6 +46,10 @@ export const ProjectSchema = ProjectRowSchema.transform(row => ({
   slackNotificationChannelId: row.slack_notification_channel_id ?? undefined,
   supabaseProjectRef: row.supabase_project_ref ?? undefined,
   supabaseConnectedAt: row.supabase_connected_at ?? undefined,
+  renderServiceId: row.render_service_id ?? undefined,
+  renderServiceName: row.render_service_name ?? undefined,
+  renderServiceUrl: row.render_service_url ?? undefined,
+  renderConnectedAt: row.render_connected_at ?? undefined,
 }));
 
 export const CreateProjectBodySchema = z.object({

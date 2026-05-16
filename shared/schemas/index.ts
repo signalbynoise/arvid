@@ -6,6 +6,7 @@ export {
   QuestionTypeEnum,
   CategoryEnum,
   ImplStatusEnum,
+  DeployStatusEnum,
 } from './enums';
 
 export type {
@@ -16,6 +17,7 @@ export type {
   QuestionType,
   Category,
   ImplStatus,
+  DeployStatus,
 } from './enums';
 
 export {
@@ -260,6 +262,14 @@ export {
 } from './figmaConnection';
 
 export type { FigmaConnectionRow, FigmaConnection } from './figmaConnection';
+
+export {
+  RenderConnectionRowSchema,
+  RenderConnectionSchema,
+  RenderServiceSchema,
+} from './renderConnection';
+
+export type { RenderConnectionRow, RenderConnection, RenderService } from './renderConnection';
 
 export {
   FigmaDesignLinkRowSchema,

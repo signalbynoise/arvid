@@ -834,6 +834,40 @@ export const api = {
     return result;
   },
 
+  // --- Render ---
+
+  async getRenderStatus(signal?: AbortSignal): Promise<{ connected: boolean; ownerName?: string; ownerId?: string; connectedAt?: string }> {
+    return request<{ connected: boolean; ownerName?: string; ownerId?: string; connectedAt?: string }>('GET', '/render/status', undefined, signal);
+  },
+
+  async validateRenderKey(apiKey: string): Promise<{ valid: boolean; owners: Array<{ id: string; name: string; email: string; type: string }> }> {
+    return request<{ valid: boolean; owners: Array<{ id: string; name: string; email: string; type: string }> }>('POST', '/render/validate-key', { apiKey });
+  },
+
+  async connectRender(apiKey: string, ownerId: string, ownerName: string): Promise<{ connected: boolean; ownerName?: string; ownerId?: string }> {
+    return request<{ connected: boolean; ownerName?: string; ownerId?: string }>('POST', '/render/connect', { apiKey, ownerId, ownerName });
+  },
+
+  async disconnectRender(): Promise<void> {
+    await request<unknown>('DELETE', '/render/connect');
+  },
+
+  async getRenderServices(signal?: AbortSignal): Promise<Array<{ id: string; name: string; type: string; url: string | null; branch: string | null; repo: string | null; suspended: string | null }>> {
+    return request<Array<{ id: string; name: string; type: string; url: string | null; branch: string | null; repo: string | null; suspended: string | null }>>('GET', '/render/services', undefined, signal);
+  },
+
+  async getProjectRenderServices(projectId: string, signal?: AbortSignal): Promise<{
+    services: Array<{ id: string; name: string; type: string; url: string | null; deployStatus: string; commitSha: string | null; deployedAt: string | null }>;
+    matched: boolean;
+    reason?: string;
+  }> {
+    return request<{
+      services: Array<{ id: string; name: string; type: string; url: string | null; deployStatus: string; commitSha: string | null; deployedAt: string | null }>;
+      matched: boolean;
+      reason?: string;
+    }>('GET', `/render/project-services/${projectId}`, undefined, signal);
+  },
+
   // --- Search ---
 
   async search(query: string, offset = 0, limit = 50, signal?: AbortSignal): Promise<SearchResult[]> {

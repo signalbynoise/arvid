@@ -107,7 +107,6 @@ projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, 
     updates.supabase_project_ref = req.body.supabase_project_ref;
     updates.supabase_connected_at = req.body.supabase_project_ref ? new Date().toISOString() : null;
   }
-
   const { data, error } = await db
     .from('projects')
     .update(updates)

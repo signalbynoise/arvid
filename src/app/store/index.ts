@@ -12,8 +12,9 @@ import { SupabaseConnectSlice, createSupabaseConnectSlice } from './slices/supab
 import { FigmaSlice, createFigmaSlice } from './slices/figma';
 import { BillingSlice, createBillingSlice } from './slices/billing';
 import { SearchSlice, createSearchSlice } from './slices/search';
+import { RenderSlice, createRenderSlice } from './slices/render';
 
-export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice & FigmaSlice & BillingSlice & SearchSlice;
+export type AppState = EntitiesSlice & SelectionSlice & ProjectsSlice & SummariesSlice & GitHubSlice & LinearSlice & SlackSlice & UISlice & WorkspacesSlice & SupabaseConnectSlice & FigmaSlice & BillingSlice & SearchSlice & RenderSlice;
 
 export const useStore = create<AppState>()((...args) => ({
   ...createEntitiesSlice(...args),
@@ -29,6 +30,7 @@ export const useStore = create<AppState>()((...args) => ({
   ...createFigmaSlice(...args),
   ...createBillingSlice(...args),
   ...createSearchSlice(...args),
+  ...createRenderSlice(...args),
 }));
 
 export type { UISlice, ModalIntent, PendingModal } from './slices/ui';
@@ -42,6 +44,7 @@ export type { FigmaConnectionState, ResolvedFigmaDesign } from './slices/figma';
 export type { WorkspacesSlice, WorkspacesDataState, WorkspacesDataStatus, BootStatus } from './slices/workspaces';
 export type { BillingSlice, PlanLimits, PlanUsage } from './slices/billing';
 export type { SearchSlice, SearchStatus } from './slices/search';
+export type { RenderSlice, RenderConnectionState, RenderServiceItem, ProjectRenderService, ProjectServicesStatus } from './slices/render';
 export { resolvePlan } from '../domain/billing';
 export {
   selectRequirements,
@@ -84,4 +87,5 @@ export {
   selectSearchStatus,
   selectSearchHasMore,
   selectSearchQuery,
+  selectRenderConnection,
 } from './selectors';

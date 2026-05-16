@@ -13,6 +13,7 @@ declare global {
       githubToken?: string;
       linearToken?: string;
       slackToken?: string;
+      renderApiKey?: string;
     }
   }
 }
@@ -148,5 +149,30 @@ export async function requireSlack(req: Request, res: Response, next: NextFuncti
   }
 
   req.slackToken = data.access_token;
+  next();
+}
+
+export async function requireRender(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('render_connections')
+    .select('api_key')
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (error || !data) {
+    console.warn(
+      `[WARN] [auth:requireRender] No Render connection found`,
+      JSON.stringify({ userId: req.user.id }),
+    );
+    res.status(403).json({ error: 'Render account not connected. Please connect your Render account first.' });
+    return;
+  }
+
+  req.renderApiKey = data.api_key;
   next();
 }

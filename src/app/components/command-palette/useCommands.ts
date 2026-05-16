@@ -36,6 +36,8 @@ export function useCommands(): PaletteCommand[] {
   const disconnectGitHub = useStore(s => s.disconnectGitHub);
   const disconnectLinear = useStore(s => s.disconnectLinear);
   const disconnectSlack = useStore(s => s.disconnectSlack);
+  const renderConnection = useStore(s => s.renderConnection);
+  const disconnectRender = useStore(s => s.disconnectRender);
   const extractMessages = useStore(s => s.extractMessages);
   const slackChannels = useStore(s => s.slackChannels);
 
@@ -345,6 +347,35 @@ export function useCommands(): PaletteCommand[] {
       });
     }
 
+    const renderConnected = renderConnection.status === 'connected';
+    if (renderConnected) {
+      commands.push({
+        id: 'disconnect-render',
+        label: 'Disconnect Render',
+        icon: Unlink,
+        category: 'Integrations',
+        keywords: ['disconnect', 'render', 'remove', 'unlink', 'deploy'],
+        contextRequired: [],
+        action: async () => {
+          await disconnectRender();
+          closeCommandPalette();
+        },
+      });
+    } else {
+      commands.push({
+        id: 'connect-render',
+        label: 'Connect Render',
+        icon: Link,
+        category: 'Integrations',
+        keywords: ['connect', 'render', 'link', 'integrate', 'deploy'],
+        contextRequired: [],
+        action: () => {
+          closeCommandPalette();
+          window.dispatchEvent(new CustomEvent('arvid:open-account-settings'));
+        },
+      });
+    }
+
     return commands;
   }, [
     projects,
@@ -355,6 +386,7 @@ export function useCommands(): PaletteCommand[] {
     githubConnection.status,
     linearConnection.status,
     slackConnection.status,
+    renderConnection.status,
     slackChannels,
     requestModal,
     setSelectedProjectId,
@@ -363,6 +395,7 @@ export function useCommands(): PaletteCommand[] {
     disconnectGitHub,
     disconnectLinear,
     disconnectSlack,
+    disconnectRender,
     extractMessages,
   ]);
 }

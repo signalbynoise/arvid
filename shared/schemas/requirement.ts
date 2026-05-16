@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ClarityEnum, RiskEnum, ImplStatusEnum } from './enums';
+import { ClarityEnum, RiskEnum, ImplStatusEnum, DeployStatusEnum } from './enums';
 
 export const RequirementRowSchema = z.object({
   id: z.string(),
@@ -33,6 +33,10 @@ export const RequirementRowSchema = z.object({
   risk_reasoning: z.string().nullable().optional(),
   scores_computed_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
+  deploy_status: DeployStatusEnum.nullable().optional(),
+  deploy_url: z.string().nullable().optional(),
+  deploy_commit_sha: z.string().nullable().optional(),
+  deploy_checked_at: z.string().nullable().optional(),
 });
 
 export const RequirementSchema = RequirementRowSchema.transform(row => ({
@@ -67,6 +71,10 @@ export const RequirementSchema = RequirementRowSchema.transform(row => ({
   riskReasoning: row.risk_reasoning ?? undefined,
   scoresComputedAt: row.scores_computed_at ?? undefined,
   updatedAt: row.updated_at ?? undefined,
+  deployStatus: row.deploy_status ?? undefined,
+  deployUrl: row.deploy_url ?? undefined,
+  deployCommitSha: row.deploy_commit_sha ?? undefined,
+  deployCheckedAt: row.deploy_checked_at ?? undefined,
 }));
 
 export const CreateRequirementBodySchema = z.object({

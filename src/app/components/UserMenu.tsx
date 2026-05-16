@@ -7,6 +7,7 @@ import { DropdownSection } from './ui/DropdownSection';
 import { DropdownItem } from './ui/DropdownItem';
 import { DropdownDivider } from './ui/DropdownDivider';
 import { AccountSettingsModal } from './AccountSettingsModal';
+import { ConnectRenderModal } from './ConnectRenderModal';
 import { useAuth } from '../auth/AuthProvider';
 import { useStore } from '../store';
 import { api } from '../api';
@@ -34,6 +35,9 @@ export function UserMenu() {
   const figmaConnection = useStore(s => s.figmaConnection);
   const loadFigmaStatus = useStore(s => s.loadFigmaStatus);
   const disconnectFigma = useStore(s => s.disconnectFigma);
+  const renderConnection = useStore(s => s.renderConnection);
+  const loadRenderStatus = useStore(s => s.loadRenderStatus);
+  const [renderModalOpen, setRenderModalOpen] = useState(false);
 
   useEffect(() => {
     loadGitHubStatus();
@@ -41,7 +45,8 @@ export function UserMenu() {
     loadSlackStatus();
     loadSupabaseConnectStatus();
     loadFigmaStatus();
-  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus, loadFigmaStatus]);
+    loadRenderStatus();
+  }, [loadGitHubStatus, loadLinearStatus, loadSlackStatus, loadSupabaseConnectStatus, loadFigmaStatus, loadRenderStatus]);
 
   useEffect(() => {
     const handler = () => setAccountSettingsOpen(true);
@@ -177,6 +182,12 @@ export function UserMenu() {
             right={toggleIndicator(figmaConnection.status === 'connected')}
             onClick={figmaConnection.status === 'connected' ? disconnectFigma : handleConnectFigma}
           />
+          <DropdownItem
+            icon={<img src="/render.svg" alt="" className="w-4 h-4 opacity-60" />}
+            label="Render"
+            right={toggleIndicator(renderConnection.status === 'connected')}
+            onClick={() => { setIsOpen(false); setRenderModalOpen(true); }}
+          />
         </DropdownSection>
 
         <DropdownDivider />
@@ -204,6 +215,11 @@ export function UserMenu() {
       <AccountSettingsModal
         isOpen={accountSettingsOpen}
         onClose={() => setAccountSettingsOpen(false)}
+      />
+
+      <ConnectRenderModal
+        isOpen={renderModalOpen}
+        onClose={() => setRenderModalOpen(false)}
       />
     </div>
   );
