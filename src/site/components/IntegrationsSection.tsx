@@ -11,6 +11,7 @@ const INTEGRATIONS = [
   { name: 'Claude', src: '/claude.svg' },
   { name: 'Lovable', src: '/lovable.svg' },
   { name: 'Figma', src: '/figma.svg' },
+  { name: 'Render', src: '/render.svg' },
 ];
 
 export function IntegrationsSection() {
