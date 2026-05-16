@@ -40,6 +40,8 @@ export interface LinearSlice {
   loadLinearProjects: (teamId: string) => Promise<void>;
   linkLinearProject: (projectId: string, linearProjectId: string, linearProjectName: string, linearTeamId: string) => Promise<void>;
   sendToLinear: (requirementId: string) => Promise<void>;
+  autoCreateLinearIssue: (requirementId: string) => Promise<void>;
+  autoSyncLinearIssue: (requirementId: string) => Promise<void>;
   resetSendToLinearStatus: () => void;
 }
 
@@ -165,6 +167,43 @@ export const createLinearSlice: StateCreator<LinearSlice, [], [], LinearSlice> =
       const message = err instanceof Error ? err.message : 'Unknown error';
       set({ sendToLinearStatus: 'error', sendToLinearError: message });
       log.error('sendToLinear', 'Failed to send to Linear', { requirementId, error: message });
+    }
+  },
+
+  autoCreateLinearIssue: async (requirementId: string) => {
+    log.info('autoCreateLinearIssue', 'Auto-creating Linear issue', { requirementId });
+
+    try {
+      const updated = await api.sendToLinear(requirementId);
+
+      set(state => {
+        const entities = state as unknown as { requirements: Array<{ id: string }> };
+        return {
+          requirements: entities.requirements.map(r =>
+            r.id === requirementId ? updated : r,
+          ),
+        } as Partial<LinearSlice>;
+      });
+
+      log.info('autoCreateLinearIssue', 'Linear issue auto-created', {
+        requirementId,
+        linearIdentifier: updated.linearIssueIdentifier,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.debug('autoCreateLinearIssue', 'Auto-create failed silently', { requirementId, error: message });
+    }
+  },
+
+  autoSyncLinearIssue: async (requirementId: string) => {
+    log.info('autoSyncLinearIssue', 'Syncing Linear issue with latest summary', { requirementId });
+
+    try {
+      await api.syncLinearIssue(requirementId);
+      log.info('autoSyncLinearIssue', 'Linear issue synced', { requirementId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      log.debug('autoSyncLinearIssue', 'Sync failed silently', { requirementId, error: message });
     }
   },
 

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { supabase, createUserClient } from '../supabase';
 import { requireLinear } from '../middleware/requireAuth';
-import { listLinearTeams, listLinearProjects, createLinearIssue, exchangeLinearCode, fetchLinearViewer } from '../lib/linearClient';
+import { listLinearTeams, listLinearProjects, createLinearIssue, updateLinearIssue, exchangeLinearCode, fetchLinearViewer } from '../lib/linearClient';
 import { sendSlackNotification } from '../lib/slackNotifier';
 import type { Summary } from '../../shared/schemas';
 
@@ -313,5 +313,79 @@ linearRouter.post('/send/:requirementId', requireLinear, async (req, res) => {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[ERROR] [linear:send] Failed to create Linear issue', JSON.stringify({ requirementId, error: message }));
     res.status(500).json({ error: `Failed to create Linear issue: ${message}` });
+  }
+});
+
+linearRouter.patch('/sync/:requirementId', requireLinear, async (req, res) => {
+  const db = createUserClient(req.accessToken!);
+  const { requirementId } = req.params;
+
+  console.info('[INFO] [linear:sync] Syncing requirement to Linear', JSON.stringify({ requirementId }));
+
+  const { data: requirement, error: reqError } = await db
+    .from('requirements')
+    .select('*')
+    .eq('id', requirementId)
+    .single();
+
+  if (reqError || !requirement) {
+    return res.status(404).json({ error: `Requirement ${requirementId} not found` });
+  }
+
+  if (!requirement.linear_issue_id) {
+    return res.status(400).json({ error: 'No Linear issue linked to this requirement' });
+  }
+
+  const { data: summary, error: sumError } = await db
+    .from('summaries')
+    .select('*')
+    .eq('requirement_id', requirementId)
+    .single();
+
+  if (sumError || !summary) {
+    return res.status(400).json({ error: 'No summary exists for this requirement' });
+  }
+
+  try {
+    const { data: figmaRows } = await db
+      .from('requirement_figma_links')
+      .select('figma_url')
+      .eq('requirement_id', requirementId);
+
+    const figmaUrls = (figmaRows || []).map((r: { figma_url: string }) => r.figma_url);
+
+    const domainSummary: Summary = {
+      id: summary.id,
+      requirementId: summary.requirement_id,
+      shortId: summary.short_id ?? undefined,
+      synthesis: summary.synthesis,
+      coreObjective: summary.core_objective,
+      architecture: summary.architecture,
+      constraints: summary.constraints,
+      unverifiedRisks: summary.unverified_risks,
+      completeness: summary.completeness,
+      completenessReasoning: summary.completeness_reasoning,
+      model: summary.model,
+      generatedAt: summary.generated_at ?? undefined,
+    };
+
+    const description = buildIssueMarkdown(domainSummary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined);
+
+    const issue = await updateLinearIssue(req.linearToken!, {
+      issueId: requirement.linear_issue_id,
+      title: requirement.title,
+      description,
+    });
+
+    console.info('[INFO] [linear:sync] Linear issue synced', JSON.stringify({
+      requirementId,
+      issueIdentifier: issue.identifier,
+    }));
+
+    res.status(200).json({ synced: true, issueIdentifier: issue.identifier });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[ERROR] [linear:sync] Failed to sync Linear issue', JSON.stringify({ requirementId, error: message }));
+    res.status(500).json({ error: `Failed to sync Linear issue: ${message}` });
   }
 });

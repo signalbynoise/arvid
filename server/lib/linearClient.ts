@@ -141,6 +141,43 @@ export async function createLinearIssue(accessToken: string, params: {
   return data.issueCreate.issue;
 }
 
+export async function updateLinearIssue(accessToken: string, params: {
+  issueId: string;
+  title?: string;
+  description?: string;
+}): Promise<LinearIssueResult> {
+  const data = await graphql<{
+    issueUpdate: {
+      success: boolean;
+      issue: LinearIssueResult;
+    };
+  }>(accessToken, `
+    mutation($issueId: String!, $title: String, $description: String) {
+      issueUpdate(id: $issueId, input: {
+        title: $title
+        description: $description
+      }) {
+        success
+        issue {
+          id
+          identifier
+          url
+          state {
+            name
+            type
+          }
+        }
+      }
+    }
+  `, params);
+
+  if (!data.issueUpdate.success) {
+    throw new Error('Linear issue update failed');
+  }
+
+  return data.issueUpdate.issue;
+}
+
 export async function exchangeLinearCode(code: string, redirectUri: string): Promise<LinearTokenResponse> {
   const clientId = process.env.LINEAR_CLIENT_ID;
   const clientSecret = process.env.LINEAR_CLIENT_SECRET;

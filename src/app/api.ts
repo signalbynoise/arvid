@@ -579,6 +579,10 @@ export const api = {
     return parseSingle(RequirementRowSchema, RequirementSchema, row, `/linear/send/${requirementId}`);
   },
 
+  async syncLinearIssue(requirementId: string): Promise<void> {
+    await request<unknown>('PATCH', `/linear/sync/${requirementId}`);
+  },
+
   // --- Slack ---
 
   async getSlackAuthUrl(): Promise<{ url: string }> {

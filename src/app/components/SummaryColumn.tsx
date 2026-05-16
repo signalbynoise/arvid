@@ -31,6 +31,8 @@ export function SummaryColumn() {
   const projects = useStore(selectProjects);
   const selectedProjectId = useStore(selectSelectedProjectId);
   const sendToLinear = useStore(s => s.sendToLinear);
+  const autoCreateLinearIssue = useStore(s => s.autoCreateLinearIssue);
+  const autoSyncLinearIssue = useStore(s => s.autoSyncLinearIssue);
   const sendToLinearStatus = useStore(s => s.sendToLinearStatus);
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId) ?? null,
@@ -54,8 +56,13 @@ export function SummaryColumn() {
   );
 
   const [figmaUrls, setFigmaUrls] = useState<string[]>([]);
+  const autoCreateInFlightRef = useRef<string | null>(null);
+  const lastSyncedAtRef = useRef<string | null>(null);
 
   useEffect(() => {
+    autoCreateInFlightRef.current = null;
+    lastSyncedAtRef.current = null;
+
     if (selectedReqId) {
       loadSummary(selectedReqId);
       api.getRequirementFigmaLinks(selectedReqId)
@@ -114,6 +121,24 @@ export function SummaryColumn() {
     };
   }, [treeFingerprint, selectedReqId, hasAcceptedQuestions, isIdle, isImplemented, summary, doGenerate]);
 
+  useEffect(() => {
+    if (!summary || !hasLinearProject || !requirement || !selectedReqId) return;
+    if (summary.completeness < 80) return;
+
+    if (!requirement.linearIssueId) {
+      if (autoCreateInFlightRef.current === selectedReqId) return;
+      autoCreateInFlightRef.current = selectedReqId;
+      autoCreateLinearIssue(selectedReqId);
+      return;
+    }
+
+    const generatedAt = summary.generatedAt ?? null;
+    if (generatedAt && generatedAt !== lastSyncedAtRef.current) {
+      lastSyncedAtRef.current = generatedAt;
+      autoSyncLinearIssue(selectedReqId);
+    }
+  }, [summary, hasLinearProject, requirement, selectedReqId, autoCreateLinearIssue, autoSyncLinearIssue]);
+
   if (!requirement) {
     return (
       <ColumnShell title="Summary" borderRight={false}>
@@ -150,7 +175,10 @@ export function SummaryColumn() {
 
   const handleSendToCursor = useCallback(() => {
     if (!summary || !requirement) return;
-    openInCursor(buildCursorPrompt(summary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined));
+    const linearIssue = requirement.linearIssueIdentifier && requirement.linearIssueUrl
+      ? { identifier: requirement.linearIssueIdentifier, url: requirement.linearIssueUrl }
+      : undefined;
+    openInCursor(buildCursorPrompt(summary, requirement.title, figmaUrls.length > 0 ? figmaUrls : undefined, linearIssue));
     api.notifyCursorSent(requirement.id);
   }, [summary, requirement, figmaUrls]);
 
