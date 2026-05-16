@@ -486,6 +486,7 @@ async function resolveFigmaDesignsForAI(userId: string, figmaLinks: string[]): P
 }
 
 const FAILED_DEPLOY_STATUSES = ['build_failed', 'update_failed', 'canceled', 'deactivated'];
+const IN_PROGRESS_DEPLOY_STATUSES = ['build_in_progress', 'update_in_progress', 'pre_deploy_in_progress', 'created'];
 const PREFERRED_URL_TYPES = ['static_site', 'web_service'];
 
 async function checkDeployStatusForRequirement(
@@ -580,14 +581,29 @@ async function checkDeployStatusForRequirement(
       if (!d.latest) return 'unknown';
       if (d.latest.status === 'live') return 'live';
       if (FAILED_DEPLOY_STATUSES.includes(d.latest.status)) return 'deploy_failed';
+      if (IN_PROGRESS_DEPLOY_STATUSES.includes(d.latest.status)) return 'in_progress';
       return 'not_deployed';
     });
 
+    console.debug(
+      '[DEBUG] [requirements:deployCheck] Status mapping',
+      JSON.stringify({
+        requirementId,
+        perService: deployResults.map((d, i) => ({
+          name: d.service.name,
+          renderStatus: d.latest?.status ?? 'none',
+          mappedStatus: statuses[i],
+        })),
+      }),
+    );
+
     let aggregateStatus: string;
-    if (statuses.every(s => s === 'live')) {
+    if (statuses.some(s => s === 'live')) {
       aggregateStatus = 'live';
     } else if (statuses.some(s => s === 'deploy_failed')) {
       aggregateStatus = 'deploy_failed';
+    } else if (statuses.some(s => s === 'in_progress')) {
+      aggregateStatus = 'not_deployed';
     } else if (statuses.some(s => s === 'not_deployed')) {
       aggregateStatus = 'not_deployed';
     } else {
