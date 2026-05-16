@@ -11,6 +11,7 @@ export interface Requirement {
   risk: 'Low' | 'Medium' | 'High';
   status?: string;
   implStatus?: string;
+  deployStatus?: string;
 }
 
 export interface Question {

@@ -68,8 +68,11 @@ export function AccordanceDmc() {
             shortId={scenario.requirement.shortId}
             title={scenario.requirement.title}
             completeness={scenario.requirement.completeness}
+            clarityScore={scenario.requirement.clarityScore}
+            riskScore={scenario.requirement.riskScore}
             status="Pre backlog"
             implStatus="Not implemented"
+            deployStatus="Not deployed"
             owner={`${scenario.requirement.owner} - Today 12:00`}
             visible={showCard}
             implChipTarget={IMPL_CHIP_TARGET}

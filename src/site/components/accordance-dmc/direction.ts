@@ -22,7 +22,7 @@ export interface AccordanceState {
 // ── Content Pool ─────────────────────────────────────────────
 
 export interface Scenario {
-  requirement: { title: string; shortId: string; owner: string; completeness: number };
+  requirement: { title: string; shortId: string; owner: string; completeness: number; clarityScore: number; riskScore: number };
   confidence: number;
   dimensions: {
     objective: boolean;
@@ -125,22 +125,22 @@ const closeRule: R = {
 const contentPool: AccordancePool = {
   scenarios: [
     {
-      requirement: { title: 'API Authentication Middleware', shortId: 'REQ-42', owner: 'Sarah K.', completeness: 92 },
+      requirement: { title: 'API Authentication Middleware', shortId: 'REQ-42', owner: 'Sarah K.', completeness: 92, clarityScore: 8, riskScore: 3 },
       confidence: 94,
       dimensions: { objective: true, architecture: true, constraints: true, risks: false },
     },
     {
-      requirement: { title: 'Database Migration Pipeline', shortId: 'REQ-78', owner: 'David L.', completeness: 78 },
+      requirement: { title: 'Database Migration Pipeline', shortId: 'REQ-78', owner: 'David L.', completeness: 78, clarityScore: 6, riskScore: 5 },
       confidence: 87,
       dimensions: { objective: true, architecture: true, constraints: false, risks: true },
     },
     {
-      requirement: { title: 'Real-time Notification System', shortId: 'REQ-15', owner: 'Sarah K.', completeness: 100 },
+      requirement: { title: 'Real-time Notification System', shortId: 'REQ-15', owner: 'Sarah K.', completeness: 100, clarityScore: 9, riskScore: 2 },
       confidence: 96,
       dimensions: { objective: true, architecture: true, constraints: true, risks: true },
     },
     {
-      requirement: { title: 'Role-based Access Control', shortId: 'REQ-91', owner: 'David L.', completeness: 65 },
+      requirement: { title: 'Role-based Access Control', shortId: 'REQ-91', owner: 'David L.', completeness: 65, clarityScore: 4, riskScore: 7 },
       confidence: 72,
       dimensions: { objective: true, architecture: false, constraints: true, risks: false },
     },

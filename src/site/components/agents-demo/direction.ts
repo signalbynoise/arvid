@@ -11,8 +11,8 @@ import { ARVID, PRIYA } from '../mini-demo/actors';
 
 const contentPool: ContentPool = {
   requirements: [
-    { id: 'ag-r1', shortId: 'R01', title: 'User authentication with SSO support', owner: 'Sarah K.', createdAt: 'May 1', completeness: 72, clarity: 'High', risk: 'Low', status: 'In progress', implStatus: 'Implemented' },
-    { id: 'ag-r2', shortId: 'R02', title: 'Real-time notifications system', owner: 'James L.', createdAt: 'Apr 29', completeness: 45, clarity: 'Medium', risk: 'Medium', status: 'In progress', implStatus: 'Partially implemented' },
+    { id: 'ag-r1', shortId: 'R01', title: 'User authentication with SSO support', owner: 'Sarah K.', createdAt: 'May 1', completeness: 72, clarity: 'High', risk: 'Low', status: 'In progress', implStatus: 'Implemented', deployStatus: 'Live' },
+    { id: 'ag-r2', shortId: 'R02', title: 'Real-time notifications system', owner: 'James L.', createdAt: 'Apr 29', completeness: 45, clarity: 'Medium', risk: 'Medium', status: 'In progress', implStatus: 'Partially implemented', deployStatus: 'Not deployed' },
     { id: 'ag-r3', shortId: 'R03', title: 'API rate limiting for public endpoints', owner: 'David M.', createdAt: 'Apr 25', completeness: 30, clarity: 'Medium', risk: 'High', status: 'Pre backlog', implStatus: 'Not implemented' },
   ],
   questions: {
