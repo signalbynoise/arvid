@@ -4,6 +4,7 @@ import { Requirement, Question, Answer, CardAssignee, EntityType, SimilarRequire
 import { api, ApiError } from '../../api';
 import { deriveQuestionStatus } from '../../domain/questions';
 import { scoreToClarityLabel, scoreToRiskLabel } from '../../../../shared/schemas/riskClarity';
+import { isSemanticallyDuplicate } from '../../../../shared/lib/textSimilarity';
 import { logger } from '../../logger';
 
 const log = logger.create('store:entities');
@@ -367,14 +368,19 @@ export const createEntitiesSlice: StateCreator<EntitiesSlice, [], [], EntitiesSl
       const suggestions = await api.suggestQuestions(requirementId);
 
       set(state => {
-        const existingTexts = new Set(
-          state.questions
-            .filter(q => q.requirementId === requirementId)
-            .map(q => q.text.toLowerCase().trim()),
-        );
-        const newSuggestions = suggestions.filter(
-          s => !existingTexts.has(s.text.toLowerCase().trim()),
-        );
+        const reqQuestions = state.questions.filter(q => q.requirementId === requirementId);
+        const exactTexts = new Set(reqQuestions.map(q => q.text.toLowerCase().trim()));
+        const allTexts = reqQuestions.map(q => q.text);
+
+        const newSuggestions = suggestions.filter(s => {
+          const normalized = s.text.toLowerCase().trim();
+          if (exactTexts.has(normalized)) return false;
+          if (isSemanticallyDuplicate(s.text, allTexts)) return false;
+          exactTexts.add(normalized);
+          allTexts.push(s.text);
+          return true;
+        });
+
         const updatedSet = new Set(state.suggestingForRequirements);
         updatedSet.delete(requirementId);
         return {

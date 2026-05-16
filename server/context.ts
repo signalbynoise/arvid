@@ -249,7 +249,7 @@ export async function fetchRequirementContext(db: SupabaseClient, requirementId:
     }));
 
   const suggestionHistory: PriorSuggestion[] = (dbQuestions || [])
-    .filter((q: { type: string | null }) => q.type === 'Auto-generated')
+    .filter((q: { author: string | null }) => q.author === 'Arvid')
     .map((q: { text: string; importance: string; category: string; is_suggested: boolean | null; is_hidden: boolean | null }): PriorSuggestion => {
       let disposition: SuggestionDisposition;
       if (q.is_hidden) {

@@ -6,6 +6,9 @@ import { suggestQuestions, classifyQuestion, computeQuestionDepth } from '../ope
 import { fetchRequirementContext, toFigmaDesignContexts } from '../context';
 import { generateShortId } from '../lib/shortId';
 import { sendSlackNotification } from '../lib/slackNotifier';
+import { isSemanticallyDuplicate } from '../lib/textSimilarity';
+
+const suggestingInProgress = new Set<string>();
 
 export const questionsRouter = Router();
 
@@ -115,6 +118,16 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const { requirementId } = req.params;
 
+  if (suggestingInProgress.has(requirementId)) {
+    console.info(
+      '[INFO] [questions:suggest] Suggestion already in progress, skipping',
+      JSON.stringify({ requirementId }),
+    );
+    return res.status(200).json([]);
+  }
+
+  suggestingInProgress.add(requirementId);
+
   console.info(
     '[INFO] [questions:suggest] Generating suggested questions',
     JSON.stringify({ requirementId }),
@@ -123,10 +136,12 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
   const context = await fetchRequirementContext(db, requirementId);
 
   if (!context) {
+    suggestingInProgress.delete(requirementId);
     return res.status(404).json({ error: `Requirement ${requirementId} not found` });
   }
 
   if (context.requirement.impl_status === 'Implemented') {
+    suggestingInProgress.delete(requirementId);
     console.info(
       '[INFO] [questions:suggest] Requirement is implemented, skipping suggestions',
       JSON.stringify({ requirementId }),
@@ -172,23 +187,37 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       depthTier,
     });
 
-    const existingTexts = new Set(
-      context.suggestionHistory.map(s => s.text.toLowerCase().trim()),
+    const allExistingTexts: string[] = [
+      ...context.suggestionHistory.map(s => s.text),
+      ...context.questions.map(q => q.text),
+    ];
+
+    const exactTexts = new Set(
+      allExistingTexts.map(t => t.toLowerCase().trim()),
     );
-    for (const q of context.questions) {
-      existingTexts.add(q.text.toLowerCase().trim());
-    }
 
     const dedupedSuggestions = suggestions.filter(s => {
       const normalized = s.text.toLowerCase().trim();
-      if (existingTexts.has(normalized)) {
+
+      if (exactTexts.has(normalized)) {
         console.debug(
-          '[DEBUG] [questions:suggest] Filtered duplicate suggestion',
+          '[DEBUG] [questions:suggest] Filtered exact duplicate',
           JSON.stringify({ text: s.text.substring(0, 60) }),
         );
         return false;
       }
-      existingTexts.add(normalized);
+
+      const fuzzyMatch = isSemanticallyDuplicate(s.text, allExistingTexts);
+      if (fuzzyMatch) {
+        console.debug(
+          '[DEBUG] [questions:suggest] Filtered semantic duplicate',
+          JSON.stringify({ new: s.text.substring(0, 60), existing: fuzzyMatch.substring(0, 60) }),
+        );
+        return false;
+      }
+
+      exactTexts.add(normalized);
+      allExistingTexts.push(s.text);
       return true;
     });
 
@@ -197,6 +226,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
         '[INFO] [questions:suggest] No new suggestions after dedup',
         JSON.stringify({ requirementId, rawCount: suggestions.length }),
       );
+      suggestingInProgress.delete(requirementId);
       return res.status(200).json([]);
     }
 
@@ -230,6 +260,7 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
         '[ERROR] [questions:suggest] Failed to insert suggestions',
         JSON.stringify({ error: insertError.message }),
       );
+      suggestingInProgress.delete(requirementId);
       return res.status(500).json({ error: insertError.message });
     }
 
@@ -238,8 +269,10 @@ questionsRouter.post('/suggest/:requirementId', async (req, res) => {
       JSON.stringify({ requirementId, count: inserted?.length }),
     );
 
+    suggestingInProgress.delete(requirementId);
     res.status(201).json(inserted);
   } catch (err) {
+    suggestingInProgress.delete(requirementId);
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(
       '[ERROR] [questions:suggest] Generation failed',
