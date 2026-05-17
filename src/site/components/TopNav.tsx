@@ -20,6 +20,7 @@ const PLAIN_LINKS = [
 
 const RESOURCES_ITEMS = [
   { label: 'Articles', href: '/articles' },
+  { label: 'Changelog', href: '/changelog' },
   { label: 'Guides', href: '/guides' },
   { label: 'Docs', href: '/docs' },
 ];

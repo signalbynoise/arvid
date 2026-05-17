@@ -1,12 +1,21 @@
 import { Router } from 'express';
-import { createUserClient } from '../supabase';
-import { supabase, supabaseAdmin } from '../supabase';
+import { Resend } from 'resend';
+import { createElement } from 'react';
+import { render } from '@react-email/components';
+import { createUserClient, supabaseAdmin } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
 import { CreateInvitationBodySchema } from '../../shared/schemas';
+import { InviteEmail } from '../emails/InviteEmail';
 
 export const invitationsRouter = Router();
 
 const APP_ORIGIN = process.env.APP_ORIGIN || 'http://localhost:5173';
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'Arvid <arvid@arvid.work>';
 
 invitationsRouter.get('/', async (req, res) => {
   const db = createUserClient(req.accessToken!);
@@ -81,31 +90,73 @@ invitationsRouter.post('/', validateBody(CreateInvitationBodySchema), async (req
     return res.status(400).json({ error: insertError.message });
   }
 
-  const redirectTo = `${APP_ORIGIN}?invite_accepted=1`;
+  const inviteUrl = `${APP_ORIGIN}?invite=1`;
 
   try {
-    const { error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: { workspace_id, team_id },
-    });
+    const { data: workspace } = await supabaseAdmin
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspace_id)
+      .single();
 
-    if (authError && authError.message.includes('already been registered')) {
-      console.info('[INFO] [invitations:create] User exists, sending OTP magic link instead');
+    let scopeName: string | undefined;
+    if (inviteScope === 'team' && team_id) {
+      const { data: team } = await supabaseAdmin
+        .from('teams')
+        .select('name')
+        .eq('id', team_id)
+        .single();
+      scopeName = team?.name;
+    } else if (inviteScope === 'project' && project_id) {
+      const { data: project } = await supabaseAdmin
+        .from('projects')
+        .select('name')
+        .eq('id', project_id)
+        .single();
+      scopeName = project?.name;
+    }
 
-      const { error: otpError } = await supabaseAdmin.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false, emailRedirectTo: redirectTo },
-      });
+    const inviterEmail = req.user!.email ?? 'Someone';
+    const workspaceName = workspace?.name ?? 'a workspace';
 
-      if (otpError) {
-        console.warn('[WARN] [invitations:create] OTP email failed', JSON.stringify({ message: otpError.message }));
+    if (resend) {
+      const html = await render(
+        createElement(InviteEmail, {
+          url: inviteUrl,
+          inviterEmail,
+          workspaceName,
+          scope: inviteScope as 'workspace' | 'team' | 'project',
+          scopeName,
+        }),
+      );
+
+      const subject = inviteScope === 'workspace'
+        ? `You've been invited to ${workspaceName} on Arvid`
+        : `You've been invited to ${scopeName ?? inviteScope} in ${workspaceName} on Arvid`;
+
+      const plainText = [
+        subject,
+        '',
+        `${inviterEmail} has invited you to join ${workspaceName} on Arvid.`,
+        '',
+        'Accept the invitation:',
+        inviteUrl,
+      ].join('\n');
+
+      const idempotencyKey = `invite/${invitation.id}`;
+
+      const { error: sendError } = await resend.emails.send(
+        { from: FROM_ADDRESS, to: [email], subject, html, text: plainText },
+        { idempotencyKey },
+      );
+
+      if (sendError) {
+        console.error('[ERROR] [invitations:create] Resend email failed', JSON.stringify({ to: email, error: sendError.message }));
       } else {
-        console.info('[INFO] [invitations:create] OTP email sent to existing user');
+        console.info('[INFO] [invitations:create] Branded invite email sent', JSON.stringify({ to: email }));
       }
-    } else if (authError) {
-      console.warn('[WARN] [invitations:create] inviteUserByEmail failed', JSON.stringify({ message: authError.message }));
     } else {
-      console.info('[INFO] [invitations:create] Invitation email sent to new user');
+      console.warn('[WARN] [invitations:create] Resend not configured, no invite email sent');
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

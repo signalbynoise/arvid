@@ -28,6 +28,8 @@ import { searchRouter } from './routes/search';
 import { renderRouter } from './routes/render';
 import { shareRouter } from './routes/share';
 import { updatesRouter } from './routes/updates';
+import { changelogRouter } from './routes/changelog';
+import { startScheduledJobs } from './jobs';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -95,6 +97,7 @@ app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/render', renderRouter);
 app.use('/api/share', shareRouter);
+app.use('/api/changelog', changelogRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR] [express:unhandled]', err.message, err.stack);
@@ -105,4 +108,5 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`BFF server running on http://0.0.0.0:${PORT}`);
+  startScheduledJobs();
 });

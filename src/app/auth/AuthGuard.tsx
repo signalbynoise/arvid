@@ -21,7 +21,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (status === 'unauthenticated') {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const loginPath = location.search
+      ? `/login${location.search}`
+      : '/login';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

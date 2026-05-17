@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug, Rocket } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSubscription, selectSubscriptionLoading } from '../store';
@@ -12,6 +12,7 @@ import { TextInput } from './ui/TextInput';
 import { SubmitButton } from './ui/SubmitButton';
 import { PlanCard } from './PlanCard';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
+import { ChangePasswordSection } from './account-settings/ChangePasswordSection';
 import { api } from '../api';
 import { logger } from '../logger';
 import { PLAN_DISPLAY } from '../../../shared/schemas/subscription';
@@ -92,6 +93,13 @@ export function AccountSettingsModal({ isOpen, onClose, initialTab }: Props) {
   const originalName = user?.user_metadata?.full_name || user?.user_metadata?.name || '';
   const email = user?.email || '';
   const isDirty = nameValue !== originalName;
+
+  const authProvider = useMemo(() => {
+    const provider = user?.app_metadata?.provider as string | undefined;
+    const providers: string[] = user?.app_metadata?.providers ?? [];
+    if (provider === 'email' || providers.includes('email')) return 'email';
+    return provider ?? providers[0] ?? 'unknown';
+  }, [user]);
 
   useEffect(() => {
     if (isOpen) {
@@ -191,6 +199,8 @@ export function AccountSettingsModal({ isOpen, onClose, initialTab }: Props) {
                 />
               </FormField>
             </div>
+
+            <ChangePasswordSection email={email} authProvider={authProvider} />
 
             <div className="border-t border-border-subtle pt-6">
               <h3 className="text-caption-lg text-text-primary mb-4">Current Plan</h3>

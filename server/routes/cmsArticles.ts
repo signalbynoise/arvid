@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import crypto from 'node:crypto';
 import { createUserClient, supabase } from '../supabase';
 import { validateBody } from '../middleware/validateBody';
@@ -8,7 +8,7 @@ import type { GenerateArticleResult } from '../openrouter';
 import type { RepoAnalysis, FileTreeEntry, CommitEntry } from '../../shared/schemas/repoContext';
 import type { DbAnalysis, DbTable, DbRelationship } from '../../shared/schemas/dbContext';
 
-const CMS_SUPER_ADMIN_ID = '926ede11-3607-446e-a7aa-400bd22635ff';
+import { requireSuperAdmin } from '../middleware/requireSuperAdmin';
 
 // --- Generation job tracking ---
 
@@ -35,15 +35,6 @@ function pruneStaleJobs(): void {
       generationJobs.delete(id);
     }
   }
-}
-
-function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
-  if (req.user?.id !== CMS_SUPER_ADMIN_ID) {
-    console.warn('[warn] [cms:auth] Non-admin user attempted CMS access', { userId: req.user?.id });
-    res.status(403).json({ error: 'CMS access restricted to super admin' });
-    return;
-  }
-  next();
 }
 
 export const cmsArticlesRouter = Router();

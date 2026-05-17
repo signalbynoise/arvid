@@ -33,8 +33,8 @@ export function ArticlePage() {
     ])
       .then(([articleData, popularData, readMoreData]) => {
         setArticle(articleData);
-        setPopular(popularData.filter((a) => a.slug !== slug));
-        setReadMore(readMoreData.filter((a) => a.slug !== slug));
+        setPopular(popularData.filter((a) => a.slug !== slug && a.type !== 'changelog'));
+        setReadMore(readMoreData.filter((a) => a.slug !== slug && a.type !== 'changelog'));
       })
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Failed to load article';

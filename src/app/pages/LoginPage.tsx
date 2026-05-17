@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { BrandPanel } from '../components/login/BrandPanel';
@@ -13,28 +13,48 @@ export function LoginPage() {
   const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('signin');
 
-  const from = (location.state as { from?: Location })?.from?.pathname || '/';
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const isInvite = searchParams.has('invite');
+
+  const fromState = (location.state as { from?: Location })?.from;
+  const redirectTarget = useMemo(() => {
+    if (fromState) {
+      const path = fromState.pathname || '/';
+      const search = (fromState as { search?: string }).search || '';
+      return `${path}${search}`;
+    }
+    return isInvite ? '/?invite=1' : '/';
+  }, [fromState, isInvite]);
 
   useEffect(() => {
     if (status === 'authenticated') {
-      navigate(from, { replace: true });
+      navigate(redirectTarget, { replace: true });
     }
-  }, [status, navigate, from]);
+  }, [status, navigate, redirectTarget]);
 
   const handleLoginSuccess = () => {
-    navigate(from, { replace: true });
+    navigate(redirectTarget, { replace: true });
   };
 
   const isSignUp = mode === 'signup';
 
   return (
-    <div
-      className="flex h-screen w-full bg-surface-base text-text-primary antialiased"
-    >
+    <div className="flex h-screen w-full bg-surface-base text-text-primary antialiased">
       <BrandPanel />
 
       <div className="flex flex-1 items-center justify-center px-6">
         <div className="w-full max-w-[400px] flex flex-col gap-8">
+          {isInvite && (
+            <div className="rounded-comfortable border border-border-subtle bg-surface-frost-04 px-4 py-3">
+              <p className="text-[13px] font-[var(--fw-medium)] text-text-secondary">
+                You&apos;ve been invited to join a workspace on Arvid.
+              </p>
+              <p className="text-[12px] font-[var(--fw-regular)] text-text-tertiary mt-0.5">
+                Sign in or create an account to accept the invitation.
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <h1 className="text-[32px] font-[var(--fw-medium)] leading-[1.13] tracking-[-0.704px] text-text-primary">
               {isSignUp ? 'Create account' : 'Sign in'}

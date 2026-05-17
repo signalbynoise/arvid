@@ -47,6 +47,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           userId: newSession?.user?.id ?? null,
         });
 
+        if (_event === 'PASSWORD_RECOVERY' && newSession) {
+          log.info('stateChange', 'Password recovery session, redirecting to reset page');
+          setSession(newSession);
+          setUser(newSession.user);
+          setStatus('authenticated');
+          window.location.replace('/reset-password');
+          return;
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setStatus(newSession ? 'authenticated' : 'unauthenticated');

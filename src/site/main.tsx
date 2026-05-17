@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
 import { ArticlePage } from './pages/ArticlePage';
 import { ArticlesListPage } from './pages/ArticlesListPage';
+import { ChangelogListPage } from './pages/ChangelogListPage';
+import { ChangelogPage } from './pages/ChangelogPage';
 import { AdminAuthProvider } from './auth/AdminAuthProvider';
 import { AdminAuthGuard } from './auth/AdminAuthGuard';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
@@ -16,6 +18,8 @@ createRoot(document.getElementById('root')!).render(
       <Route path="/" element={<LandingPage />} />
       <Route path="/articles" element={<ArticlesListPage />} />
       <Route path="/articles/:slug" element={<ArticlePage />} />
+      <Route path="/changelog" element={<ChangelogListPage />} />
+      <Route path="/changelog/:slug" element={<ChangelogPage />} />
 
       <Route
         path="/admin/*"

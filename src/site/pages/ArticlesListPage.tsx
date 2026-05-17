@@ -1,10 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { TopNav } from '../components/TopNav';
-import { PageGrid } from '../components/PageGrid';
-import { SiteSearchInput } from '../components/SiteSearchInput';
+import React from 'react';
+import { ContentListPage } from '../components/ContentListPage';
 import { ArticleCard } from '../components/article/ArticleCard';
-import { CtaSection } from '../components/CtaSection';
-import { publicGet } from '../lib/api';
 import type { ArticleRow } from '../../../shared/schemas/article';
 
 const FEATURED_COUNT = 4;
@@ -18,95 +14,55 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-export function ArticlesListPage() {
-  const [articles, setArticles] = useState<ArticleRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    publicGet<ArticleRow[]>('/api/articles')
-      .then(setArticles)
-      .catch((err) => {
-        console.error('[error] [ArticlesListPage] Failed to fetch articles', {
-          message: err instanceof Error ? err.message : String(err),
-        });
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return articles;
-    const query = search.toLowerCase();
-    return articles.filter(
-      (a) =>
-        a.title.toLowerCase().includes(query) ||
-        (a.excerpt ?? '').toLowerCase().includes(query),
-    );
-  }, [articles, search]);
-
-  const featured = filtered.slice(0, FEATURED_COUNT);
-  const rest = filtered.slice(FEATURED_COUNT);
+function renderArticles(articles: ArticleRow[]) {
+  const featured = articles.slice(0, FEATURED_COUNT);
+  const rest = articles.slice(FEATURED_COUNT);
 
   return (
-    <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-      <TopNav />
-
-      <PageGrid className="pt-30">
-        <div className="col-span-full flex flex-col gap-6">
-          <h1 className="text-h2 text-text-primary">Articles</h1>
-          <SiteSearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search articles about Arvid"
+    <>
+      <div className="col-span-full mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+        {featured.map((article) => (
+          <ArticleCard
+            key={article.slug}
+            title={article.title}
+            excerpt={article.excerpt ?? ''}
+            slug={article.slug}
+            date={formatDate(article.published_at)}
+            author={article.author ?? undefined}
+            miniDemoId={article.mini_demo_id}
+            variant="featured"
           />
-        </div>
-
-        {loading ? (
-          <p className="col-span-full mt-10 text-body text-text-tertiary">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="col-span-full mt-10 text-body text-text-tertiary">
-            {search ? 'No articles match your search.' : 'No articles yet.'}
-          </p>
-        ) : (
-          <>
-            <div className="col-span-full mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {featured.map((article) => (
-                <ArticleCard
-                  key={article.slug}
-                  title={article.title}
-                  excerpt={article.excerpt ?? ''}
-                  slug={article.slug}
-                  date={formatDate(article.published_at)}
-                  author={article.author ?? undefined}
-                  miniDemoId={article.mini_demo_id}
-                  variant="featured"
-                />
-              ))}
-            </div>
-
-            {rest.length > 0 && (
-              <div className="col-span-full mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {rest.map((article) => (
-                  <ArticleCard
-                    key={article.slug}
-                    title={article.title}
-                    excerpt={article.excerpt ?? ''}
-                    slug={article.slug}
-                    date={formatDate(article.published_at)}
-                    author={article.author ?? undefined}
-                    miniDemoId={article.mini_demo_id}
-                    variant="compact"
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </PageGrid>
-
-      <div className="pt-60">
-        <CtaSection />
+        ))}
       </div>
-    </div>
+
+      {rest.length > 0 && (
+        <div className="col-span-full mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {rest.map((article) => (
+            <ArticleCard
+              key={article.slug}
+              title={article.title}
+              excerpt={article.excerpt ?? ''}
+              slug={article.slug}
+              date={formatDate(article.published_at)}
+              author={article.author ?? undefined}
+              miniDemoId={article.mini_demo_id}
+              variant="compact"
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+export function ArticlesListPage() {
+  return (
+    <ContentListPage
+      title="Articles"
+      emptyMessage="No articles yet."
+      fetchUrl="/api/articles"
+      filterFn={(data) => data.filter((a) => a.type !== 'changelog')}
+      renderItems={renderArticles}
+    />
   );
 }
