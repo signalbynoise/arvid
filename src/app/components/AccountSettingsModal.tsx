@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug, Rocket } from 'lucide-react';
+import { CreditCard, Receipt, User as UserIcon, Crown, ExternalLink, Loader2, Plug, Rocket, Trash2 } from 'lucide-react';
 import { ICON_SIZE } from '../../constants/icons';
 import { useStore, selectSubscription, selectSubscriptionLoading } from '../store';
 import { useAuth } from '../auth/AuthProvider';
@@ -19,10 +19,11 @@ import { PLAN_DISPLAY } from '../../../shared/schemas/subscription';
 import { resolvePlan, getPlanFeatures, formatSubscriptionStatus, formatPeriodEndLabel } from '../domain/billing';
 import { IntegrationsTab } from './account-settings/IntegrationsTab';
 import { DeploymentTab } from './account-settings/DeploymentTab';
+import { DangerZoneTab } from './account-settings/DangerZoneTab';
 
 const log = logger.create('AccountSettings');
 
-type SettingsTab = 'account' | 'integrations' | 'deployment' | 'plan' | 'invoices';
+type SettingsTab = 'account' | 'integrations' | 'deployment' | 'plan' | 'invoices' | 'danger';
 
 const TAB_CONFIG: ModalSidebarItem[] = [
   { id: 'account', label: 'Account', icon: <UserIcon size={ICON_SIZE.sm} /> },
@@ -30,6 +31,7 @@ const TAB_CONFIG: ModalSidebarItem[] = [
   { id: 'deployment', label: 'Deployment', icon: <Rocket size={ICON_SIZE.sm} /> },
   { id: 'plan', label: 'Plan', icon: <Crown size={ICON_SIZE.sm} /> },
   { id: 'invoices', label: 'Invoices', icon: <Receipt size={ICON_SIZE.sm} /> },
+  { id: 'danger', label: 'Danger Zone', icon: <Trash2 size={ICON_SIZE.sm} /> },
 ];
 
 interface Props {
@@ -73,7 +75,7 @@ const FORMAT_LONG_DATE = (isoString: string) =>
   });
 
 export function AccountSettingsModal({ isOpen, onClose, initialTab }: Props) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, signOut } = useAuth();
   const subscription = useStore(selectSubscription);
   const subscriptionLoading = useStore(selectSubscriptionLoading);
   const loadSubscription = useStore(s => s.loadSubscription);
@@ -366,6 +368,16 @@ export function AccountSettingsModal({ isOpen, onClose, initialTab }: Props) {
               </button>
             )}
           </div>
+        )}
+
+        {activeTab === 'danger' && (
+          <DangerZoneTab
+            email={email}
+            onDeleted={async () => {
+              onClose();
+              await signOut();
+            }}
+          />
         )}
       </div>
     </BaseModal>

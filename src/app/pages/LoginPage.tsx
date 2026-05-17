@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { BrandPanel } from '../components/login/BrandPanel';
@@ -12,9 +12,15 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('signin');
+  const [showingConfirmation, setShowingConfirmation] = useState(false);
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const isInvite = searchParams.has('invite');
+  const inviteEmail = searchParams.get('email');
+
+  const handleConfirmationView = useCallback((showing: boolean) => {
+    setShowingConfirmation(showing);
+  }, []);
 
   const fromState = (location.state as { from?: Location })?.from;
   const redirectTarget = useMemo(() => {
@@ -23,8 +29,8 @@ export function LoginPage() {
       const search = (fromState as { search?: string }).search || '';
       return `${path}${search}`;
     }
-    return isInvite ? '/?invite=1' : '/';
-  }, [fromState, isInvite]);
+    return isInvite ? `/?invite=1${inviteEmail ? `&email=${encodeURIComponent(inviteEmail)}` : ''}` : '/';
+  }, [fromState, isInvite, inviteEmail]);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -44,65 +50,84 @@ export function LoginPage() {
 
       <div className="flex flex-1 items-center justify-center px-6">
         <div className="w-full max-w-[400px] flex flex-col gap-8">
-          {isInvite && (
+          {!showingConfirmation && isInvite && (
             <div className="rounded-comfortable border border-border-subtle bg-surface-frost-04 px-4 py-3">
               <p className="text-[13px] font-[var(--fw-medium)] text-text-secondary">
                 You&apos;ve been invited to join a workspace on Arvid.
               </p>
               <p className="text-[12px] font-[var(--fw-regular)] text-text-tertiary mt-0.5">
-                Sign in or create an account to accept the invitation.
+                {inviteEmail ? (
+                  <>
+                    Sign in as{' '}
+                    <span className="text-text-secondary font-[var(--fw-medium)]">{inviteEmail}</span>
+                    {' '}to accept the invitation.
+                  </>
+                ) : (
+                  'Sign in or create an account to accept the invitation.'
+                )}
               </p>
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[32px] font-[var(--fw-medium)] leading-[1.13] tracking-[-0.704px] text-text-primary">
-              {isSignUp ? 'Create account' : 'Sign in'}
-            </h1>
-            <p className="text-[15px] font-[var(--fw-regular)] leading-[1.6] tracking-[-0.165px] text-text-tertiary">
-              {isSignUp
-                ? 'Enter your details to get started.'
-                : 'Welcome back! Enter your details below.'}
-            </p>
-          </div>
+          {!showingConfirmation && (
+            <div className="flex flex-col gap-2">
+              <h1 className="text-[32px] font-[var(--fw-medium)] leading-[1.13] tracking-[-0.704px] text-text-primary">
+                {isSignUp ? 'Create account' : 'Sign in'}
+              </h1>
+              <p className="text-[15px] font-[var(--fw-regular)] leading-[1.6] tracking-[-0.165px] text-text-tertiary">
+                {isSignUp
+                  ? 'Enter your details to get started.'
+                  : 'Welcome back! Enter your details below.'}
+              </p>
+            </div>
+          )}
 
-          <LoginForm mode={mode} onSuccess={handleLoginSuccess} />
+          <LoginForm
+            mode={mode}
+            onSuccess={handleLoginSuccess}
+            inviteEmail={inviteEmail}
+            onConfirmationView={handleConfirmationView}
+          />
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-surface-frost-08" />
-            <span className="text-[12px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
-              or
-            </span>
-            <div className="flex-1 h-px bg-surface-frost-08" />
-          </div>
+          {!showingConfirmation && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-surface-frost-08" />
+                <span className="text-[12px] font-[var(--fw-medium)] text-text-quaternary uppercase tracking-wider">
+                  or
+                </span>
+                <div className="flex-1 h-px bg-surface-frost-08" />
+              </div>
 
-          <OAuthButtons />
+              <OAuthButtons inviteEmail={inviteEmail} />
 
-          <p className="text-center text-[13px] font-[var(--fw-regular)] text-text-tertiary">
-            {isSignUp ? (
-              <>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setMode('signin')}
-                  className="text-[13px] font-[var(--fw-medium)] text-text-primary hover:text-white transition-colors"
-                >
-                  Sign in
-                </button>
-              </>
-            ) : (
-              <>
-                Don&apos;t have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setMode('signup')}
-                  className="text-[13px] font-[var(--fw-medium)] text-text-primary hover:text-white transition-colors"
-                >
-                  Sign up
-                </button>
-              </>
-            )}
-          </p>
+              <p className="text-center text-[13px] font-[var(--fw-regular)] text-text-tertiary">
+                {isSignUp ? (
+                  <>
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setMode('signin')}
+                      className="text-[13px] font-[var(--fw-medium)] text-text-primary hover:text-white transition-colors"
+                    >
+                      Sign in
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Don&apos;t have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setMode('signup')}
+                      className="text-[13px] font-[var(--fw-medium)] text-text-primary hover:text-white transition-colors"
+                    >
+                      Sign up
+                    </button>
+                  </>
+                )}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

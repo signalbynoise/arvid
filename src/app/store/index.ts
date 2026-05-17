@@ -33,6 +33,10 @@ export const useStore = create<AppState>()((...args) => ({
   ...createRenderSlice(...args),
 }));
 
+export function resetStore() {
+  useStore.setState(useStore.getInitialState());
+}
+
 export type { UISlice, ModalIntent, PendingModal } from './slices/ui';
 export type { DataState, DataStatus } from './slices/entities';
 export type { SummaryDataState, SummaryDataStatus } from './slices/summaries';

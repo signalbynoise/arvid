@@ -77,15 +77,14 @@ export const createWorkspacesSlice: StateCreator<WorkspacesSlice, [], [], Worksp
 
   bootStatus: 'idle' as BootStatus,
 
-  bootApp: () => {
+  bootApp: async () => {
     if (get().bootStatus !== 'idle') return;
     set({ bootStatus: 'booting' });
     log.info('bootApp', 'Starting app boot');
 
-    get().acceptPendingInvitations();
-    get().loadWorkspaces().then(() => {
-      set({ bootStatus: 'ready' });
-    });
+    await get().acceptPendingInvitations();
+    await get().loadWorkspaces();
+    set({ bootStatus: 'ready' });
   },
 
   deactivationMap: { isOwner: false, workspace: false, teams: {}, projects: {} },

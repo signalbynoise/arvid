@@ -1,4 +1,5 @@
 import { setup, assign, fromPromise } from 'xstate';
+import { toast } from 'sonner';
 import type { Invitation } from '../../types';
 import { logger } from '../../logger';
 
@@ -66,15 +67,19 @@ export function createSendInvitationMachine(actions: SendInvitationActions) {
       },
 
       success: {
-        entry: () => {
+        entry: ({ context }) => {
           log.info('success', 'Invitation sent');
+          toast.success('Invitation sent', { description: `An invite has been sent to ${context.email}.` });
           actions.onClose();
         },
         type: 'final',
       },
 
       failure: {
-        entry: ({ context }) => log.error('failure', 'Failed to send invitation', { error: context.error }),
+        entry: ({ context }) => {
+          log.error('failure', 'Failed to send invitation', { error: context.error });
+          toast.error('Invitation failed', { description: context.error ?? 'Something went wrong.' });
+        },
         on: {
           SUBMIT: {
             target: 'submitting',

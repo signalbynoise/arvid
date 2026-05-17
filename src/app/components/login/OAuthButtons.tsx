@@ -29,13 +29,21 @@ const PROVIDERS: { id: Provider; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
+const INVITE_EMAIL_KEY = 'arvid_invite_email';
+
 interface OAuthButtonsProps {
   disabled?: boolean;
+  inviteEmail?: string | null;
 }
 
-export function OAuthButtons({ disabled }: OAuthButtonsProps) {
+export function OAuthButtons({ disabled, inviteEmail }: OAuthButtonsProps) {
   const handleOAuth = async (provider: Provider) => {
     log.info('signIn', `Starting OAuth with ${provider}`);
+
+    if (inviteEmail) {
+      sessionStorage.setItem(INVITE_EMAIL_KEY, inviteEmail);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { API_BASE } from '../../constants';
 import { logger } from '../../logger';
 
 const log = logger.create('loginForm');
@@ -10,14 +11,21 @@ type FormView = 'credentials' | 'forgot';
 interface LoginFormProps {
   mode: 'signin' | 'signup';
   onSuccess: () => void;
+  inviteEmail?: string | null;
+  onConfirmationView?: (showing: boolean) => void;
 }
 
-export function LoginForm({ mode, onSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState('');
+export function LoginForm({ mode, onSuccess, inviteEmail, onConfirmationView }: LoginFormProps) {
+  const [email, setEmail] = useState(inviteEmail ?? '');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [view, setView] = useState<FormView>('credentials');
+
+  const isConfirmationView = status === 'signup_success' || status === 'reset_sent';
+  React.useEffect(() => {
+    onConfirmationView?.(isConfirmationView);
+  }, [isConfirmationView, onConfirmationView]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -27,11 +35,24 @@ export function LoginForm({ mode, onSuccess }: LoginFormProps) {
 
       if (mode === 'signup') {
         log.info('submit', 'Attempting sign up', { email });
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          log.error('submit', 'Sign up failed', { message: error.message });
+        try {
+          const res = await fetch(`${API_BASE}/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            log.error('submit', 'Sign up failed', { message: data.error });
+            setStatus('error');
+            setErrorMessage(data.error);
+            return;
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Network error';
+          log.error('submit', 'Sign up request failed', { message });
           setStatus('error');
-          setErrorMessage(error.message);
+          setErrorMessage(message);
           return;
         }
         log.info('submit', 'Sign up succeeded — check email for confirmation');
@@ -69,14 +90,24 @@ export function LoginForm({ mode, onSuccess }: LoginFormProps) {
       }
 
       log.info('forgotPassword', 'Sending password reset email', { email });
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        log.error('forgotPassword', 'Reset failed', { message: error.message });
+      try {
+        const res = await fetch(`${API_BASE}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          log.error('forgotPassword', 'Reset failed', { message: data.error });
+          setStatus('error');
+          setErrorMessage(data.error);
+          return;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Network error';
+        log.error('forgotPassword', 'Reset request failed', { message });
         setStatus('error');
-        setErrorMessage(error.message);
+        setErrorMessage(message);
         return;
       }
 
@@ -92,9 +123,7 @@ export function LoginForm({ mode, onSuccess }: LoginFormProps) {
   if (status === 'signup_success') {
     return (
       <div className="flex flex-col items-center gap-3 py-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-status-success-green-halo">
-          <span className="text-status-success-green text-body-lg">&#10003;</span>
-        </div>
+        <img src="/favicon.svg" alt="Arvid" className="h-10 w-10" />
         <p className="text-[15px] font-[var(--fw-medium)] text-text-primary">Check your email</p>
         <p className="text-[13px] font-[var(--fw-regular)] text-text-tertiary max-w-[300px]">
           We sent a confirmation link to <span className="text-text-secondary font-[var(--fw-medium)]">{email}</span>. Click it to activate your account.
@@ -106,9 +135,7 @@ export function LoginForm({ mode, onSuccess }: LoginFormProps) {
   if (status === 'reset_sent') {
     return (
       <div className="flex flex-col items-center gap-3 py-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-status-success-green-halo">
-          <span className="text-status-success-green text-body-lg">&#10003;</span>
-        </div>
+        <img src="/favicon.svg" alt="Arvid" className="h-10 w-10" />
         <p className="text-[15px] font-[var(--fw-medium)] text-text-primary">Check your email</p>
         <p className="text-[13px] font-[var(--fw-regular)] text-text-tertiary max-w-[300px]">
           We sent a password reset link to <span className="text-text-secondary font-[var(--fw-medium)]">{email}</span>. Click it to set a new password.

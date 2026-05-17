@@ -24,9 +24,14 @@ import { LinkLinearModal } from './components/LinkLinearModal';
 import { LinkSlackChannelModal } from './components/LinkSlackChannelModal';
 import { LinkDatabaseModal } from './components/LinkDatabaseModal';
 import { supabase } from './lib/supabase';
+import { useAuth } from './auth/AuthProvider';
+import { InviteMismatchModal } from './components/InviteMismatchModal';
+
+const INVITE_EMAIL_KEY = 'arvid_invite_email';
 
 export default function App() {
   const { theme } = useTheme();
+  const { user, signOut } = useAuth();
   const dataState = useStore(selectDataState);
   const selectedReqId = useStore(selectSelectedReqId);
   const selectedQuestionId = useStore(selectSelectedQuestionId);
@@ -56,10 +61,33 @@ export default function App() {
   const bootApp = useStore(s => s.bootApp);
   const loadSubscription = useStore(s => s.loadSubscription);
 
+  const acceptInvitationsStatus = useStore(s => s.acceptInvitationsState.status);
+  const [mismatchInviteEmail, setMismatchInviteEmail] = useState<string | null>(null);
+
   useEffect(() => {
     bootApp();
     loadSubscription();
   }, [bootApp, loadSubscription]);
+
+  useEffect(() => {
+    if (acceptInvitationsStatus !== 'resolved') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const isInvite = params.has('invite');
+
+    const inviteEmail =
+      params.get('email') || sessionStorage.getItem(INVITE_EMAIL_KEY);
+
+    sessionStorage.removeItem(INVITE_EMAIL_KEY);
+
+    if (isInvite) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (inviteEmail && user?.email && user.email.toLowerCase() !== inviteEmail.toLowerCase()) {
+      setMismatchInviteEmail(inviteEmail);
+    }
+  }, [acceptInvitationsStatus, user?.email]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -410,6 +438,16 @@ export default function App() {
         </>
       )}
       <CommandPalette />
+      <InviteMismatchModal
+        isOpen={!!mismatchInviteEmail}
+        inviteEmail={mismatchInviteEmail ?? ''}
+        currentEmail={user?.email ?? ''}
+        onSignOut={async () => {
+          setMismatchInviteEmail(null);
+          await signOut();
+        }}
+        onDismiss={() => setMismatchInviteEmail(null)}
+      />
       <Toaster
         theme={theme}
         position="bottom-right"

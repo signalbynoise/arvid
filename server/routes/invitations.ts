@@ -90,7 +90,7 @@ invitationsRouter.post('/', validateBody(CreateInvitationBodySchema), async (req
     return res.status(400).json({ error: insertError.message });
   }
 
-  const inviteUrl = `${APP_ORIGIN}?invite=1`;
+  const inviteUrl = `${APP_ORIGIN}?invite=1&email=${encodeURIComponent(email)}`;
 
   try {
     const { data: workspace } = await supabaseAdmin

@@ -4,8 +4,11 @@ import { Project } from '../../types';
 import { api, ApiError } from '../../api';
 import { logger } from '../../logger';
 import { SelectionSlice } from './selection';
+import type { WorkspacesSlice } from './workspaces';
 
 const log = logger.create('store:projects');
+
+const AUTO_CREATE_ROLES = new Set(['owner', 'admin']);
 
 export type ProjectsDataStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -24,7 +27,7 @@ export interface ProjectsSlice {
   deleteProject: (id: string) => Promise<void>;
 }
 
-type CombinedState = ProjectsSlice & SelectionSlice;
+type CombinedState = ProjectsSlice & SelectionSlice & Pick<WorkspacesSlice, 'workspaces'>;
 
 export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSlice> = (set, get) => ({
   projects: [],
@@ -40,11 +43,18 @@ export const createProjectsSlice: StateCreator<CombinedState, [], [], ProjectsSl
       let projects = await api.getProjects(workspaceId);
 
       if (projects.length === 0 && workspaceId) {
-        log.info('loadProjects', 'No projects found, creating default project');
-        const teams = await api.getTeams(workspaceId);
-        const teamId = teams[0]?.id;
-        const created = await api.createProject('My Project', undefined, workspaceId, teamId);
-        projects = [created];
+        const ws = get().workspaces.find(w => w.id === workspaceId);
+        const role = ws?.userRole ?? 'guest';
+
+        if (AUTO_CREATE_ROLES.has(role)) {
+          log.info('loadProjects', 'No projects found, creating default project', { role });
+          const teams = await api.getTeams(workspaceId);
+          const teamId = teams[0]?.id;
+          const created = await api.createProject('My Project', undefined, workspaceId, teamId);
+          projects = [created];
+        } else {
+          log.debug('loadProjects', 'No projects visible for this user, skipping auto-create', { role });
+        }
       }
 
       set({ projects, projectsDataState: { status: 'ready' } });

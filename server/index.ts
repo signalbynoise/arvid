@@ -29,6 +29,8 @@ import { renderRouter } from './routes/render';
 import { shareRouter } from './routes/share';
 import { updatesRouter } from './routes/updates';
 import { changelogRouter } from './routes/changelog';
+import { authRouter } from './routes/auth';
+import { accountRouter } from './routes/account';
 import { startScheduledJobs } from './jobs';
 
 const app = express();
@@ -71,6 +73,7 @@ app.use('/api/supabase-connect/callback', supabaseConnectCallbackRouter);
 app.use('/api/figma/callback', figmaCallbackRouter);
 app.use('/api/articles', articlesPublicRouter);
 app.use('/api/updates', updatesRouter);
+app.use('/api/auth', authRouter);
 
 app.use('/api', requireAuth);
 
@@ -98,6 +101,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/render', renderRouter);
 app.use('/api/share', shareRouter);
 app.use('/api/changelog', changelogRouter);
+app.use('/api/account', accountRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ERROR] [express:unhandled]', err.message, err.stack);

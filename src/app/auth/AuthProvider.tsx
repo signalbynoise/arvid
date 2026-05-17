@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { resetStore } from '../store';
 import { logger } from '../logger';
 
 const log = logger.create('auth');
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = useCallback(async () => {
     log.info('signOut', 'Signing out');
+    resetStore();
     const { error } = await supabase.auth.signOut();
     if (error) {
       log.error('signOut', 'Sign out failed', { message: error.message });

@@ -913,4 +913,22 @@ export const api = {
   async emailRequirementLink(to: string, url: string, requirementTitle?: string): Promise<void> {
     await request<{ success: boolean }>('POST', '/share/email-requirement', { to, url, requirementTitle });
   },
+
+  // --- Account ---
+
+  async getDeletionBlockers(): Promise<{
+    blockers: string[];
+    canDelete: boolean;
+    pendingDeletion: { deleteAfter: string } | null;
+  }> {
+    return request('GET', '/account/deletion-blockers');
+  },
+
+  async deleteAccount(confirmEmail: string): Promise<{ message: string; deleteAfter: string }> {
+    return request('DELETE', '/account', { confirmEmail });
+  },
+
+  async cancelAccountDeletion(): Promise<{ message: string }> {
+    return request('POST', '/account/cancel-deletion');
+  },
 };
