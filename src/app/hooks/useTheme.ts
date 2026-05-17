@@ -1,6 +1,20 @@
-import { useSyncExternalStore, useCallback } from 'react';
+import { useSyncExternalStore, useCallback, useEffect } from 'react';
 
 type Theme = 'dark' | 'light';
+
+interface ElectronAPI {
+  getSystemTheme: () => Promise<Theme>;
+  onThemeChange: (callback: (theme: Theme) => void) => () => void;
+  getAppVersion: () => Promise<string>;
+  onDeepLink: (callback: (path: string) => void) => () => void;
+  onNetworkStatus: (callback: (online: boolean) => void) => () => void;
+}
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
 
 const STORAGE_KEY = 'arvid-theme';
 const CLASS_LIGHT = 'light';
@@ -31,10 +45,28 @@ function applyTheme(theme: Theme): void {
   listeners.forEach(l => l());
 }
 
+function resolveDefaultTheme(): Theme {
+  return 'dark';
+}
+
 export function initTheme(): void {
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-  const resolved = stored === 'light' ? 'light' : 'dark';
-  applyTheme(resolved);
+  if (stored) {
+    applyTheme(stored);
+    return;
+  }
+
+  if (window.electronAPI) {
+    window.electronAPI.getSystemTheme().then((systemTheme) => {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        applyTheme(systemTheme);
+      }
+    }).catch(() => {
+      applyTheme(resolveDefaultTheme());
+    });
+  } else {
+    applyTheme(resolveDefaultTheme());
+  }
 }
 
 export function useTheme() {
@@ -49,6 +81,15 @@ export function useTheme() {
     const next = getSnapshot() === 'dark' ? 'light' : 'dark';
     setTheme(next);
   }, [setTheme]);
+
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    return window.electronAPI.onThemeChange((systemTheme) => {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        applyTheme(systemTheme);
+      }
+    });
+  }, []);
 
   return { theme, setTheme, toggleTheme } as const;
 }

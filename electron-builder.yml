@@ -1,0 +1,36 @@
+appId: com.arvid.desktop
+productName: Arvid
+
+mac:
+  category: public.app-category.developer-tools
+  target: dmg
+  icon: resources/icon.png
+  protocols:
+    - name: Arvid
+      schemes:
+        - arvid
+
+dmg:
+  title: Arvid
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+files:
+  - electron/dist/**/*
+  - resources/**/*
+  - package.json
+
+extraMetadata:
+  main: electron/dist/main.cjs
+
+directories:
+  output: release
+
+publish:
+  provider: generic
+  url: https://arvid-api.onrender.com/api/updates/mac

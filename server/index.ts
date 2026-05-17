@@ -27,6 +27,7 @@ import { stripeWebhooksRouter } from './routes/stripeWebhooks';
 import { searchRouter } from './routes/search';
 import { renderRouter } from './routes/render';
 import { shareRouter } from './routes/share';
+import { updatesRouter } from './routes/updates';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,6 +68,7 @@ app.use('/api/slack/callback', slackCallbackRouter);
 app.use('/api/supabase-connect/callback', supabaseConnectCallbackRouter);
 app.use('/api/figma/callback', figmaCallbackRouter);
 app.use('/api/articles', articlesPublicRouter);
+app.use('/api/updates', updatesRouter);
 
 app.use('/api', requireAuth);
 

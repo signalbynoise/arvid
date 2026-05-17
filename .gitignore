@@ -11,3 +11,5 @@ coverage/
 !.env.example
 !.env.production
 pnpm-lock.yaml
+electron/dist/
+release/

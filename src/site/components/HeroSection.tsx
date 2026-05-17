@@ -1,13 +1,14 @@
 import React from 'react';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
-import { ChevronDown } from '@/components/animate-ui/icons/chevron-down';
 import { MorphingText } from '@/components/animate-ui/primitives/texts/morphing';
 import Grainient from '@/components/Grainient';
 import { AppDemo } from './app-demo';
 import { PageGrid } from './PageGrid';
+import { AppleLogo } from './AppleLogo';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
+const DOWNLOAD_MAC_URL = import.meta.env.VITE_DOWNLOAD_MAC_URL || 'https://github.com/signalbynoise/arvid/releases/latest/download/Arvid-1.0.0-arm64.dmg';
 
 const ROTATING_WORDS = ['#issues', '#agents', '#projects', '#tasks', '#features'];
 
@@ -27,16 +28,14 @@ export function HeroSection() {
       </h1>
 
       <div className="col-span-full flex items-center gap-4">
+        <a href={DOWNLOAD_MAC_URL} className="site-btn-primary">
+          <AppleLogo size={16} />
+          Download Arvid
+        </a>
         <AnimateIcon animateOnHover asChild>
-          <a href={`${APP_URL}/login`} className="site-btn-primary">
-            Launch Arvid
+          <a href={`${APP_URL}/login`} className="site-btn-outline">
             <LoaderPinwheel size={16} />
-          </a>
-        </AnimateIcon>
-        <AnimateIcon animateOnHover asChild>
-          <a href="#product" className="site-btn-secondary">
-            Explore Features
-            <ChevronDown size={16} />
+            Launch Arvid
           </a>
         </AnimateIcon>
       </div>

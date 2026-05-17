@@ -69,7 +69,7 @@ export function TopNav() {
           href={`${APP_URL}/login`}
           className="site-btn-primary hidden md:flex"
         >
-          Open App
+          Launch Arvid
         </a>
 
         <button
@@ -120,7 +120,7 @@ export function TopNav() {
             href={`${APP_URL}/login`}
             className="site-btn-primary justify-center"
           >
-            Open App
+            Launch Arvid
           </a>
         </div>
       )}
