@@ -9,8 +9,8 @@ import { NavDropdown } from './NavDropdown';
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 const PRODUCT_ITEMS = [
-  { label: 'Features', href: '#features' },
-  { label: 'Integrations', href: '#integrations' },
+  { label: 'Features', href: '/features' },
+  { label: 'Integrations', href: '/integrations' },
 ];
 
 const PLAIN_LINKS = [

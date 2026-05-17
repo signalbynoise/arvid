@@ -2,9 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
-import { TopNav } from '../components/TopNav';
-import { PageGrid } from '../components/PageGrid';
-import { CtaSection } from '../components/CtaSection';
+import { ContentListPage } from '../components/ContentListPage';
 import { ShareSidebar } from '../components/article/ShareSidebar';
 import { ArticleContent } from '../components/article/ArticleBlockRenderer';
 import { RecentChangelogsSidebar } from '../components/changelog/RecentChangelogsSidebar';
@@ -52,74 +50,48 @@ export function ChangelogPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-        <TopNav />
-        <div className="flex items-center justify-center pt-40">
-          <p className="text-body text-text-tertiary">Loading...</p>
-        </div>
-      </div>
+      <ContentListPage title="Loading...">
+        <p className="text-body text-text-tertiary">Loading...</p>
+      </ContentListPage>
     );
   }
 
   if (error || !entry) {
     return (
-      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-        <TopNav />
-        <div className="flex flex-col items-center justify-center gap-4 pt-40">
-          <p className="text-body text-text-tertiary">{error ?? 'Changelog not found'}</p>
-          <a href="/changelog" className="text-caption link-default">
-            Browse all updates
-          </a>
-        </div>
-      </div>
+      <ContentListPage title="Changelog not found">
+        <p className="text-body text-text-tertiary">{error ?? 'Changelog not found'}</p>
+        <a href="/changelog" className="text-caption link-default">
+          Browse all updates
+        </a>
+      </ContentListPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-      <TopNav />
+    <ContentListPage
+      title={entry.title}
+      subtitle={
+        <p className="text-btn text-text-tertiary">
+          {entry.published_at
+            ? new Date(entry.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : ''}
+        </p>
+      }
+      leftPanel={<RecentChangelogsSidebar entries={recent} currentSlug={slug ?? ''} />}
+      rightPanel={<ShareSidebar articleUrl={pageUrl} />}
+    >
+      <ArticleContent content={entry.content} />
 
-      <PageGrid className="pt-30">
-        <div className="col-span-full flex items-stretch justify-between gap-10">
-          <div className="hidden lg:block">
-            <RecentChangelogsSidebar entries={recent} currentSlug={slug ?? ''} />
-          </div>
-
-          <article className="flex w-full max-w-article-content flex-col gap-10">
-            <header className="flex flex-col gap-6">
-              <h1 className="text-h2 text-text-primary">
-                {entry.title}
-              </h1>
-              <p className="text-btn text-text-tertiary">
-                {entry.published_at
-                  ? new Date(entry.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                  : ''}
-              </p>
-            </header>
-
-            <ArticleContent content={entry.content} />
-
-            <AnimateIcon animateOnHover asChild>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="site-btn-secondary"
-              >
-                Copy link
-                <ChevronRight size={16} />
-              </button>
-            </AnimateIcon>
-          </article>
-
-          <div className="hidden lg:block">
-            <ShareSidebar articleUrl={pageUrl} />
-          </div>
-        </div>
-      </PageGrid>
-
-      <div className="pt-30">
-        <CtaSection />
-      </div>
-    </div>
+      <AnimateIcon animateOnHover asChild>
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="site-btn-secondary"
+        >
+          Copy link
+          <ChevronRight size={16} />
+        </button>
+      </AnimateIcon>
+    </ContentListPage>
   );
 }

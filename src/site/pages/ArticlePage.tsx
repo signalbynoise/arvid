@@ -2,9 +2,7 @@ import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { AnimateIcon } from '@/components/animate-ui/icons/icon';
 import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
-import { TopNav } from '../components/TopNav';
-import { PageGrid } from '../components/PageGrid';
-import { CtaSection } from '../components/CtaSection';
+import { ContentListPage } from '../components/ContentListPage';
 import { PopularArticlesSidebar } from '../components/article/PopularArticlesSidebar';
 import { ShareSidebar } from '../components/article/ShareSidebar';
 import { ArticleReadMore } from '../components/article/ArticleReadMore';
@@ -57,106 +55,79 @@ export function ArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-        <TopNav />
-        <div className="flex items-center justify-center pt-40">
-          <p className="text-body text-text-tertiary">Loading...</p>
-        </div>
-      </div>
+      <ContentListPage title="Loading...">
+        <p className="text-body text-text-tertiary">Loading...</p>
+      </ContentListPage>
     );
   }
 
   if (error || !article) {
     return (
-      <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-        <TopNav />
-        <div className="flex flex-col items-center justify-center gap-4 pt-40">
-          <p className="text-body text-text-tertiary">{error ?? 'Article not found'}</p>
-          <a href="/articles" className="text-caption link-default">
-            Browse all articles
-          </a>
-        </div>
-      </div>
+      <ContentListPage title="Article not found">
+        <p className="text-body text-text-tertiary">{error ?? 'Article not found'}</p>
+        <a href="/articles" className="text-caption link-default">
+          Browse all articles
+        </a>
+      </ContentListPage>
     );
   }
 
   const MdaComponent = article.mini_demo_id ? MDA_REGISTRY[article.mini_demo_id]?.component : null;
 
   return (
-    <div className="min-h-screen bg-surface-base text-text-primary antialiased">
-      <TopNav />
-
-      <PageGrid className="pt-30">
-        <div className="col-span-full flex items-stretch justify-between gap-10">
-          <div className="hidden lg:block">
-            <PopularArticlesSidebar
-              articles={popular.map((a) => ({ title: a.title, slug: a.slug }))}
-            />
-          </div>
-
-          <article className="flex w-full max-w-article-content flex-col gap-10">
-            <header className="flex flex-col gap-6">
-              <h1 className="text-h2 text-text-primary">
-                {article.title}
-              </h1>
-              <p className="text-btn text-text-tertiary">
-                {article.published_at
-                  ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                  : ''}
-                {article.author ? ` by ${article.author}` : ''}
-              </p>
-            </header>
-
-            {MdaComponent && (
-              <div className="overflow-hidden rounded-card bg-surface-frost-05">
-                <Suspense fallback={<div className="h-100 w-full rounded-card bg-surface-frost-10" />}>
-                  <MdaComponent />
-                </Suspense>
-              </div>
-            )}
-
-            <ArticleContent content={article.content} />
-
-            <AnimateIcon animateOnHover asChild>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="site-btn-secondary"
-              >
-                Copy article link
-                <ChevronRight size={16} />
-              </button>
-            </AnimateIcon>
-
-            <p className="text-btn text-text-tertiary">
-              {article.published_at
-                ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                : ''}
-              {article.author ? ` by ${article.author}` : ''}
-            </p>
-          </article>
-
-          <div className="hidden lg:block">
-            <ShareSidebar articleUrl={articleUrl} />
-          </div>
+    <ContentListPage
+      title={article.title}
+      subtitle={
+        <p className="text-btn text-text-tertiary">
+          {article.published_at
+            ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : ''}
+          {article.author ? ` by ${article.author}` : ''}
+        </p>
+      }
+      leftPanel={
+        <PopularArticlesSidebar
+          articles={popular.map((a) => ({ title: a.title, slug: a.slug }))}
+        />
+      }
+      rightPanel={<ShareSidebar articleUrl={articleUrl} />}
+      footer={
+        <ArticleReadMore
+          articles={readMore.map((a) => ({
+            title: a.title,
+            description: a.excerpt ?? '',
+            slug: a.slug,
+          }))}
+        />
+      }
+    >
+      {MdaComponent && (
+        <div className="overflow-hidden rounded-card bg-surface-frost-05">
+          <Suspense fallback={<div className="h-100 w-full rounded-card bg-surface-frost-10" />}>
+            <MdaComponent />
+          </Suspense>
         </div>
-      </PageGrid>
+      )}
 
-      <PageGrid className="pt-60">
-        <div className="col-span-full">
-          <ArticleReadMore
-            articles={readMore.map((a) => ({
-              title: a.title,
-              description: a.excerpt ?? '',
-              slug: a.slug,
-            }))}
-          />
-        </div>
-      </PageGrid>
+      <ArticleContent content={article.content} />
 
-      <div className="pt-30">
-        <CtaSection />
-      </div>
-    </div>
+      <AnimateIcon animateOnHover asChild>
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="site-btn-secondary"
+        >
+          Copy article link
+          <ChevronRight size={16} />
+        </button>
+      </AnimateIcon>
+
+      <p className="text-btn text-text-tertiary">
+        {article.published_at
+          ? new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : ''}
+        {article.author ? ` by ${article.author}` : ''}
+      </p>
+    </ContentListPage>
   );
 }

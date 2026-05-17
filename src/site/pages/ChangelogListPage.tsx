@@ -41,9 +41,11 @@ export function ChangelogListPage() {
   return (
     <ContentListPage
       title="Changelog"
-      emptyMessage="No changelog entries yet."
-      fetchUrl="/api/articles?type=changelog"
-      renderItems={renderChangelogs}
+      listProps={{
+        emptyMessage: 'No changelog entries yet.',
+        fetchUrl: '/api/articles?type=changelog',
+        renderItems: renderChangelogs,
+      }}
     />
   );
 }

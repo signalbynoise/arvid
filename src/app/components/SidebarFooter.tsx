@@ -7,7 +7,8 @@ import { RepoSelector } from './RepoSelector';
 import { LinearProjectSelector } from './LinearProjectSelector';
 import { SlackNotifySelector } from './SlackNotifySelector';
 import { SupabaseProjectSelector } from './SupabaseProjectSelector';
-import { useStore } from '../store';
+import { useStore, selectWorkspaces, selectActiveWorkspaceId } from '../store';
+import { canManageIntegrations } from '../domain/access';
 import type { Project } from '../types';
 
 type IntegrationKey = 'repository' | 'project' | 'alerts' | 'database';
@@ -26,6 +27,11 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
   const slackChannels = useStore(s => s.slackChannels);
   const repoFetchStatus = useStore(s => s.repoFetchStatus);
   const dbFetchStatus = useStore(s => s.dbFetchStatus);
+
+  const workspaces = useStore(selectWorkspaces);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const userRole = workspaces.find(w => w.id === activeWorkspaceId)?.userRole;
+  const canManage = canManageIntegrations(userRole);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState<IntegrationKey | null>(null);
@@ -82,15 +88,32 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
 
   const isUnlocked = (key: IntegrationKey) => unlocked.has(key);
 
-  const showGithub = githubConnection.status === 'connected';
-  const showLinear = linearConnection.status === 'connected';
-  const showSlack = slackConnection.status === 'connected';
-  const showSupabase = supabaseConnection.status === 'connected';
-  const showRender = renderConnection.status === 'connected';
+  const ghUserConnected = githubConnection.status === 'connected';
+  const linearUserConnected = linearConnection.status === 'connected';
+  const slackUserConnected = slackConnection.status === 'connected';
+  const supabaseUserConnected = supabaseConnection.status === 'connected';
+  const renderUserConnected = renderConnection.status === 'connected';
+
+  const ghProjectLinked = !!project.githubRepo;
+  const linearProjectLinked = !!project.linearProjectName;
+  const slackProjectLinked = !!project.slackNotificationChannelId;
+  const supabaseProjectLinked = !!project.supabaseProjectRef;
+  const renderProjectLinked = !!project.renderServiceName;
+
+  const showGithub = ghProjectLinked || (ghUserConnected && canManage);
+  const showLinear = linearProjectLinked || (linearUserConnected && canManage);
+  const showSlack = slackProjectLinked || (slackUserConnected && canManage);
+  const showSupabase = supabaseProjectLinked || (supabaseUserConnected && canManage);
+  const showRender = renderProjectLinked || (renderUserConnected && canManage);
 
   if (!showGithub && !showLinear && !showSlack && !showSupabase && !showRender) return null;
 
   const slackChannel = slackChannels.find(c => c.id === project.slackNotificationChannelId);
+
+  const canEditGithub = canManage && ghUserConnected;
+  const canEditLinear = canManage && linearUserConnected;
+  const canEditSlack = canManage && slackUserConnected;
+  const canEditSupabase = canManage && supabaseUserConnected;
 
   return (
     <>
@@ -120,14 +143,20 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                   </>
                 }
                 label="Repository"
-                isConnected={!!project.githubRepo}
+                isConnected={ghProjectLinked}
               >
-                {project.githubRepo && !isUnlocked('repository') ? (
-                  <FooterDropdownTrigger onClick={() => handleRequestChange('repository')}>
-                    <span className="text-text-primary">{project.githubRepo}</span>
-                  </FooterDropdownTrigger>
+                {canEditGithub ? (
+                  ghProjectLinked && !isUnlocked('repository') ? (
+                    <FooterDropdownTrigger onClick={() => handleRequestChange('repository')}>
+                      <span className="text-text-primary">{project.githubRepo}</span>
+                    </FooterDropdownTrigger>
+                  ) : (
+                    <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
+                  )
                 ) : (
-                  <RepoSelector projectId={project.id} onLinked={onProjectsReload} />
+                  <FooterDropdownTrigger onClick={() => {}} disabled>
+                    <span className="text-text-primary">{project.githubRepo ?? 'Not linked'}</span>
+                  </FooterDropdownTrigger>
                 )}
               </SidebarFooterItem>
             )}
@@ -143,14 +172,20 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
                   </>
                 }
                 label="Database"
-                isConnected={!!project.supabaseProjectRef}
+                isConnected={supabaseProjectLinked}
               >
-                {project.supabaseProjectRef && !isUnlocked('database') ? (
-                  <FooterDropdownTrigger onClick={() => handleRequestChange('database')}>
-                    <span className="text-text-primary">{project.supabaseProjectRef}</span>
-                  </FooterDropdownTrigger>
+                {canEditSupabase ? (
+                  supabaseProjectLinked && !isUnlocked('database') ? (
+                    <FooterDropdownTrigger onClick={() => handleRequestChange('database')}>
+                      <span className="text-text-primary">{project.supabaseProjectRef}</span>
+                    </FooterDropdownTrigger>
+                  ) : (
+                    <SupabaseProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                  )
                 ) : (
-                  <SupabaseProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                  <FooterDropdownTrigger onClick={() => {}} disabled>
+                    <span className="text-text-primary">{project.supabaseProjectRef ?? 'Not linked'}</span>
+                  </FooterDropdownTrigger>
                 )}
               </SidebarFooterItem>
             )}
@@ -159,14 +194,20 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <SidebarFooterItem
                 icon={<img src="/linear.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
                 label="Project"
-                isConnected={!!project.linearProjectName}
+                isConnected={linearProjectLinked}
               >
-                {project.linearProjectName && !isUnlocked('project') ? (
-                  <FooterDropdownTrigger onClick={() => handleRequestChange('project')}>
-                    <span className="text-text-primary">{project.linearProjectName}</span>
-                  </FooterDropdownTrigger>
+                {canEditLinear ? (
+                  linearProjectLinked && !isUnlocked('project') ? (
+                    <FooterDropdownTrigger onClick={() => handleRequestChange('project')}>
+                      <span className="text-text-primary">{project.linearProjectName}</span>
+                    </FooterDropdownTrigger>
+                  ) : (
+                    <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                  )
                 ) : (
-                  <LinearProjectSelector projectId={project.id} onLinked={onProjectsReload} />
+                  <FooterDropdownTrigger onClick={() => {}} disabled>
+                    <span className="text-text-primary">{project.linearProjectName ?? 'Not linked'}</span>
+                  </FooterDropdownTrigger>
                 )}
               </SidebarFooterItem>
             )}
@@ -175,14 +216,20 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <SidebarFooterItem
                 icon={<img src="/slack.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
                 label="Alerts"
-                isConnected={!!project.slackNotificationChannelId}
+                isConnected={slackProjectLinked}
               >
-                {project.slackNotificationChannelId && !isUnlocked('alerts') ? (
-                  <FooterDropdownTrigger onClick={() => handleRequestChange('alerts')}>
-                    <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : 'Channel set'}</span>
-                  </FooterDropdownTrigger>
+                {canEditSlack ? (
+                  slackProjectLinked && !isUnlocked('alerts') ? (
+                    <FooterDropdownTrigger onClick={() => handleRequestChange('alerts')}>
+                      <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : 'Channel set'}</span>
+                    </FooterDropdownTrigger>
+                  ) : (
+                    <SlackNotifySelector projectId={project.id} />
+                  )
                 ) : (
-                  <SlackNotifySelector projectId={project.id} />
+                  <FooterDropdownTrigger onClick={() => {}} disabled>
+                    <span className="text-text-primary">{slackChannel ? `#${slackChannel.name}` : slackProjectLinked ? 'Channel set' : 'Not linked'}</span>
+                  </FooterDropdownTrigger>
                 )}
               </SidebarFooterItem>
             )}
@@ -191,10 +238,12 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
               <SidebarFooterItem
                 icon={<img src="/render.svg" alt="" className="w-3.5 h-3.5 opacity-40" />}
                 label="Deployment"
-                isConnected={renderConnection.status === 'connected'}
+                isConnected={renderProjectLinked || renderUserConnected}
               >
                 <FooterDropdownTrigger onClick={() => {}} disabled>
-                  <span className="text-text-primary">{renderConnection.ownerName ?? 'Connected'}</span>
+                  <span className="text-text-primary">
+                    {project.renderServiceName ?? renderConnection.ownerName ?? 'Connected'}
+                  </span>
                 </FooterDropdownTrigger>
               </SidebarFooterItem>
             )}
@@ -204,7 +253,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showGithub && (
               <div className="relative">
                 <img src="/github.svg" alt="GitHub" className="w-4 h-4 opacity-50" />
-                {!!project.githubRepo && (
+                {ghProjectLinked && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
                 )}
               </div>
@@ -212,7 +261,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showSupabase && (
               <div className="relative">
                 <img src="/supabase.svg" alt="Supabase" className="w-4 h-4 opacity-50" />
-                {!!project.supabaseProjectRef && (
+                {supabaseProjectLinked && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
                 )}
               </div>
@@ -220,7 +269,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showLinear && (
               <div className="relative">
                 <img src="/linear.svg" alt="Linear" className="w-4 h-4 opacity-50" />
-                {!!project.linearProjectName && (
+                {linearProjectLinked && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
                 )}
               </div>
@@ -228,7 +277,7 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showSlack && (
               <div className="relative">
                 <img src="/slack.svg" alt="Slack" className="w-4 h-4 opacity-50" />
-                {!!project.slackNotificationChannelId && (
+                {slackProjectLinked && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
                 )}
               </div>
@@ -236,7 +285,9 @@ export function SidebarFooter({ project, onProjectsReload }: SidebarFooterProps)
             {showRender && (
               <div className="relative">
                 <img src="/render.svg" alt="Render" className="w-4 h-4 opacity-50" />
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                {(renderProjectLinked || renderUserConnected) && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success" />
+                )}
               </div>
             )}
           </div>

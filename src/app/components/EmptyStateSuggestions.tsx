@@ -13,7 +13,10 @@ import {
   selectLinearConnection,
   selectSlackConnection,
   selectSupabaseConnection,
+  selectWorkspaces,
+  selectActiveWorkspaceId,
 } from '../store';
+import { canManageIntegrations } from '../domain/access';
 import { api } from '../api';
 import { logger } from '../logger';
 
@@ -50,6 +53,11 @@ export function EmptyStateSuggestions({
   const supabaseConnection = useStore(selectSupabaseConnection);
   const flashRequirementHint = useStore(s => s.flashRequirementHint);
   const requestModal = useStore(s => s.requestModal);
+
+  const workspaces = useStore(selectWorkspaces);
+  const activeWorkspaceId = useStore(selectActiveWorkspaceId);
+  const userRole = workspaces.find(w => w.id === activeWorkspaceId)?.userRole;
+  const canManage = canManageIntegrations(userRole);
 
   const selectedProject = useMemo(
     () => projects.find(p => p.id === selectedProjectId),
@@ -94,6 +102,8 @@ export function EmptyStateSuggestions({
   }, [hasRequirements, onCreateRequirement, onInviteMembers, onCreateSubProject]);
 
   const integrationSuggestions = useMemo<Suggestion[]>(() => {
+    if (!canManage) return [];
+
     const items: Suggestion[] = [];
 
     const ghConnected = githubConnection.status === 'connected';
@@ -191,6 +201,7 @@ export function EmptyStateSuggestions({
 
     return items;
   }, [
+    canManage,
     githubConnection.status,
     linearConnection.status,
     slackConnection.status,

@@ -71,6 +71,10 @@ export function canOpenWorkspaceSettings(role: WorkspaceRole | undefined): boole
   return hasMinimumRole(role, 'member');
 }
 
+export function canManageIntegrations(role: WorkspaceRole | undefined): boolean {
+  return hasMinimumRole(role, 'admin');
+}
+
 export function getRoleLabel(role: WorkspaceRole): string {
   const labels: Record<WorkspaceRole, string> = {
     owner: 'Owner',

@@ -88,9 +88,46 @@ projectsRouter.post('/', checkProjectLimit, validateBody(CreateProjectBodySchema
   res.status(201).json(data);
 });
 
+const INTEGRATION_FIELDS = new Set([
+  'github_repo_full_name',
+  'github_repo_default_branch',
+  'linear_project_id',
+  'linear_project_name',
+  'linear_team_id',
+  'supabase_project_ref',
+  'slack_notification_channel_id',
+  'render_service_id',
+  'render_service_name',
+]);
+
+const INTEGRATION_ADMIN_ROLES = new Set(['owner', 'admin']);
+
 projectsRouter.patch('/:id', validateBody(UpdateProjectBodySchema), async (req, res) => {
   const db = createUserClient(req.accessToken!);
   const projectId = req.params.id;
+
+  const touchesIntegration = Object.keys(req.body).some(k => INTEGRATION_FIELDS.has(k));
+
+  if (touchesIntegration) {
+    const { data: proj } = await db
+      .from('projects')
+      .select('workspace_id')
+      .eq('id', projectId)
+      .single();
+
+    if (!proj) return res.status(404).json({ error: 'Project not found' });
+
+    const { data: membership } = await supabaseAdmin
+      .from('workspace_memberships')
+      .select('role')
+      .eq('workspace_id', proj.workspace_id)
+      .eq('user_id', req.user!.id)
+      .single();
+
+    if (!membership || !INTEGRATION_ADMIN_ROLES.has(membership.role)) {
+      return res.status(403).json({ error: 'Only admins and owners can change project integrations' });
+    }
+  }
 
   const repoChanging = req.body.github_repo_full_name !== undefined;
   const dbChanging = req.body.supabase_project_ref !== undefined;

@@ -5,6 +5,10 @@ import { ArticlePage } from './pages/ArticlePage';
 import { ArticlesListPage } from './pages/ArticlesListPage';
 import { ChangelogListPage } from './pages/ChangelogListPage';
 import { ChangelogPage } from './pages/ChangelogPage';
+import { FeaturesListPage } from './pages/FeaturesListPage';
+import { IntegrationsListPage } from './pages/IntegrationsListPage';
+import { GuidesListPage } from './pages/GuidesListPage';
+import { DocsListPage } from './pages/DocsListPage';
 import { AdminAuthProvider } from './auth/AdminAuthProvider';
 import { AdminAuthGuard } from './auth/AdminAuthGuard';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
@@ -16,10 +20,14 @@ createRoot(document.getElementById('root')!).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/features" element={<FeaturesListPage />} />
+      <Route path="/integrations" element={<IntegrationsListPage />} />
       <Route path="/articles" element={<ArticlesListPage />} />
       <Route path="/articles/:slug" element={<ArticlePage />} />
       <Route path="/changelog" element={<ChangelogListPage />} />
       <Route path="/changelog/:slug" element={<ChangelogPage />} />
+      <Route path="/guides" element={<GuidesListPage />} />
+      <Route path="/docs" element={<DocsListPage />} />
 
       <Route
         path="/admin/*"

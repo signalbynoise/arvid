@@ -400,21 +400,89 @@ The `TopNav` already uses `PageGrid` internally — it does not need an addition
 - **Hardcoded `max-width`** on page sections — the grid max-width comes from `--grid-max-width` via `.page-grid`.
 - **Mixing `PageGrid` pages with manual-container pages** — every marketing page must use the same layout primitive so widths are consistent across nav, content, and footer.
 
-### Article page layout
+### Content page template (`ContentListPage`)
 
-Article pages use `PageGrid` for the outer container and a flexbox layout inside `col-span-full` for the three-column structure (sidebar / article / share). The article body column is constrained to `max-w-article-content` (600px) within this flex layout:
+All marketing content pages — list pages and detail pages — use the shared `ContentListPage` template (`src/site/components/ContentListPage.tsx`). This is the **single source of truth** for page layout on the marketing site (excluding the landing page). Never build page chrome (nav, grid, CTA) directly in a page component.
+
+The template handles: `TopNav`, `PageGrid` with centered title, optional three-column body, optional footer section, and `CtaSection`.
+
+#### Props
+
+| Prop | Type | Use |
+|------|------|-----|
+| `title` | `string` | Page heading (always rendered) |
+| `subtitle` | `ReactNode?` | Metadata line below the title (e.g. date, author) |
+| `leftPanel` | `ReactNode?` | Left sidebar (hidden below `lg`) |
+| `rightPanel` | `ReactNode?` | Right sidebar (hidden below `lg`) |
+| `footer` | `ReactNode?` | Extra section below the main content (e.g. "Read more") |
+| `children` | `ReactNode?` | Direct body content (detail pages) |
+| `listProps` | `ListPatternProps?` | Fetch-and-render pattern (list pages) |
+
+`listProps` includes `fetchUrl`, `emptyMessage`, `renderItems`, and optional `filterFn`.
+
+#### Layout structure (with panels)
+
+```
+[              Nav (full width)              ]
+[spacer | Title + Subtitle | spacer          ]  ← centered via invisible sidebar-width spacers
+[left   | Body content     | right           ]  ← panels at body level, items-stretch for sticky
+[              Footer                        ]
+[              CTA                           ]
+```
+
+The title row uses invisible `w-article-sidebar` spacers so the title aligns horizontally with the body column. Side panels use `items-stretch` on their flex row so that `sticky top-40` on sidebar `<aside>` elements works correctly during scroll.
+
+#### Layout structure (without panels)
+
+```
+[              Nav (full width)              ]
+[              Title                         ]
+[              Body content (grid children)  ]
+[              CTA                           ]
+```
+
+When no panels are provided, the body content (from `listProps.renderItems`) renders as direct children of `PageGrid`, so `col-span-full` classes on rendered items work as expected.
+
+#### Two content patterns
+
+**List pages** (Articles, Changelog, Features, Integrations, Guides, Docs) use `listProps`:
 
 ```tsx
-<PageGrid className="pt-30">
-  <div className="col-span-full flex items-stretch justify-between gap-10">
-    <div className="hidden lg:block">{/* Popular articles sidebar */}</div>
-    <article className="flex w-full max-w-article-content flex-col gap-10">
-      {/* Title, content, footer */}
-    </article>
-    <div className="hidden lg:block">{/* Share sidebar */}</div>
-  </div>
-</PageGrid>
+<ContentListPage
+  title="Articles"
+  listProps={{
+    emptyMessage: 'No articles yet.',
+    fetchUrl: '/api/articles',
+    filterFn: (data) => data.filter((a) => a.type !== 'changelog'),
+    renderItems: renderArticles,
+  }}
+/>
 ```
+
+**Detail pages** (ArticlePage, ChangelogPage) use `children` + panel props:
+
+```tsx
+<ContentListPage
+  title={article.title}
+  subtitle={<p className="text-btn text-text-tertiary">May 10, 2026 by Arvid</p>}
+  leftPanel={<PopularArticlesSidebar articles={popular} />}
+  rightPanel={<ShareSidebar articleUrl={articleUrl} />}
+  footer={<ArticleReadMore articles={readMore} />}
+>
+  <ArticleContent content={article.content} />
+</ContentListPage>
+```
+
+#### Adding new page-level features
+
+If a new feature is needed (banner, breadcrumbs, filter bar), add it as a prop on `ContentListPage`. Every page that needs it passes it in. Never add page chrome directly to a consumer page.
+
+#### Anti-patterns
+
+- **Building page chrome in a page component** — use `ContentListPage`; do not import `TopNav`, `PageGrid`, `CtaSection` directly in page files
+- **`items-start` on the panel row** — must be `items-stretch` or sidebar `sticky` breaks
+- **Putting the title inside the panel flex row** — title is its own grid row above the panels
+- **`max-w-article-content` as a page container** — this token (600px) constrains the body column within the template, not the page itself
 
 ---
 

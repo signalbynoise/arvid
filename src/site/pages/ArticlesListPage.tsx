@@ -59,10 +59,12 @@ export function ArticlesListPage() {
   return (
     <ContentListPage
       title="Articles"
-      emptyMessage="No articles yet."
-      fetchUrl="/api/articles"
-      filterFn={(data) => data.filter((a) => a.type !== 'changelog')}
-      renderItems={renderArticles}
+      listProps={{
+        emptyMessage: 'No articles yet.',
+        fetchUrl: '/api/articles',
+        filterFn: (data) => data.filter((a) => a.type !== 'changelog'),
+        renderItems: renderArticles,
+      }}
     />
   );
 }

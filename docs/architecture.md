@@ -260,7 +260,17 @@ RLS: joins back to `requirements` → `projects` to verify workspace membership,
 
 ### CMS table (marketing site content)
 
-- **articles** — id, title, slug (unique), type (article/feature/docs), status (draft/published), content (jsonb blocks), excerpt, mini_demo_id, author, cover_image_url, published_at, created_at, updated_at, created_by (FK auth.users)
+- **articles** — id, title, slug (unique), type, status (draft/published), content (jsonb blocks), excerpt, mini_demo_id, author, cover_image_url, published_at, created_at, updated_at, created_by (FK auth.users)
+
+Article types: `article`, `feature`, `guide`, `docs`, `changelog`. Each type maps to a dedicated list page on the marketing site. All content is managed through the same CMS admin interface — the `type` field determines which page displays the article.
+
+| Type | List page route | Detail page route |
+|------|----------------|-------------------|
+| `article` | `/articles` | `/articles/:slug` |
+| `feature` | `/features` | `/articles/:slug` |
+| `guide` | `/guides` | `/articles/:slug` |
+| `docs` | `/docs` | `/articles/:slug` |
+| `changelog` | `/changelog` | `/changelog/:slug` |
 
 RLS: anon can SELECT where `status = 'published'`. Authenticated users have full CRUD. Public endpoints on the BFF use the service-role client with a hard filter to `status = 'published'`. Admin endpoints use per-request user clients for RLS enforcement.
 
@@ -331,11 +341,23 @@ src/site/
     AdminAuthProvider.tsx  Admin auth context
     AdminAuthGuard.tsx     Admin route guard
   pages/
-    LandingPage.tsx        Landing page
-    ArticlePage.tsx        Single article (fetches from BFF)
-    ArticlesListPage.tsx   Published articles listing
-    admin/                 CMS admin pages (list, create, edit)
-  components/         TopNav, HeroSection, article renderers
+    LandingPage.tsx           Landing page (only page not using ContentListPage)
+    ArticlePage.tsx           Single article detail (uses ContentListPage with children)
+    ArticlesListPage.tsx      Articles listing (uses ContentListPage with listProps)
+    ChangelogListPage.tsx     Changelog listing (uses ContentListPage with listProps)
+    ChangelogPage.tsx         Single changelog detail (uses ContentListPage with children)
+    FeaturesListPage.tsx      Features listing (uses ContentListPage with listProps)
+    IntegrationsListPage.tsx  Integrations listing (uses ContentListPage with listProps)
+    GuidesListPage.tsx        Guides listing (uses ContentListPage with listProps)
+    DocsListPage.tsx          Docs listing (uses ContentListPage with listProps)
+    admin/                    CMS admin pages (list, create, edit)
+  components/
+    ContentListPage.tsx   Shared page template for ALL content pages (SSOT for layout)
+    TopNav.tsx            Top navigation bar
+    PageGrid.tsx          CSS grid layout primitive
+    CtaSection.tsx        Bottom CTA section
+    article/              Article-specific components (sidebars, cards, read-more)
+    changelog/            Changelog-specific components (sidebar)
 render.yaml           Render Blueprint (3 services)
 vite.config.ts        Dashboard app build
 vite.config.site.ts   Marketing site build

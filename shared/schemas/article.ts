@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const ArticleStatusEnum = z.enum(['draft', 'published']);
 export type ArticleStatus = z.infer<typeof ArticleStatusEnum>;
 
-export const ArticleTypeEnum = z.enum(['article', 'feature', 'docs', 'changelog']);
+export const ArticleTypeEnum = z.enum(['article', 'feature', 'guide', 'docs', 'changelog']);
 export type ArticleType = z.infer<typeof ArticleTypeEnum>;
 
 export const ArticleRowSchema = z.object({

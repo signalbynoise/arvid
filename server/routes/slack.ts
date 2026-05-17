@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { supabase, createUserClient } from '../supabase';
+import { supabase, supabaseAdmin, createUserClient } from '../supabase';
 import { fetchChannels, extractMessages } from '../lib/slackClient';
 import { analyzeSlackMessages } from '../openrouter';
 
@@ -358,6 +358,26 @@ slackRouter.patch('/notify-channel/:projectId', async (req, res) => {
   const { channelId } = req.body as { channelId: string | null };
 
   const db = createUserClient(req.accessToken!);
+
+  const { data: proj } = await db
+    .from('projects')
+    .select('workspace_id')
+    .eq('id', projectId)
+    .single();
+
+  if (!proj) return res.status(404).json({ error: 'Project not found' });
+
+  const { data: membership } = await supabaseAdmin
+    .from('workspace_memberships')
+    .select('role')
+    .eq('workspace_id', proj.workspace_id)
+    .eq('user_id', req.user!.id)
+    .single();
+
+  if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Only admins and owners can change project integrations' });
+  }
+
   const { error } = await db
     .from('projects')
     .update({ slack_notification_channel_id: channelId })
