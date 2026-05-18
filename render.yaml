@@ -12,6 +12,7 @@ services:
         - src/site/**
         - src/styles/**
         - shared/**
+        - public/**
         - package.json
         - package-lock.json
         - vite.config.site.ts
