@@ -1,21 +1,28 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
+import { ArrowDownToLine, ArrowRight } from 'lucide-react';
 import { MorphingText } from '@/components/animate-ui/primitives/texts/morphing';
 import Grainient from '@/components/Grainient';
 import { AppDemo } from './app-demo';
 import { PageGrid } from './PageGrid';
-import { AppleLogo } from './AppleLogo';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-const DOWNLOAD_MAC_URL = import.meta.env.VITE_DOWNLOAD_MAC_URL || 'https://github.com/signalbynoise/arvid/releases/latest/download/Arvid-1.0.0-arm64.dmg';
+const DOWNLOAD_MAC_URL =
+  import.meta.env.VITE_DOWNLOAD_MAC_URL ||
+  'https://github.com/signalbynoise/arvid/releases/latest/download/Arvid-1.0.0-arm64.dmg';
 
-const ROTATING_WORDS = ['#issues', '#agents', '#projects', '#tasks', '#features'];
+const ROTATING_WORDS = [
+  '#issues',
+  '#agents',
+  '#projects',
+  '#tasks',
+  '#features',
+];
 
 export function HeroSection() {
   return (
     <PageGrid as="section" className="w-full pt-30">
-      <h1 className="col-span-full text-h2 text-text-primary">
+      {/* Headline — text-h2 (24px regular) both breakpoints */}
+      <h1 className="col-span-full text-h2 text-text-primary max-w-[300px] md:max-w-none">
         Arvid builds the missing knowledge graph,
         <br />
         for your{' '}
@@ -27,20 +34,33 @@ export function HeroSection() {
         />
       </h1>
 
-      <div className="col-span-full flex items-center gap-4">
-        <a href={DOWNLOAD_MAC_URL} className="site-btn-primary">
-          <AppleLogo size={16} />
-          Download Arvid
+      {/* Desktop CTAs — large primary + secondary with icons */}
+      <div className="hidden md:flex col-span-full items-center gap-4">
+        <a href={DOWNLOAD_MAC_URL} className="site-btn-primary site-btn-lg">
+          Download for macOS
+          <ArrowDownToLine size={18} />
         </a>
-        <AnimateIcon animateOnHover asChild>
-          <a href={`${APP_URL}/login`} className="site-btn-outline">
-            <LoaderPinwheel size={16} />
-            Launch Arvid
-          </a>
-        </AnimateIcon>
+        <a href="/features" className="site-btn-secondary site-btn-lg">
+          Explore Features
+          <ArrowRight size={18} />
+        </a>
       </div>
 
-      <div data-cursor-boundary="hero" className="col-span-full relative mt-15 h-[680px] w-full overflow-hidden rounded-card bg-surface-frost-08">
+      {/* Mobile CTAs — large primary + secondary, no icons */}
+      <div className="flex md:hidden col-span-full items-center gap-4">
+        <a href={`${APP_URL}/login`} className="site-btn-primary site-btn-lg">
+          Launch Arvid
+        </a>
+        <a href="/features" className="site-btn-secondary site-btn-lg">
+          Explore Features
+        </a>
+      </div>
+
+      {/* App preview — 800px desktop, bleeds right on mobile */}
+      <div
+        data-cursor-boundary="hero"
+        className="col-span-full relative mt-10 h-[600px] md:h-[800px] w-full overflow-hidden rounded-tl-comfortable md:rounded-card bg-surface-frost-08 -mr-[var(--grid-margin)] md:mr-0"
+      >
         <div className="absolute inset-0">
           <Grainient
             color1="#616161"

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 import { ContentListPage } from '../components/ContentListPage';
 import { ShareSidebar } from '../components/article/ShareSidebar';
 import { ArticleContent } from '../components/article/ArticleBlockRenderer';
@@ -82,16 +81,14 @@ export function ChangelogPage() {
     >
       <ArticleContent content={entry.content} />
 
-      <AnimateIcon animateOnHover asChild>
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="site-btn-secondary"
-        >
-          Copy link
-          <ChevronRight size={16} />
-        </button>
-      </AnimateIcon>
+      <button
+        type="button"
+        onClick={handleCopyLink}
+        className="site-btn-secondary site-btn-md"
+      >
+        Copy link
+        <ArrowUpRight size={14} />
+      </button>
     </ContentListPage>
   );
 }

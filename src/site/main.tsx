@@ -9,6 +9,7 @@ import { FeaturesListPage } from './pages/FeaturesListPage';
 import { IntegrationsListPage } from './pages/IntegrationsListPage';
 import { GuidesListPage } from './pages/GuidesListPage';
 import { DocsListPage } from './pages/DocsListPage';
+import { SagaPage } from './pages/SagaPage';
 import { AdminAuthProvider } from './auth/AdminAuthProvider';
 import { AdminAuthGuard } from './auth/AdminAuthGuard';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
       <Route path="/changelog" element={<ChangelogListPage />} />
       <Route path="/changelog/:slug" element={<ChangelogPage />} />
       <Route path="/guides" element={<GuidesListPage />} />
+      <Route path="/saga" element={<SagaPage />} />
       <Route path="/docs" element={<DocsListPage />} />
 
       <Route

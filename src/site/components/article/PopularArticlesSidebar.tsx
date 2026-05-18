@@ -1,6 +1,5 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 
 export interface PopularArticle {
   title: string;
@@ -28,12 +27,10 @@ export function PopularArticlesSidebar({ articles }: PopularArticlesSidebarProps
         </a>
       ))}
 
-      <AnimateIcon animateOnHover asChild>
-        <a href="/articles" className="site-btn-secondary">
-          All articles
-          <ChevronRight size={16} />
-        </a>
-      </AnimateIcon>
+      <a href="/articles" className="site-btn-secondary site-btn-md">
+        All articles
+        <ArrowUpRight size={14} />
+      </a>
     </aside>
   );
 }

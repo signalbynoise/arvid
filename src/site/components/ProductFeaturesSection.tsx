@@ -1,18 +1,22 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 import { PageGrid } from './PageGrid';
+import { ArticleCard } from './article/ArticleCard';
 
 const FEATURES = [
   {
     title: 'Arvid loves Linear',
-    description:
+    excerpt:
       'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
+    slug: 'arvid-loves-linear',
+    href: '/features',
   },
   {
     title: 'Arvid talks to Slack',
-    description:
+    excerpt:
       'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
+    slug: 'arvid-talks-to-slack',
+    href: '/features',
   },
 ];
 
@@ -23,29 +27,23 @@ export function ProductFeaturesSection() {
         Arvid can do a lot
       </h2>
 
-      {FEATURES.map(feature => (
-        <div
-          key={feature.title}
-          className="col-span-full lg:col-span-6 flex flex-col justify-between rounded-card bg-surface-panel pt-10 px-5 h-100"
-        >
-          <div className="flex flex-col gap-2">
-            <h3 className="text-btn text-text-primary">
-              {feature.title}
-            </h3>
-            <p className="text-btn text-text-tertiary">
-              {feature.description}
-            </p>
-          </div>
-          <div className="w-full h-65 rounded-tl-card rounded-tr-card bg-surface-frost-10" />
-        </div>
-      ))}
+      <div className="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
+        {FEATURES.map((feature) => (
+          <ArticleCard
+            key={feature.slug}
+            title={feature.title}
+            excerpt={feature.excerpt}
+            slug={feature.slug}
+            href={feature.href}
+            variant="featured"
+          />
+        ))}
+      </div>
 
-      <AnimateIcon animateOnHover asChild>
-        <a href="#" className="site-btn-secondary col-span-full">
-          Browse all product features
-          <ChevronRight size={16} />
-        </a>
-      </AnimateIcon>
+      <a href="/articles" className="site-btn-secondary site-btn-md col-span-full">
+        Browse all articles about Arvid
+        <ArrowUpRight size={14} />
+      </a>
     </PageGrid>
   );
 }

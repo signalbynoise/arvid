@@ -1,6 +1,5 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 import type { ArticleRow } from '../../../../shared/schemas/article';
 
 interface RecentChangelogsSidebarProps {
@@ -27,12 +26,10 @@ export function RecentChangelogsSidebar({ entries, currentSlug }: RecentChangelo
         </a>
       ))}
 
-      <AnimateIcon animateOnHover asChild>
-        <a href="/changelog" className="site-btn-secondary">
-          All updates
-          <ChevronRight size={16} />
-        </a>
-      </AnimateIcon>
+      <a href="/changelog" className="site-btn-secondary site-btn-md">
+        All updates
+        <ArrowUpRight size={14} />
+      </a>
     </aside>
   );
 }

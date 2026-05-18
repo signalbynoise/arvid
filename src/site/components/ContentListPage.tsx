@@ -92,10 +92,12 @@ export function ContentListPage({
           </>
         ) : (
           <>
-            <div className="col-span-full flex flex-col gap-6">
-              <h1 className="text-h2 text-text-primary">{title}</h1>
-              {subtitle}
-            </div>
+            {title && (
+              <div className="col-span-full flex flex-col gap-6">
+                <h1 className="text-h2 text-text-primary">{title}</h1>
+                {subtitle}
+              </div>
+            )}
             {bodyContent}
           </>
         )}

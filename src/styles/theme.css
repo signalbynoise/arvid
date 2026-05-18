@@ -462,7 +462,7 @@
   .text-display-md { font-size: 56px; font-weight: var(--fw-regular); line-height: 1.00; letter-spacing: -1.232px; }
   .text-display    { font-size: 48px; font-weight: var(--fw-medium); line-height: 1.00; letter-spacing: -1.056px; }
   .text-h1         { font-size: 32px; font-weight: var(--fw-regular); line-height: 1.13; letter-spacing: -0.704px; }
-  .text-h2         { font-size: 24px; font-weight: var(--fw-regular); line-height: 1.33; letter-spacing: -0.288px; }
+  .text-h2         { font-size: 24px; font-weight: var(--fw-medium); line-height: 1.33; letter-spacing: -0.288px; }
   .text-h3         { font-size: 20px; font-weight: var(--fw-semibold); line-height: 1.33; letter-spacing: -0.24px; }
   .text-body-lg    { font-size: 18px; font-weight: var(--fw-regular); line-height: 1.60; letter-spacing: -0.165px; }
   .text-body       { font-size: 16px; font-weight: var(--fw-regular); line-height: 1.50; letter-spacing: normal; }
@@ -470,13 +470,37 @@
   .text-body-sb    { font-size: 16px; font-weight: var(--fw-semibold); line-height: 1.50; letter-spacing: normal; }
   .text-sm         { font-size: 15px; font-weight: var(--fw-regular); line-height: 1.60; letter-spacing: -0.165px; }
   .text-sm-md      { font-size: 15px; font-weight: var(--fw-medium); line-height: 1.60; letter-spacing: -0.165px; }
-  .text-caption-lg { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
+  .text-caption-lg { font-size: 14px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
   .text-caption    { font-size: 13px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.13px; }
   .text-btn        { font-size: var(--fs-btn); font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: normal; }
   .text-label      { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; }
   .text-label-upper { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.182px; text-transform: uppercase; }
   .text-label-sm   { font-size: 11px; font-weight: var(--fw-medium); line-height: 1.40; letter-spacing: normal; }
   .text-tiny       { font-size: 10px; font-weight: var(--fw-medium); line-height: 1.50; letter-spacing: -0.15px; }
+
+  /* --- Article Body (5-token typography) --- */
+  .article-body h2 {
+    font-size: 24px;
+    font-weight: var(--fw-medium);
+    line-height: 1.33;
+    letter-spacing: -0.288px;
+    color: var(--text-primary);
+    margin-top: var(--space-4);
+  }
+
+  .article-body h3 {
+    font-size: 16px;
+    font-weight: var(--fw-medium);
+    line-height: 1.50;
+    letter-spacing: normal;
+    color: var(--text-primary);
+    margin-top: var(--space-2);
+  }
+
+  .article-body strong {
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
+  }
 
   /* --- Button Variants --- */
   .btn-primary, .btn-ghost, .btn-subtle {
@@ -539,19 +563,31 @@
     }
   }
 
-  /* --- Marketing Button Variants --- */
+  /* --- Marketing Button Variants (3 variants × 3 sizes = 9 buttons) --- */
   .site-btn-primary, .site-btn-secondary, .site-btn-outline {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    justify-content: center;
     border-radius: var(--radius-pill);
-    padding: var(--space-2) var(--space-5);
-    font-size: 13px;
     font-weight: var(--fw-medium);
     line-height: 1.5;
-    letter-spacing: -0.182px;
+    letter-spacing: normal;
     transition: background-color 150ms;
     width: fit-content;
+    font-size: var(--fs-btn);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .site-btn-md {
+    font-size: 14px;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .site-btn-lg {
+    font-size: 16px;
+    gap: 10px;
+    padding: 14px var(--space-6);
   }
 
   .site-btn-primary {

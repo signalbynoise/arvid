@@ -1,6 +1,5 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 import { ArticleCard } from './ArticleCard';
 
 export interface ReadMoreArticle {
@@ -32,12 +31,10 @@ export function ArticleReadMore({ articles }: ArticleReadMoreProps) {
         ))}
       </div>
 
-      <AnimateIcon animateOnHover asChild>
-        <a href="/articles" className="site-btn-secondary">
-          Browse all articles about Arvid
-          <ChevronRight size={16} />
-        </a>
-      </AnimateIcon>
+      <a href="/articles" className="site-btn-secondary site-btn-md">
+        Browse all articles about Arvid
+        <ArrowUpRight size={14} />
+      </a>
     </section>
   );
 }

@@ -5,19 +5,21 @@ interface ArticleCardProps {
   title: string;
   excerpt: string;
   slug: string;
+  href?: string;
   date?: string;
   author?: string;
   miniDemoId?: string | null;
   variant?: 'featured' | 'compact';
 }
 
-export function ArticleCard({ title, excerpt, slug, date, author, miniDemoId, variant = 'compact' }: ArticleCardProps) {
+export function ArticleCard({ title, excerpt, slug, href, date, author, miniDemoId, variant = 'compact' }: ArticleCardProps) {
   const isFeatured = variant === 'featured';
   const MdaComponent = miniDemoId ? MDA_REGISTRY[miniDemoId]?.component : null;
+  const linkHref = href ?? `/articles/${slug}`;
 
   return (
     <a
-      href={`/articles/${slug}`}
+      href={linkHref}
       className="group flex flex-col gap-4 rounded-card bg-surface-panel px-6 py-10"
     >
       <div className="flex flex-col gap-2">

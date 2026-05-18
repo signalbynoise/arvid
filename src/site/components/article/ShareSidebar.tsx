@@ -1,6 +1,5 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 
 interface ShareSidebarProps {
   articleUrl: string;
@@ -21,16 +20,14 @@ export function ShareSidebar({ articleUrl, onCopyResult }: ShareSidebarProps) {
         Share
       </p>
 
-      <AnimateIcon animateOnHover asChild>
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="site-btn-secondary"
-        >
-          Copy article link
-          <ChevronRight size={16} />
-        </button>
-      </AnimateIcon>
+      <button
+        type="button"
+        onClick={handleCopyLink}
+        className="site-btn-secondary site-btn-md"
+      >
+        Copy article link
+        <ArrowUpRight size={14} />
+      </button>
     </aside>
   );
 }

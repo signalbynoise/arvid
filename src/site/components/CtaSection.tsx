@@ -1,8 +1,6 @@
 import React from 'react';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { LoaderPinwheel } from '@/components/animate-ui/icons/loader-pinwheel';
+import { ArrowDownToLine, ArrowRight } from 'lucide-react';
 import { PageGrid } from './PageGrid';
-import { AppleLogo } from './AppleLogo';
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 const DOWNLOAD_MAC_URL = import.meta.env.VITE_DOWNLOAD_MAC_URL || 'https://github.com/signalbynoise/arvid/releases/latest/download/Arvid-1.0.0-arm64.dmg';
@@ -15,17 +13,15 @@ export function CtaSection() {
           Build with Arvid today.
         </h2>
 
-        <div className="flex items-center gap-4">
-          <a href={DOWNLOAD_MAC_URL} className="site-btn-primary">
-            <AppleLogo size={16} />
-            Download Arvid
+        <div className="flex items-center gap-2">
+          <a href={DOWNLOAD_MAC_URL} className="site-btn-primary site-btn-md">
+            Download for macOS
+            <ArrowDownToLine size={14} />
           </a>
-          <AnimateIcon animateOnHover asChild>
-            <a href={`${APP_URL}/login`} className="site-btn-outline">
-              <LoaderPinwheel size={16} />
-              Launch Arvid
-            </a>
-          </AnimateIcon>
+          <a href={`${APP_URL}/login`} className="site-btn-outline site-btn-md">
+            Launch Arvid
+            <ArrowRight size={14} />
+          </a>
         </div>
       </div>
     </PageGrid>

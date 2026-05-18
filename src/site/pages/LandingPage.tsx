@@ -7,7 +7,6 @@ import { GitHubDemo } from '../components/github-demo';
 import { ConnectorDemo } from '../components/connector-demo';
 import { AgentsDemo } from '../components/agents-demo';
 
-import { RequirementGridSection } from '../components/RequirementGridSection';
 import { ProductFeaturesSection } from '../components/ProductFeaturesSection';
 import { LearnMoreSection } from '../components/LearnMoreSection';
 import { CtaSection } from '../components/CtaSection';
@@ -18,18 +17,24 @@ const FEATURES = [
     description:
       'Login with GitHub, or connect your repo and let Arvid learn your codebase to understand the full context.',
     imagePosition: 'right' as const,
+    linkHref: '/features',
+    linkLabel: 'Learn more',
   },
   {
     title: 'Arvid is a good connector',
     description:
       'Bring in requirements from Slack, Email, or your documents. Do not worry, Arvid knows how to extract perfected requests from messy sources.',
     imagePosition: 'left' as const,
+    linkHref: '/features',
+    linkLabel: 'Learn more',
   },
   {
     title: 'Arvid loves Agents',
     description:
       'Send your complete knowledge graph to Cursor and make your Agents happy.',
     imagePosition: 'right' as const,
+    linkHref: '/features',
+    linkLabel: 'Learn more',
   },
 ];
 
@@ -50,16 +55,14 @@ export function LandingPage() {
             title={feature.title}
             description={feature.description}
             imagePosition={feature.imagePosition}
+            linkHref={feature.linkHref}
+            linkLabel={feature.linkLabel}
           >
             {index === 0 && <GitHubDemo />}
             {index === 1 && <ConnectorDemo />}
             {index === 2 && <AgentsDemo />}
           </FeatureSection>
         ))}
-      </div>
-
-      <div className="pt-30">
-        <RequirementGridSection />
       </div>
 
       <div className="pt-30">

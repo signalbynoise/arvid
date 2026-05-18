@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { AnimateIcon } from '@/components/animate-ui/icons/icon';
-import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { ArrowUpRight } from 'lucide-react';
 import { ContentListPage } from '../components/ContentListPage';
 import { PopularArticlesSidebar } from '../components/article/PopularArticlesSidebar';
 import { ShareSidebar } from '../components/article/ShareSidebar';
@@ -111,16 +110,14 @@ export function ArticlePage() {
 
       <ArticleContent content={article.content} />
 
-      <AnimateIcon animateOnHover asChild>
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="site-btn-secondary"
-        >
-          Copy article link
-          <ChevronRight size={16} />
-        </button>
-      </AnimateIcon>
+      <button
+        type="button"
+        onClick={handleCopyLink}
+        className="site-btn-secondary site-btn-md"
+      >
+        Copy article link
+        <ArrowUpRight size={14} />
+      </button>
 
       <p className="text-btn text-text-tertiary">
         {article.published_at
